@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.text.Font?>
+
+<GridPane hgap="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" stylesheets="@ui.css" vgap="25.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="di.unito.it.prog3.client.controllers.LoginController">
+  <columnConstraints>
+    <ColumnConstraints hgrow="SOMETIMES" maxWidth="358.0" minWidth="10.0" />
+    <ColumnConstraints hgrow="SOMETIMES" />
+      <ColumnConstraints hgrow="SOMETIMES" />
+  </columnConstraints>
+  <rowConstraints>
+    <RowConstraints vgrow="NEVER" />
+    <RowConstraints vgrow="NEVER" />
+    <RowConstraints vgrow="NEVER" />
+      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
+  </rowConstraints>
+   <children>
+      <Label alignment="CENTER" maxHeight="135.0" maxWidth="135.0" minHeight="35.0" minWidth="135.0" prefHeight="35.0" prefWidth="135.0" text="Welcome!" GridPane.columnIndex="1" GridPane.halignment="LEFT">
+         <font>
+            <Font size="29.0" />
+         </font>
+         <GridPane.margin>
+            <Insets />
+         </GridPane.margin>
+      </Label>
+      <Label alignment="CENTER_RIGHT" text="Server:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+      <Label text="E-mail:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
+      <TextField fx:id="serverField" prefHeight="27.0" text="localhost:2525" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="1" />
+      <TextField fx:id="emailField" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="2" />
+      <Button fx:id="submitButton" mnemonicParsing="false" text="Connect" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="3" />
+      <Label fx:id="messageLabel" prefHeight="17.0" prefWidth="184.0" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS" GridPane.rowIndex="3" />
+   </children>
+   <padding>
+      <Insets bottom="40.0" left="30.0" right="30.0" top="40.0" />
+   </padding>
+</GridPane>

@@ -1,0 +1,2 @@
+rootProject.name = 'prog3'
+include('client', 'libs', 'server')
