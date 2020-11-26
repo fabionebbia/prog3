@@ -1,9 +1,0 @@
-.recipient {
-    -fx-border-radius: 6px;
-    -fx-border-color: red;
-    -fx-border-width: 1px;
-}
-
-.recipient-remove-button {
-    -fx-background-color: transparent;
-}

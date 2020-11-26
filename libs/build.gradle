@@ -7,6 +7,9 @@ plugins {
     id 'org.openjfx.javafxplugin' version '0.0.9'
 }
 
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
+
 javafx {
     version = "15.0.1"
     modules = [ 'javafx.base', 'javafx.controls', 'javafx.graphics', 'javafx.fxml' ]
@@ -14,4 +17,12 @@ javafx {
 
 dependencies {
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.11.3'
+}
+
+task buildControls(type: Jar) {
+    baseName 'controls'
+    from sourceSets.main.output
+    include 'di/unito/it/prog3/libs/controls/**.class'
+    from sourceSets.main.resources
+    include 'controls/**'
 }
