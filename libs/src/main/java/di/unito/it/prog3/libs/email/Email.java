@@ -1,4 +1,4 @@
-package di.unito.it.prog3.libs.pojos;
+package di.unito.it.prog3.libs.email;
 
 import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -30,7 +30,7 @@ public class Email {
     private boolean read;
 
     @JsonCreator // for Jackson deserialization
-    private Email() {
+    public Email() {
         recipients = new ArrayList<>();
     }
 
@@ -88,8 +88,8 @@ public class Email {
         return timestamp;
     }
 
-    public void setTimestamp() {
-        this.timestamp = timestamp;
+    public void timestamp() {
+        timestamp = LocalDateTime.now();
     }
 
     public List<Mailbox> getRecipients() {
@@ -186,21 +186,6 @@ public class Email {
         public String toString() {
             return mailbox + "/" + queue.asShortPath() + "/" + String.format("%04d", relativeId);
         }
-
-        /*
-        @JsonCreator
-        public ID fromString(String str) {
-            String[] parts = str.split("/");
-
-            if (parts.length == 3) {
-                Mailbox mailbox = Mailbox.from(parts[0]);
-                Queue queue = Queue.fromShortPath(parts[1]);
-                int relativeId = Integer.parseInt(parts[2]);
-
-                return new ID(mailbox, queue, relativeId);
-            } else throw new MalformedEmailIDException(str);
-        }*/
     }
-
 
 }

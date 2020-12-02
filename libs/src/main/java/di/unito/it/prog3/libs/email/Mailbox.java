@@ -1,4 +1,4 @@
-package di.unito.it.prog3.libs.pojos;
+package di.unito.it.prog3.libs.email;
 
 import di.unito.it.prog3.libs.utils.Emails;
 

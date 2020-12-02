@@ -1,8 +1,9 @@
 package di.unito.it.prog3.libs.store;
 
-import di.unito.it.prog3.libs.pojos.Email;
-import di.unito.it.prog3.libs.pojos.ID;
+import di.unito.it.prog3.libs.email.Email;
+import di.unito.it.prog3.libs.email.Email.ID;
 
+import java.io.FileNotFoundException;
 import java.util.List;
 
 public interface EmailStore {
@@ -11,9 +12,9 @@ public interface EmailStore {
 
     void delete(ID email) throws EmailStoreException;
 
-    Email read(ID email) throws EmailStoreException;
+    Email read(ID email) throws EmailStoreException, FileNotFoundException;
 
-    List<Email> read(Queue queue, ID offset, int many)  throws EmailStoreException;
+    List<Email> read(ID offset, int many)  throws EmailStoreException;
 
     List<Email> readAll(Queue queue)  throws EmailStoreException;
 

@@ -1,6 +1,6 @@
 package di.unito.it.prog3.libs.utils;
 
-import di.unito.it.prog3.libs.pojos.Mailbox;
+import di.unito.it.prog3.libs.email.Mailbox;
 
 import java.util.regex.Pattern;
 
@@ -17,6 +17,16 @@ public class Emails {
 
     public static boolean isWellFormed(String email) {
         return emailRegex.matcher(email).matches();
+    }
+
+    public static boolean isMalformed(String email) {
+        return !isWellFormed(email);
+    }
+
+    public static String ensureWellFormed(String email) {
+        if (isWellFormed(email)) {
+            return email;
+        } else throw new RuntimeException();
     }
 
 }

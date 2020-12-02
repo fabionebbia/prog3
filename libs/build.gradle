@@ -17,12 +17,7 @@ javafx {
 
 dependencies {
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.11.3'
-}
+    implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.11.3'
 
-task buildControls(type: Jar) {
-    baseName 'controls'
-    from sourceSets.main.output
-    include 'di/unito/it/prog3/libs/controls/**.class'
-    from sourceSets.main.resources
-    include 'controls/**'
+
 }

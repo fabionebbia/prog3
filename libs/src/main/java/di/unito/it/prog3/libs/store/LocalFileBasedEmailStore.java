@@ -1,21 +1,24 @@
 package di.unito.it.prog3.libs.store;
 
-import di.unito.it.prog3.libs.pojos.Email;
-import di.unito.it.prog3.libs.pojos.ID;
+import di.unito.it.prog3.libs.email.Email;
+import di.unito.it.prog3.libs.email.Email.ID;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
+import java.util.function.Predicate;
 
-public class FileBasedEmailStoreClient extends FileBasedEmailStore {
+public abstract class LocalFileBasedEmailStore extends FileBasedEmailStore {
 
-    private final EmailJsonMapper json;
 
-    public FileBasedEmailStoreClient(String storeDir, String extension) {
+
+    public LocalFileBasedEmailStore(String storeDir, String extension) {
         super(storeDir, extension);
-        json = new EmailJsonMapper();
     }
 
     @Override
@@ -32,20 +35,18 @@ public class FileBasedEmailStoreClient extends FileBasedEmailStore {
         }
 
         if (Files.exists(emailPath)) {
-            throw new EmailStoreException("E-mail already exists" + email.getID());
+            throw new EmailStoreException("E-mail already exists" + email);
         }
 
-        try {
+        emailPath = Paths.get(queueDir.toString(), UUID.randomUUID().toString() + ".json");
+        /* try {
+
             Files.createFile(emailPath);
         } catch (IOException e) {
             throw new EmailStoreException("Could not create " + email.getID() + " file", e);
-        }
+        } */
 
-        try {
-            json.serialize(email, emailPath);
-        } catch (IOException e) {
-            throw new EmailStoreException("Could not serialize " + email.getID(), e);
-        }
+        serialize(email, emailPath);
     }
 
     @Override
@@ -72,26 +73,27 @@ public class FileBasedEmailStoreClient extends FileBasedEmailStore {
             throw new EmailStoreException(id + " is missing");
         }
 
-        try {
-            return json.deserialize(file);
-        } catch (IOException e) {
-            throw new EmailStoreException("Could not read " + id, e);
-        }
+        return deserialize(file.toPath());
     }
 
     @Override
     public List<Email> read(ID offset, int many) {
         List<Email> emails = new ArrayList<>();
-        Path offsetPath = getPath(offset);
-        Path queuePath = offsetPath.getParent();
+        Path queuePath = getPath(offset).getParent();
 
         try {
 
-
+            int n = 0;
             Files.list(queuePath)
-                    .sorted()
-                    .map(Path::getFileName)
-                    .map(Path::toString)
+                    .map(Path::toFile)
+                    .sorted(Comparator.comparingLong(File::lastModified))
+                    .map(File::getName)
+                    .takeWhile(new Predicate<String>() {
+                        @Override
+                        public boolean test(String s) {
+                            return false;
+                        }
+                    })
                     .forEach(System.out::println);
 
 
@@ -106,4 +108,9 @@ public class FileBasedEmailStoreClient extends FileBasedEmailStore {
     public List<Email> readAll(Queue queue) {
         return null;
     }
+
+    protected abstract void serialize(Email email, Path path) throws EmailStoreException;
+
+    protected abstract Email deserialize(Path path) throws EmailStoreException;
+
 }
