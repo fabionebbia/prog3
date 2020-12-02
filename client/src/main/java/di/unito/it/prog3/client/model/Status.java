@@ -9,8 +9,10 @@ public enum Status implements BaseStatus {
     MALFORMED_EMAIL_ADDRESS(true, "Malformed email address"),
 
     // Login
-    LOGIN_BLANK_SERVER_FIELD(true, "Please insert server address"),
-    LOGIN_BLANK_EMAIL_FIELD(true, "Please insert e-mail address"),
+    LOGIN_INVALID_SERVER_ADDRESS(true, "Please specify a valid server address"),
+    LOGIN_INVALID_SERVER_PORT(true, "Please specify a valid port"),
+    LOGIN_INVALID_EMAIL(true, "Please specify a valid e-mail address"),
+
     LOGIN_SUCCESS(false, "Successfully logged in");
 
     private final boolean isError;

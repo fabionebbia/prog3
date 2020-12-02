@@ -26,4 +26,5 @@ public enum ClientStatus implements BaseStatus {
     public String getMessage() {
         return message;
     }
+
 }

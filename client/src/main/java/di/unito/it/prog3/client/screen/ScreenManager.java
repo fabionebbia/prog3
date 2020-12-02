@@ -1,4 +1,4 @@
-package di.unito.it.prog3.client.engine;
+package di.unito.it.prog3.client.screen;
 
 import di.unito.it.prog3.client.model.Model;
 import javafx.fxml.FXMLLoader;

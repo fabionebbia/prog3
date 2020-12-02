@@ -3,9 +3,26 @@
  */
 
 plugins {
-    id 'di.unito.it.prog3.java-library-conventions'
+    id 'di.unito.it.prog3.java-application-conventions'
+
+    id 'org.openjfx.javafxplugin' version '0.0.9'
+}
+
+repositories {
+    mavenCentral()
+}
+
+javafx {
+    version = "15.0.1"
+    modules = [ 'javafx.base', 'javafx.controls', 'javafx.graphics', 'javafx.fxml' ]
 }
 
 dependencies {
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.11.3'
     implementation project(':libs')
+}
+
+application {
+    // Define the main class for the application.
+    mainClass = 'di.unito.it.prog3.server.MailServer'
 }

@@ -1,85 +1,106 @@
 package di.unito.it.prog3.client.controllers;
 
-import di.unito.it.prog3.client.controls.Recipient;
-import di.unito.it.prog3.client.fxml.BaseController;
-import di.unito.it.prog3.client.fxml.ScreenManager;
-import di.unito.it.prog3.client.model.Model;
-import javafx.collections.ListChangeListener;
-import javafx.event.ActionEvent;
+import di.unito.it.prog3.client.screen.Controller;
+import di.unito.it.prog3.client.controls.RecipientsFlowPane;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
+import javafx.scene.control.Control;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.RowConstraints;
+import javafx.util.Duration;
 
-import java.io.IOException;
-
-public class EmailViewerController extends BaseController<Model> {
-
-    @FXML
-    public FlowPane recipients;
+public class EmailViewerController extends Controller {
 
     @FXML
-    private TextField recipientField;
+    private RecipientsFlowPane recipientsFlowPane;
 
-    public EmailViewerController(Model model) {
-        init(null, model);
+    @FXML
+    private Label fromIndicator;
+
+    @FXML
+    private TextField fromField;
+
+    @FXML
+    private TextField subjectField;
+
+    @FXML
+    private Label dateIndicator;
+
+    @FXML
+    private Label dateLabel;
+
+    @FXML
+    private GridPane gridPane;
+
+
+    private final BooleanProperty modifiable;
+    private final int FROM_ROW = 1;
+    private final int DATE_ROW = 3;
+
+    public EmailViewerController() {
+        modifiable = new SimpleBooleanProperty(true);
     }
-
 
     @Override
-    public void init(ScreenManager screenManager, Model model) {
-        super.init(screenManager, model);
+    public void setupControl() {
+        recipientsFlowPane.recipientsProperty().bindBidirectional(model.currentEmailProperty().recipientsProperty());
 
-        /*recipientsListView.getItems().addAll("abc", "cde");
-        recipientsListView.setCellFactory(new Callback<ListView<String>, ListCell<String>>() {
-            @Override
-            public ListCell<String> call(ListView<String> param) {
-                return new RecipientListCell();
+        fromField.textProperty().bindBidirectional(model.currentEmailProperty().fromProperty());
+        fromField.disableProperty().bind(Bindings.not(modifiable));
+        bindVisibility(fromIndicator, fromField);
+
+        subjectField.disableProperty().bind(Bindings.not(modifiable));
+
+        bindVisibility(dateIndicator, dateLabel);
+
+        modifiable.addListener(((observable, wasModifiable, isModifiable) -> {
+            ObservableList<RowConstraints> rowConstraints = gridPane.getRowConstraints();
+            double newMaxHeight = isModifiable ? Control.USE_COMPUTED_SIZE : 0;
+
+            rowConstraints.get(DATE_ROW).setMaxHeight(newMaxHeight);
+            rowConstraints.get(FROM_ROW).setMaxHeight(newMaxHeight);
+
+            // TODO vedere se posso usare i CSS invece che sta cosa esplicita
+            if (isModifiable) {
+                gridPane.setVgap(gridPane.getVgap() * 2);
+            } else {
+                gridPane.setVgap(gridPane.getVgap() / 2);
             }
-        });
+        }));
 
-        recipientsListView.prefHeightProperty().bind(
-                Bindings.multiply(Bindings.size(recipientsListView.getItems()), 40));
-        recipientsListView.minHeightProperty().bind(recipientsListView.prefHeightProperty());
-        recipientsListView.maxHeightProperty().bind(recipientsListView.prefHeightProperty());*/
+        Timeline timeline = new Timeline(
+                new KeyFrame(Duration.seconds(6), e ->
+                        modifiable.set(!modifiable.get())
+                )
+        );
+        timeline.setCycleCount(Animation.INDEFINITE);
+        timeline.playFromStart();
 
-        model.currentEmailProperty().recipientsProperty().addListener((ListChangeListener<String>) c -> {
-            if (c.next() && c.wasAdded()) {
-                for (String addedRecipient : c.getAddedSubList()) {
-                    loadRecipient(addedRecipient);
-                }
-            }
-        });
+
+        /*
+            TODO
+            - [ ] rendere modificabile/non modificabile anche RecipientsFlowPane
+            - [ ] usare i CSS per modificare i gap
+            - [ ] recipient.css è importato sia da recipient.fxml che da recipient-flow-pane.fxml
+            - [ ] fare in modo che, quando disabilitato, subjectField appaia come una label (CSS)
+            - [ ] i bottoni della toolbar non sono più stylati correttamente
+         */
     }
 
-    private void loadRecipient(String addedRecipient) {
-        /*try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/recipient.fxml"));
-            loader.setController(this);
-            loader.setRoot(new HBox());
-            Parent newRecipient = loader.load();
-            recipients.getChildren().add(newRecipient);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
-        try {
-            Recipient recipient = new Recipient(addedRecipient);
-            recipients.getChildren().add(recipient);
-        } catch (IOException e) {
-            e.printStackTrace();
+    private void bindVisibility(Node... nodes) {
+        for (Node node : nodes) {
+            node.managedProperty().bind(modifiable); // removes the node from the parent's layout calculation
+            node.visibleProperty().bind(modifiable);
         }
-    }
-
-    public void addRecipient(String recipient) {
-        model.currentEmailProperty().recipientsProperty().add(recipient);
-    }
-
-    public void addRecipient(ActionEvent e) {
-        // TODO e il binding? :(
-        addRecipient(recipientField.getText());
-    }
-
-    public void removeRecipient(ActionEvent e) {
-
     }
 
 }

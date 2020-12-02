@@ -7,9 +7,10 @@
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<GridPane hgap="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" stylesheets="@../ui.css" vgap="25.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="di.unito.it.prog3.client.controllers.LoginController">
+<GridPane fx:id="screen" hgap="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" stylesheets="@ui.css" vgap="10.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="di.unito.it.prog3.client.controllers.screens.LoginScreenController">
   <columnConstraints>
     <ColumnConstraints hgrow="SOMETIMES" maxWidth="358.0" minWidth="10.0" />
     <ColumnConstraints hgrow="SOMETIMES" />
@@ -19,6 +20,7 @@
     <RowConstraints vgrow="NEVER" />
     <RowConstraints vgrow="NEVER" />
     <RowConstraints vgrow="NEVER" />
+      <RowConstraints vgrow="NEVER" />
       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
   </rowConstraints>
    <children>
@@ -30,12 +32,37 @@
             <Insets />
          </GridPane.margin>
       </Label>
-      <Label alignment="CENTER_RIGHT" text="Server:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
-      <Label text="E-mail:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
-      <TextField fx:id="serverField" prefHeight="27.0" text="localhost:2525" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="1" />
-      <TextField fx:id="emailField" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="2" />
-      <Button fx:id="submitButton" mnemonicParsing="false" text="Connect" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="3" />
-      <Label fx:id="messageLabel" prefHeight="17.0" prefWidth="184.0" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS" GridPane.rowIndex="3" />
+      <Label alignment="CENTER_RIGHT" text="Server:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.valignment="TOP">
+         <GridPane.margin>
+            <Insets top="5.0" />
+         </GridPane.margin></Label>
+      <Label text="E-mail:" GridPane.halignment="RIGHT" GridPane.rowIndex="3" GridPane.valignment="TOP">
+         <GridPane.margin>
+            <Insets top="5.0" />
+         </GridPane.margin></Label>
+      <Button fx:id="submitButton" mnemonicParsing="false" text="Connect" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="4" />
+      <Label text="Port:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.valignment="TOP">
+         <GridPane.margin>
+            <Insets top="5.0" />
+         </GridPane.margin></Label>
+      <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="1">
+         <children>
+            <TextField fx:id="serverField" prefHeight="27.0" />
+            <Label fx:id="serverFieldError" text="Invalid server address" textFill="#d32e2e" />
+         </children>
+      </VBox>
+      <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="2">
+         <children>
+            <TextField fx:id="portField" prefHeight="27.0" />
+            <Label fx:id="portFieldError" text="Invalid server port" textFill="#d32e2e" />
+         </children>
+      </VBox>
+      <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="3">
+         <children>
+            <TextField fx:id="emailField" />
+            <Label fx:id="emailFieldError" text="Invalid email" textFill="#d32e2e" />
+         </children>
+      </VBox>
    </children>
    <padding>
       <Insets bottom="40.0" left="30.0" right="30.0" top="40.0" />

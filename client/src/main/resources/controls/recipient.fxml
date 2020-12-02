@@ -13,7 +13,7 @@
       <graphic>
          <ImageView fitHeight="17.0" pickOnBounds="true" preserveRatio="true">
             <image>
-               <Image url="@../179347-control/png/cancel.png" />
+               <Image url="@../../../../../libs/src/main/resources/179347-control/png/cancel.png" />
             </image>
          </ImageView>
       </graphic>

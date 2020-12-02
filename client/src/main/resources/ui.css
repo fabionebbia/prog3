@@ -1,27 +1,12 @@
-.status-bar-label {
-    -fx-text-fill: #8f8f8f;
-}
-
-.status-bar-label--error {
-    -fx-text-fill: #db392c;
-}
-
-.status-circle--idle {
-    -fx-fill: #AAAAAA;
-}
-
-.status-circle--connected {
-    -fx-fill: #25a434;
-}
-
-.status-circle--unreachable-server {
-    -fx-fill: #db392c;
+#screen {
+    -fx-font-family: Arial;
+    -fx-font-size: 14px;
+    -fx-text-fill: #0c0c0c;
 }
 
 #toolbar > .button {
    -fx-background-color: transparent;
 }
-
 
 #toolbar > .button:hover {
     -fx-background-color: #f5f5f5;
@@ -34,4 +19,91 @@
 #toolbar,
 .tab-pane *.tab-header-background {
     -fx-background-color: #ededed;
+}
+
+/*************************************
+           E-mail List View
+ *************************************/
+
+.email-list-view {
+    -fx-selection-bar: transparent;
+    -fx-control-inner-background-alt: -fx-control-inner-background; /* remove alternate line color */
+}
+
+.email-list-view,
+.email-list-view .list-cell {
+    -fx-padding: 0;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+.email-preview {
+    -fx-padding: 12px 15px 12px 15px;
+    -fx-background-color: #f5f5f5;
+    //-fx-opacity: 0.7;
+}
+
+.email-preview .sender-label {
+    -fx-text-fill: #626262;
+    //-fx-font-size: 13px;
+}
+
+.email-preview .subject-label {
+    -fx-font-size: 15px;
+    -fx-text-fill: #006cb8;
+}
+
+.email-preview .datetime-label {
+    -fx-text-fill: #4f4f4f;
+}
+
+.email-preview .body-label {
+    -fx-text-fill: #777777;
+}
+
+.email-preview--unread {
+    -fx-background-color: #ffffff;
+}
+
+.email-preview--unread .sender-label,
+.email-preview--unread .datetime-label,
+.email-preview--unread .subject-label,
+.email-preview--unread .body-label {
+
+}
+
+.email-preview--unread .sender-label,
+.email-preview--unread .datetime-label,
+.email-preview--unread .subject-label {
+    -fx-font-weight: bold;
+}
+
+.email-preview--unread .subject-label {
+    -fx-font-size: 15px;
+    -fx-text-fill: #0075ca;
+}
+
+.email-preview--unread .datetime-label {
+    -fx-text-fill: #343434;
+    -fx-font-size: 15px;
+}
+
+.email-preview--unread .body-label {
+    -fx-text-fill: #535353;
+}
+
+.email-list-view .list-cell:hover .email-preview,
+.email-list-view .list-cell:hover .email-preview {
+    -fx-padding: 4px 7px 4px 7px;
+    -fx-border-width: 8px;
+    -fx-border-color: transparent transparent transparent #0093ff;
+    -fx-background-color: #ebf5ff;
+}
+
+.email-list-view .list-cell:filled:selected:focused .email-preview,
+.email-list-view .list-cell:filled:selected .email-preview {
+    -fx-background-color: #e7f5ff;
+    -fx-padding: 4px 7px 4px 7px;
+    -fx-border-width: 8px;
+    -fx-border-color: transparent transparent transparent #0093ff;
 }

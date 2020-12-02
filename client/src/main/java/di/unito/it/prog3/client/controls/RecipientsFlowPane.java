@@ -1,4 +1,4 @@
-package di.unito.it.prog3.libs.controls;
+package di.unito.it.prog3.client.controls;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ListProperty;

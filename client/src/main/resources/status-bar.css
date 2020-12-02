@@ -6,6 +6,7 @@
     -fx-text-fill: #db392c;
 }
 
+.status-circle,
 .status-circle--idle {
     -fx-fill: #AAAAAA;
 }

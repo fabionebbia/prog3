@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+
+<GridPane hgap="10.0" styleClass="email-preview" vgap="6.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
+   <columnConstraints>
+      <ColumnConstraints hgrow="ALWAYS" percentWidth="70.0" />
+      <ColumnConstraints percentWidth="30.0" />
+   </columnConstraints>
+   <rowConstraints>
+      <RowConstraints vgrow="NEVER" />
+      <RowConstraints vgrow="NEVER" />
+      <RowConstraints vgrow="NEVER" />
+   </rowConstraints>
+   <children>
+      <Label fx:id="fromLabel" styleClass="sender-label" text="sender@email.tld" GridPane.vgrow="NEVER">
+      </Label>
+      <Label fx:id="datetimeLabel" styleClass="datetime-label" text="11:54" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.vgrow="NEVER">
+      </Label>
+      <Label fx:id="subjectLabel" maxHeight="17.0" styleClass="subject-label" text="Subject" wrapText="true" GridPane.columnSpan="2" GridPane.rowIndex="1" GridPane.vgrow="NEVER">
+      </Label>
+      <Label fx:id="bodyLabel" maxHeight="17.0" styleClass="body-label" text="Body" wrapText="true" GridPane.columnSpan="2" GridPane.rowIndex="2" GridPane.vgrow="NEVER" />
+   </children>
+</GridPane>

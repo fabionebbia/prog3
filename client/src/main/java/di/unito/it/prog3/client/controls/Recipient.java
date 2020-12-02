@@ -1,4 +1,4 @@
-package di.unito.it.prog3.libs.controls;
+package di.unito.it.prog3.client.controls;
 
 import javafx.beans.property.StringProperty;
 import javafx.event.ActionEvent;
