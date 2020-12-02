@@ -10,10 +10,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
 
 import java.io.IOException;
 import java.util.List;
@@ -72,14 +70,6 @@ public class RecipientsFlowPane extends GridPane implements ListChangeListener<S
         // TODO remove (use css instead: some padding)
         if (children.size() > 0) setVgap(10);
         else setVgap(0);
-    }
-
-    private void trimChildren(int n) {
-        // TODO check n >= 0 && n < currentChildrenSize
-        ObservableList<Node> children = flowPane.getChildren();
-        if (n < children.size()) {
-            children.remove(n, children.size());
-        }
     }
 
     public ListProperty<String> recipientsProperty() {

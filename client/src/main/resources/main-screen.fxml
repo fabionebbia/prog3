@@ -3,15 +3,14 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
 
-
-<BorderPane fx:id="borderPane" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="di.unito.it.prog3.client.controllers.MainController">
+<BorderPane fx:id="borderPane" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
    <top>
       <VBox BorderPane.alignment="CENTER">
-         <fx:include fx:id="menuBar" source="menu-bar.fxml" />
-         <fx:include fx:id="toolbar" source="toolbar.fxml" />
+         <fx:include fx:id="menuBar" source="../menu-bar.fxml" />
+         <fx:include fx:id="toolbar" source="../toolbar.fxml" />
       </VBox>
    </top>
    <bottom>
-      <fx:include fx:id="statusBar" source="status-bar.fxml" />
+      <fx:include fx:id="statusBar" source="../status-bar.fxml" />
    </bottom>
 </BorderPane>

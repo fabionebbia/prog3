@@ -7,14 +7,16 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.shape.Circle?>
 
-<HBox spacing="7.0" stylesheets="@ui.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="di.unito.it.prog3.client.controllers.StatusBarController">
+<!-- fx:controller="di.unito.it.prog3.client.controllers.StatusBarController" -->
+
+<fx:root spacing="7.0" stylesheets="@status-bar.css" type="HBox" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
    <children>
-      <Circle fx:id="clientStatusCircle" fill="#21ab24" radius="5.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" styleClass="status-circle--grey">
+      <Circle fx:id="statusCircle" fill="#21ab24" radius="5.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" styleClass="status-circle--grey">
          <HBox.margin>
             <Insets top="8.0" />
          </HBox.margin>
       </Circle>
-      <Label fx:id="clientStatusLabel" maxHeight="25.0" minHeight="25.0" prefHeight="25.0" styleClass="status-bar-label" text="Status message" textFill="#888888" />
+      <Label fx:id="statusLabel" maxHeight="25.0" minHeight="25.0" prefHeight="25.0" styleClass="status-bar-label" text="Status message" textFill="#888888" />
       <Region HBox.hgrow="ALWAYS" />
       <Label fx:id="emailLabel" maxHeight="25.0" minHeight="25.0" prefHeight="25.0" styleClass="status-bar-label" text="user@domain.tld" textFill="#888888" />
       <Separator orientation="VERTICAL" />
@@ -23,4 +25,4 @@
    <padding>
       <Insets left="7.0" right="7.0" />
    </padding>
-</HBox>
+</fx:root>

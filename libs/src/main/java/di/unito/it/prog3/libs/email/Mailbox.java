@@ -12,7 +12,7 @@ public class Mailbox {
         this.domain = domain;
     }
 
-    public static Mailbox from(String email) {
+    public static Mailbox fromString(String email) {
         if (Emails.isWellFormed(email)) {
             String[] parts = email.split("@");
             return new Mailbox(parts[0], parts[1]);
