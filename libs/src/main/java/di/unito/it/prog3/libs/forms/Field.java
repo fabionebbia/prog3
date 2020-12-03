@@ -1,102 +1,163 @@
 package di.unito.it.prog3.libs.forms;
 
-import javafx.beans.binding.Bindings;
+import com.fasterxml.jackson.annotation.JsonValue;
+import di.unito.it.prog3.libs.forms.FormException.InvalidValueException;
+import di.unito.it.prog3.libs.utils.CssUtils;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextInputControl;
 
-public class Field<V> {
+public final class Field<V> {
 
-    private final FieldValidator<String, V> validator;
-    private final StringProperty textProperty;
-    private final BooleanProperty initialized;
+    private final BooleanProperty isInitialized;
     private final TextInputControl control;
-    private final ObjectProperty<V> value;
+    private final Validator<V> validator;
+    private final Enum<?> enumKey;
 
-    private FieldErrorHandler<V> errorHandler;
-    private Form.Key<?> key;
+    private final ObjectProperty<V> validatedValue;
 
-    public Field(TextInputControl control, FieldValidator<String, V> validator) {
+    private Label errorLabel;
+
+    Field(Enum<?> enumKey, TextInputControl control, Validator<V> validator, String initText) {
+        this.enumKey = enumKey;
         this.control = control;
         this.validator = validator;
+        this.isInitialized = new SimpleBooleanProperty();
+        this.validatedValue = new SimpleObjectProperty<>();
 
-        value = new SimpleObjectProperty<>();
-        initialized = new SimpleBooleanProperty();
+        control.textProperty().addListener(new InitializationListener());
 
-        textProperty = control.textProperty();
-
-        // resets control's text when the user corrects the input after a previous error
-        textProperty.addListener((observable, oldValue, newValue) -> {
-            initialized.set(true);
-
-            if (isInvalid().get()) {
-                textProperty.set(null);
-            }
-        });
-    }
-
-    public Field(TextInputControl control, FieldValidator<String, V> validator, String initText) {
-        this(control, validator);
         initialize(initText);
     }
 
-    public void initialize(String text) {
-        if (initialized.get()) {
-            throw new IllegalStateException("Field " + key + " already initialized");
-        }
-        textProperty.set(text);
-        validate();
+    Enum<?> getKey() {
+        return enumKey;
     }
 
-    public void setErrorHandler(FieldErrorHandler<V> errorHandler) {
-        this.errorHandler = errorHandler;
-    }
-
-    protected final void validate() {
-        String input = textProperty.get();
-
-        try {
-            V validated = validator.validate(input);
-            value.set(validated);
-        } catch (FormException e) {
-            if (errorHandler != null) {
-                errorHandler.handle(this);
-            } else {
-                throw e;
-            }
-        }
-    }
-
-    protected final TextInputControl getControl() {
+    TextInputControl getControl() {
         return control;
     }
 
-    public String getInput() {
-        return textProperty.get();
+    public Field<V> setErrorLabel(Label errorLabel) {
+        this.errorLabel = errorLabel;
+        CssUtils.ensureClassSet(errorLabel, "error-label");
+        CssUtils.ensureClassSetOnlyIf(errorLabel, "error-occurred", isInvalid());
+        return this;
     }
 
+    public Field<V> initialize(String text) {
+        if (text != null) {
+            if (!isInitialized.get()) {
+                control.setText(text);
+            } else {
+                throw new FormException(enumKey, "already initialized");
+            }
+        }
+        return this;
+    }
+
+    private BooleanBinding valid;
     public BooleanBinding isValid() {
-        return initialized.and(value.isNotNull());
+        if (valid == null) valid = isInitialized.not().or(validatedValue.isNotNull());
+        return valid;
     }
 
+    private BooleanBinding invalid;
     public BooleanBinding isInvalid() {
-        return isValid().not();
-    }
-
-    public BooleanBinding isInitialized() {
-        return Bindings.createBooleanBinding(initialized::get, initialized);
+        if (invalid == null) invalid = isValid().not();
+        return invalid;
     }
 
     protected boolean needsFocus() {
-        return isInitialized().not().or(isInvalid()).get();
+        System.out.println(isInitialized.not().get() + " " + isInvalid().get());
+        return isInitialized.not().and(isInvalid()).get();
     }
 
-    protected Form.Key<?> getKey() {
-        return key;
+    @JsonValue
+    private V getJsonSerialization() {
+        return validatedValue.get();
     }
 
-    protected void setKey(Form.Key<?> key) {
-        this.key = key;
+    protected String getJsonKey() {
+        StringBuilder sb = new StringBuilder();
+
+        String[] tokens = enumKey.name().split("_+");
+        sb.append(tokens[0]);
+
+        for(int i = 1; i < tokens.length; i++) {
+            String capitalizedToken = tokens[i]
+                    .substring(0, 1)
+                    .toUpperCase()
+                    .concat(tokens[i].substring(1));
+            sb.append(capitalizedToken);
+        }
+
+        return sb.toString();
     }
 
+
+    class InitializationListener implements ChangeListener<String> {
+
+        InitializationListener() {
+            isInitialized.set(false);
+        }
+
+        public void changed(ObservableValue<? extends String> observable, String oldInput, String newInput) {
+            control.textProperty().removeListener(this);
+            control.focusedProperty().addListener(new FieldChangeListener());
+        }
+    }
+
+
+    class FieldChangeListener implements ChangeListener<Boolean> {
+
+        private String previousInput;
+
+        @Override
+        public void changed(ObservableValue<? extends Boolean> observable, Boolean wasFocused, Boolean isFocused) {
+            if (isFocused) {
+                onFocusAcquired();
+            } else {
+                onFocusLost();
+            }
+        }
+
+        private void onFocusAcquired() {
+            // reset text if previous input was invalid so that the user
+            // can start typing without having to clear previous input himself
+            if (isInvalid().get()) {
+                control.setText(null);
+                control.focusedProperty().removeListener(this);
+                control.textProperty().addListener(new InitializationListener());
+            }
+        }
+
+        private void onFocusLost() {
+            String newInput = control.getText();
+            boolean hasInputChanged = previousInput == null || !previousInput.equals(newInput);
+
+            if (hasInputChanged) {
+                V newValidatedInput;
+                try {
+                    newValidatedInput = validator.validate(newInput);
+                    System.out.println("New validated input: " + newValidatedInput);
+                } catch (InvalidValueException e) {
+                    newValidatedInput = null;
+                    // TODO
+                    // System.out.println(new InvalidValueException(enumKey, e.getMessage()).getMessage());
+                    // e.rethrowIfKeyUnset(enumKey);
+                }
+
+                validatedValue.set(newValidatedInput);
+                previousInput = newInput;
+                isInitialized.set(true);
+            }
+        }
+    }
 }

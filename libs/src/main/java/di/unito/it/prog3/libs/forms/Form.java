@@ -1,56 +1,102 @@
 package di.unito.it.prog3.libs.forms;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import di.unito.it.prog3.libs.utils.Emails;
+import di.unito.it.prog3.libs.forms.FormException.InvalidValueException;
 import di.unito.it.prog3.libs.utils.Log;
 import javafx.application.Platform;
 import javafx.scene.control.Control;
 import javafx.scene.control.TextInputControl;
 
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
 
 public class Form<K extends Enum<K>> {
 
-    private final Map<Key<K>, Field<?>> fields;
-    private Callback submitCallback;
+    @JsonValue
+    private final Map<K, Field<?>> fields;
+
     private Control submitControl;
+
+    private final ObjectMapper json;
 
     public Form() {
         fields = new LinkedHashMap<>();
+        json = new ObjectMapper();
     }
 
-    /*
-    public <V> FormKey<V> add(TextInputControl control, String initInput, FieldValidator<String, V> validator) {
-        return add(new Field<>(control, validator, initInput));
+    public Field<String> registerString(K k, TextInputControl c, String initialValue) {
+        return register(k, c, s -> s, initialValue);
     }
 
-    public <V> FormKey<V> add(Field<V> field) {
-        return new FormKey<>(field);
+    public Field<String> registerString(K k, TextInputControl c) {
+        return registerString(k, c, null);
     }
 
-    return new FormKey<>() {
-        @Override
-        Field<V> getField() {
-            return field;
-        }
-    };
-    */
+    public Field<String> registerNonBlankString(K k, TextInputControl c, String initialValue) {
+        return register(k, c, this::ensureNonBlank, initialValue);
+    }
 
-    public <V> Field<V> add(K enumKey, Field<V> field) {
-        Key<K> key = new Key<>(enumKey);
+    public Field<String> registerNonBlankString(K k, TextInputControl c) {
+        return registerNonBlankString(k, c, null);
+    }
 
+    public Field<String> registerEmail(K k, TextInputControl c, String initialValue) {
+        return register(k, c, this::ensureEmail, initialValue);
+    }
+
+    public Field<String> registerEmail(K k, TextInputControl c) {
+        return registerEmail(k, c, null);
+    }
+
+    public Field<Integer> registerInteger(K k, TextInputControl c, String initialValue) {
+        return register(k, c, this::ensureInteger, initialValue);
+    }
+
+    public Field<Integer> registerInteger(K k, TextInputControl c, int initialValue) {
+        return registerInteger(k, c, String.valueOf(initialValue));
+    }
+
+    public Field<Integer> registerInteger(K k, TextInputControl c) {
+        return registerInteger(k, c, null);
+    }
+
+    public Field<Integer> registerBoundedInteger(K k, TextInputControl c, int min, int max, String initialValue) {
+        return register(k, c, s -> ensureBoundedInteger(s, min, max), initialValue);
+    }
+
+    public Field<Integer> registerBoundedInteger(K k, TextInputControl c, int min, int max, int initialValue) {
+        return registerBoundedInteger(k, c, min, max, String.valueOf(initialValue));
+    }
+
+    public Field<Integer> registerBoundedInteger(K k, TextInputControl c, int min, int max) {
+        return register(k, c, s -> ensureBoundedInteger(s, min, max), null);
+    }
+
+    // TODO initial value is ignored
+    private <V> Field<V> register(K key, TextInputControl control, Validator<V> validator, String initialValue) {
         if (fields.containsKey(key)) {
-            throw new FormException("Already managed field " + key);
+            throw new FormException(key, "is already managed");
         }
 
-        TextInputControl newControl = field.getControl();
-        for (Field<?> managedField : fields.values()) {
-            if (newControl.equals(managedField.getControl())) {
-                throw new FormException("Control already associated to " + key);
+        for (Field<?> wrapper : fields.values()) {
+            if (control.equals(wrapper.getControl())) {
+                throw new FormException("Control already associated to",  key);
             }
         }
 
+        Field<V> field = new Field<>(key, control, validator, initialValue);
         fields.put(key, field);
-
         return field;
+    }
+
+    public void setSubmitControl(Control submitControl) {
+        Objects.requireNonNull(submitControl);
+
+        this.submitControl = submitControl;
     }
 
     public void computeFocus() {
@@ -65,54 +111,45 @@ public class Form<K extends Enum<K>> {
         }
     }
 
-    /* Just like OpenJFX's FXMLLoader official implementation
-    // https://github.com/openjdk/jfx/blob/master/modules/javafx.fxml/src/main/java/javafx/fxml/FXMLLoader.java
-    @SuppressWarnings("unchecked")
-    public <C> C getFocus(E key) {
-        return (C) fields.get(key).getField().getControl();
-    }*/
-
-    public void setSubmitControl(Control submitControl) {
-        Objects.requireNonNull(submitControl);
-
-        this.submitControl = submitControl;
-    }
-
-    public void onSubmit(Callback submitCallback) {
-        Objects.requireNonNull(submitCallback);
-
-        if (this.submitCallback != null) {
-            Log.warn("Submit callback is being replaced");
-        }
-
-        this.submitCallback = submitCallback;
-    }
-
     public void submit() {
-        if (submitCallback == null) {
-            throw new IllegalStateException("Submit callback unset");
+        try {
+            String jsonString = json.writeValueAsString(this);
+            System.out.println(jsonString);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
         }
-
-        submitCallback.call();
 
         computeFocus();
     }
 
-    public static class Key<E extends Enum<E>> {
-        private E enumKey;
-
-        private Key(E enumKey) {
-            this.enumKey = enumKey;
+    private String ensureNonBlank(String s) {
+        if (s != null && !s.isBlank()) {
+            return s;
         }
+        throw new InvalidValueException("cannot be blank");
+    }
 
-        public E getEnumKey() {
-            return enumKey;
+    private int ensureInteger(String s) {
+        try {
+            return Integer.parseInt(s);
+        } catch (NumberFormatException ignored) {
+            throw new InvalidValueException("must be an integer");
         }
+    }
 
-        @Override
-        public String toString() {
-            return enumKey.name().replaceAll("_+", " ").toLowerCase();
+    private int ensureBoundedInteger(String s, int min, int max) {
+        int value = ensureInteger(s);
+        if (min <= value && value <= max) {
+            return value;
         }
+        throw new InvalidValueException("must be an integer between " + min + " and " + max);
+    }
+
+    private String ensureEmail(String s) {
+        if (Emails.isWellFormed(s)) {
+            return s;
+        }
+        throw new InvalidValueException("is malformed");
     }
 
 }

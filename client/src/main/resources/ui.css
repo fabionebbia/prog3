@@ -21,6 +21,15 @@
     -fx-background-color: #ededed;
 }
 
+.error-label {
+    -fx-text-fill: transparent;
+}
+
+.error-label.error-occurred {
+    -fx-text-fill: #d32e2e;
+}
+
+
 /*************************************
            E-mail List View
  *************************************/
