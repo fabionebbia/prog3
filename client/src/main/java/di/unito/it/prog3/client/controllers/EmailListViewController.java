@@ -23,7 +23,7 @@ public class EmailListViewController extends Controller implements EventHandler<
 
     @Override
     protected void setupControl() {
-        listView.itemsProperty().bind(model.emailsProperty());
+        //listView.itemsProperty().bind(model.emailsProperty());
         listView.setCellFactory(emailListView -> new EmailPreview());
         listView.setOnMouseClicked(this);
     }

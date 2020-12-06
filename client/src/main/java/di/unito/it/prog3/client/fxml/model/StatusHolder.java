@@ -2,17 +2,17 @@ package di.unito.it.prog3.client.fxml.model;
 
 import javafx.beans.property.*;
 
-public interface StatusHolder<T extends Enum<T> & BaseStatus> {
+public interface StatusHolder {
 
-    T getStatus();
+    BaseStatus getStatus();
 
-    void setStatus(T newStatus);
+    void setStatus(BaseStatus newStatus);
 
     ReadOnlyStringProperty statusMessageProperty();
 
-    ReadOnlyObjectProperty<T> statusProperty();
+    ReadOnlyObjectProperty<BaseStatus> statusProperty();
 
-    void onStatus(T status, OnStatusListener listener);
+    void onStatus(BaseStatus status, OnStatusListener listener);
 
     interface OnStatusListener {
         void perform();

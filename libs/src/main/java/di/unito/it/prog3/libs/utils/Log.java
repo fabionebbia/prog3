@@ -18,8 +18,10 @@ public class Log {
         print(WARN, message);
     }
 
+
     private static void print(String label, String message) {
         System.out.println(label + message);
         System.out.flush();
     }
+
 }

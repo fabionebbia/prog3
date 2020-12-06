@@ -16,9 +16,15 @@ import java.util.function.Predicate;
 public abstract class LocalFileBasedEmailStore extends FileBasedEmailStore {
 
 
-
     public LocalFileBasedEmailStore(String storeDir, String extension) {
         super(storeDir, extension);
+    }
+
+    @Override
+    public boolean userExists(String userMail) {
+        Path userStore = Paths.get(getStoreDir().toString(), userMail);
+        System.out.println(userStore);
+        return Files.exists(userStore);
     }
 
     @Override

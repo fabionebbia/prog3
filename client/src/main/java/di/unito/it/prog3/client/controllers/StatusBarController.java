@@ -1,13 +1,11 @@
 package di.unito.it.prog3.client.controllers;
 
+import di.unito.it.prog3.client.fxml.model.BaseStatus;
 import di.unito.it.prog3.client.screen.Controller;
-import di.unito.it.prog3.client.model.ClientStatus;
 import di.unito.it.prog3.libs.utils.CssUtils;
-import di.unito.it.prog3.libs.utils.CssUtils.Styler;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
@@ -17,7 +15,7 @@ import javafx.util.Duration;
 
 import static di.unito.it.prog3.client.model.ClientStatus.CONNECTED;
 
-public class StatusBarController extends Controller implements ChangeListener<ClientStatus> {
+public class StatusBarController extends Controller implements ChangeListener<BaseStatus> {
 
     private static final String BASE_CLASS = "status-circle";
     private static final String CONNECTED_MODIFIER = "connected";
@@ -62,10 +60,10 @@ public class StatusBarController extends Controller implements ChangeListener<Cl
         serverLabel.textProperty().bind(model.getClient().serverAddressProperty());
 
 
-        Styler.style(statusCircle).bindWithModifier(BASE_CLASS, model.clientStatusProperty());
+        // Styler.style(statusCircle).bindWithModifier(BASE_CLASS, model.clientStatusProperty());
     }
 
-    @Override
+    /*@Override
     public void changed(ObservableValue<? extends ClientStatus> observable,
                         ClientStatus oldStatus,
                         ClientStatus newStatus) {
@@ -74,6 +72,14 @@ public class StatusBarController extends Controller implements ChangeListener<Cl
         } else if (timeline.getStatus() == Animation.Status.RUNNING) {
             timeline.stop();
         }
-    }
+    }*/
 
+    @Override
+    public void changed(ObservableValue<? extends BaseStatus> observable, BaseStatus oldStatus, BaseStatus newStatus) {
+        if (newStatus == CONNECTED) {
+            timeline.playFromStart();
+        } else if (timeline.getStatus() == Animation.Status.RUNNING) {
+            timeline.stop();
+        }
+    }
 }

@@ -8,6 +8,8 @@ import java.util.List;
 
 public interface EmailStore {
 
+    boolean userExists(String userMail);
+
     void store(Email email) throws EmailStoreException;
 
     void delete(ID email) throws EmailStoreException;

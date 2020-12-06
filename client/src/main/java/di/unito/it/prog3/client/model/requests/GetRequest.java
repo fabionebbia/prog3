@@ -1,4 +1,4 @@
-package di.unito.it.prog3.libs.requests;
+package di.unito.it.prog3.client.model.requests;
 
 import di.unito.it.prog3.libs.email.Email.ID;
 

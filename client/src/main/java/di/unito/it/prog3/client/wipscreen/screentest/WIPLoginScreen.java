@@ -2,7 +2,6 @@ package di.unito.it.prog3.client.wipscreen.screentest;
 
 import di.unito.it.prog3.client.wipscreen.WIPScreen;
 import di.unito.it.prog3.client.wipscreen.WIPScreenManager;
-import di.unito.it.prog3.libs.utils.Input;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
@@ -15,7 +14,7 @@ import javafx.scene.input.KeyCode;
 
 import java.io.IOException;
 
-import static di.unito.it.prog3.client.model.Status.LOGIN_SUCCESS;
+import static di.unito.it.prog3.client.model.OldStatus.LOGIN_SUCCESS;
 
 public class WIPLoginScreen extends WIPScreen {
 

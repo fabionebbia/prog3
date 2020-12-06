@@ -1,4 +1,4 @@
-#screen {
+.scene {
     -fx-font-family: Arial;
     -fx-font-size: 14px;
     -fx-text-fill: #0c0c0c;
@@ -28,7 +28,6 @@
 .error-label.error-occurred {
     -fx-text-fill: #d32e2e;
 }
-
 
 /*************************************
            E-mail List View

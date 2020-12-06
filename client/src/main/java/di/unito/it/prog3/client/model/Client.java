@@ -1,43 +1,43 @@
 package di.unito.it.prog3.client.model;
 
+import di.unito.it.prog3.client.forms.LoginForm;
 import di.unito.it.prog3.client.fxml.model.BaseModel;
+import di.unito.it.prog3.libs.email.Email;
+import di.unito.it.prog3.libs.store.*;
+import di.unito.it.prog3.libs.utils.Emails;
 import javafx.application.Platform;
 import javafx.beans.property.*;
 
+import java.io.FileNotFoundException;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static di.unito.it.prog3.client.model.ClientStatus.CONNECTED;
 import static di.unito.it.prog3.client.model.ClientStatus.IDLE;
-import static di.unito.it.prog3.client.model.Status.*;
+import static di.unito.it.prog3.client.model.OldStatus.*;
 
-public class Client extends BaseModel<ClientStatus> {
+public class Client extends BaseModel implements EmailStore {
 
     private final Timer timer;
     private final Model model;
 
-    /*private final ReadOnlyStringWrapper serverAddress;
-    private final ValidableStringProperty serverUrl;
-    private final ValidableStringProperty serverPort;
-    private final ValidableStringProperty userEmail;*/
-
     private final ReadOnlyStringWrapper serverAddress;
     private final ReadOnlyStringWrapper userEmail;
+
+    private final EmailStore localStore;
 
     public Client(Model model) {
         super(IDLE);
         this.model = model;
+
         timer = new Timer();
+        userEmail = new ReadOnlyStringWrapper("");
+        serverAddress = new ReadOnlyStringWrapper("localhost:1919");
 
-        /*serverUrl = new LoginFormField(server, Input::isBlank, LOGIN_INVALID_SERVER_ADDRESS);
-        serverPort = new LoginFormField(port, Input::isPort, LOGIN_INVALID_SERVER_PORT);
-        userEmail = new LoginFormField(email, Input::isEmail, LOGIN_INVALID_EMAIL);
-
-        serverAddress = new ReadOnlyStringWrapper();
-        serverAddress.bind(Bindings.concat(serverUrl, ":", serverPort));*/
-
-        serverAddress = new ReadOnlyStringWrapper();
-        userEmail = new ReadOnlyStringWrapper();
+        localStore = new LocalJsonEmailStore("_store");
     }
 
     public void start() {
@@ -54,30 +54,49 @@ public class Client extends BaseModel<ClientStatus> {
        timer.schedule(blinkTask, 0, 2000);
     }
 
-    public void login(String server, int port, String email) {
-        System.out.println(email + "@" + server + ":" + port);
-        userEmail.set(server + ":" + port);
-        model.setStatus(LOGIN_SUCCESS);
-
-        /*
-        new ShortCircuitCombinedValidator<>()
-            .begin(serverAddress)
-                .check(Input::isBlank)
-                    .ifTrue(() -> model.setStatus(LOGIN_BLANK_SERVER_ADDRESS))
-            .next(serverPort)
-                .check(Input::isBlank)
-                    .ifTrue(() -> model.setStatus(LOGIN_BLANK_SERVER_PORT))
-                .check(Input::isPort)
-                    .ifTrue(() -> model.setStatus(LOGIN_MALFORMED_SERVER_PORT))
-            .next(userEmail)
-                .check(Input::isBlank)
-                    .ifTrue(() -> model.setStatus(LOGIN_BLANK_EMAIL))
-                .check(Emails::isWellFormed)
-                    .ifTrue(() -> model.setStatus(MALFORMED_EMAIL_ADDRESS))
-                    .ifFalse(() -> model.setStatus(LOGIN_SUCCESS));
-        */
+    private void fireIf(boolean condition, OldStatus status) {
+        model.fireIf(condition, status);
     }
 
+    private void fire(OldStatus status) {
+        model.fire(status);
+    }
+
+/*
+
+    public LoginForm.LoginResponse login(String server, int port, String email) {
+        fireIf(server != null && !server.isBlank(), LOGIN_INVALID_SERVER_ADDRESS);
+
+        fireIf(port < 1 || port > 65535, LOGIN_INVALID_SERVER_PORT);
+
+        fireIf(email == null || email.isBlank(),
+
+        if (email == null || email.isBlank()) {
+            model.emailInputStatus.set(EmailStatus.BLANK);
+        }
+        if (Emails.isWellFormed(email)) {
+            model.emailInputStatus.set(EmailStatus.MALFORMED);
+        }
+        if (!userExists(email)) {
+            model.emailInputStatus.set(EmailStatus.UNKNOWN);
+        }
+
+        if (userExists(email)) {
+            model.emailInputStatus.set(EmailStatus.UNKNOWN);
+            serverAddress.set(server + ":" + port);
+            userEmail.set(email);
+
+            model.setStatus(LOGIN_SUCCESS);
+        } else {
+            model.setStatus(LOGIN_UNKNOWN_USER);
+        }
+
+        if (callback != null) {
+            // callback.call(model.getStatus());
+            callback.call(model.getStatus());
+        }
+    }
+*/
     public ReadOnlyStringProperty serverAddressProperty() {
         return serverAddress.getReadOnlyProperty();
     }
@@ -88,6 +107,36 @@ public class Client extends BaseModel<ClientStatus> {
 
     public void shutdown() {
         timer.cancel();
+    }
+
+    @Override
+    public boolean userExists(String userMail) {
+        return localStore.userExists(userMail);
+    }
+
+    @Override
+    public void store(Email email) throws EmailStoreException {
+
+    }
+
+    @Override
+    public void delete(Email.ID email) throws EmailStoreException {
+
+    }
+
+    @Override
+    public Email read(Email.ID email) throws EmailStoreException, FileNotFoundException {
+        return null;
+    }
+
+    @Override
+    public List<Email> read(Email.ID offset, int many) throws EmailStoreException {
+        return null;
+    }
+
+    @Override
+    public List<Email> readAll(Queue queue) throws EmailStoreException {
+        return null;
     }
 
     /*

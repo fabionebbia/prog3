@@ -1,5 +1,6 @@
 package di.unito.it.prog3.client.fxml.model;
 
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
@@ -10,19 +11,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class BaseModel<T extends Enum<T> & BaseStatus> implements StatusHolder<T> {
+public class BaseModel implements StatusHolder {
 
-    private final ReadOnlyObjectWrapper<T> status;
+    private final ReadOnlyObjectWrapper<BaseStatus> status;
     private final ReadOnlyStringWrapper statusMessage;
-    private final Map<T, List<OnStatusListener>> onStatusListeners;
+    private final Map<BaseStatus, List<OnStatusListener>> onStatusListeners;
 
-    protected BaseModel(T initialStatus) {
+    protected BaseModel(BaseStatus initialStatus) {
         status = new ReadOnlyObjectWrapper<>(initialStatus);
         statusMessage = new ReadOnlyStringWrapper(initialStatus.getMessage());
         onStatusListeners = new HashMap<>();
 
         status.addListener((statusObservable, oldStatus, newStatus) -> {
             statusMessage.set(newStatus.getMessage());
+            System.out.println("aehwoeigjo");
 
             List<OnStatusListener> toBeCalled = onStatusListeners.get(newStatus);
             if (toBeCalled != null) toBeCalled.forEach(OnStatusListener::perform);
@@ -30,17 +32,17 @@ public class BaseModel<T extends Enum<T> & BaseStatus> implements StatusHolder<T
     }
 
     @Override
-    public T getStatus() {
+    public BaseStatus getStatus() {
         return status.get();
     }
 
     @Override
-    public void setStatus(T newStatus) {
-        status.set(newStatus);
+    public void setStatus(BaseStatus newStatus) {
+        Platform.runLater(() -> status.set(newStatus));
     }
 
     @Override
-    public void onStatus(T status, OnStatusListener listener) {
+    public void onStatus(BaseStatus status, OnStatusListener listener) {
         onStatusListeners.putIfAbsent(status, new ArrayList<>());
         onStatusListeners.get(status).add(listener);
     }
@@ -51,7 +53,8 @@ public class BaseModel<T extends Enum<T> & BaseStatus> implements StatusHolder<T
     }
 
     @Override
-    public ReadOnlyObjectProperty<T> statusProperty() {
+    public ReadOnlyObjectProperty<BaseStatus> statusProperty() {
         return status.getReadOnlyProperty();
     }
+
 }

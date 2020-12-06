@@ -17,6 +17,10 @@ public class FormException extends IllegalArgumentException {
         this(message + " " + getFieldName(key));
     }
 
+    FormException(FormCommitException e) {
+        super(e);
+    }
+
     private static String getName(Enum<?> key) {
         return key.name().replaceAll("_+", " ").toLowerCase();
     }
@@ -27,22 +31,12 @@ public class FormException extends IllegalArgumentException {
 
 
     public static class InvalidValueException extends IllegalArgumentException {
-        private final boolean hasKey;
-
         InvalidValueException(String message) {
             super(message);
-            hasKey = false;
         }
 
-        InvalidValueException(Enum<?> key, String message) {
-            super(Utils.toUpperFirst(FormException.getName(key)) + " " + message);
-            hasKey = true;
-        }
-
-        public void rethrowIfKeyUnset(Enum<?> enumKey) throws InvalidValueException{
-            if (!hasKey) {
-                throw new InvalidValueException(enumKey, getMessage());
-            }
+        public String computeErrorMessage(Enum<?> key) {
+            return Utils.toUpperFirst(FormException.getName(key)) + " " + getMessage();
         }
     }
 

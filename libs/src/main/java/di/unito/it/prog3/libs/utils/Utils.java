@@ -6,6 +6,7 @@ import javafx.beans.value.ObservableValue;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class Utils {
@@ -34,6 +35,24 @@ public class Utils {
 
     public static <E extends Enum<E>> String toTitleCase(E e) {
         return toTitleCase(e.name(), "_").replaceAll(" +", " ");
+    }
+
+
+    public static String toCamelCase(Enum<?> e) {
+        StringBuilder sb = new StringBuilder();
+
+        String[] tokens = e.name().toLowerCase().split("_+");
+        sb.append(tokens[0]);
+
+        for (int i = 1; i < tokens.length; i++) {
+            String capitalizedToken = tokens[i]
+                    .substring(0, 1)
+                    .toUpperCase()
+                    .concat(tokens[i].substring(1));
+            sb.append(capitalizedToken);
+        }
+
+        return sb.toString();
     }
 
 }

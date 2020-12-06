@@ -16,6 +16,10 @@ public abstract class FileBasedEmailStore implements EmailStore {
         this.extension = extension;
     }
 
+    protected Path getStoreDir() {
+        return storeDir;
+    }
+
     protected Path getPath(Email email) {
         return getPath(email.getId());
     }
