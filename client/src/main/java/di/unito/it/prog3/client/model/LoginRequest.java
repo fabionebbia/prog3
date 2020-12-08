@@ -1,40 +1,56 @@
 package di.unito.it.prog3.client.model;
 
-import di.unito.it.prog3.client.fxml.model.BaseStatus;
-import di.unito.it.prog3.client.model.requests.Response;
+import di.unito.it.prog3.client.forms.LoginForm;
+import di.unito.it.prog3.client.model.LoginRequest.LoginResponse;
+import di.unito.it.prog3.libs.communication.Request;
+import di.unito.it.prog3.libs.communication.Response;
 import di.unito.it.prog3.libs.model.Error;
 
 public class LoginRequest {
 
-    public enum LoginResponse implements Response, BaseStatus {
-        SUCCESS(false, "Successfully logged in"),
-        ALREADY_LOGGED_IN(true, "Already logged in"),
-        BLANK_EMAIL(true, "E-mail is required"),
-        MALFORMED_EMAIL(true, "Malformed e-mail address"),
-        UNKNOWN_EMAIL(true, "Unknown e-mail address"),
-        UNREACHABLE_SERVER(true, "Cannot reach server");
+    private final LoginForm form;
 
-        private final boolean isError;
-        private final String message;
+    public LoginRequest(LoginForm form) {
+        this.form = form;
+    }
 
-        LoginResponse(boolean isError, String message) {
-            this.isError = isError;
-            this.message = message;
+
+    public static class LoginResponse implements Response {
+
+        public static final LoginResponse SUCCESS            = new LoginResponse(false, "Successfully logged in");
+        public static final LoginResponse ALREADY_LOGGED_IN  = new LoginResponse(true, "Already logged in");
+        public static final LoginResponse BLANK_EMAIL        = new LoginResponse(true, "E-mail is required");
+        public static final LoginResponse MALFORMED_EMAIL    = new LoginResponse(true, "Malformed e-mail address");
+        public static final LoginResponse UNKNOWN_EMAIL      = new LoginResponse(true, "Unknown e-mail address");
+        public static final LoginResponse UNREACHABLE_SERVER = new LoginResponse(true, "Cannot reach server");
+
+        private Error error;
+        private String message;
+
+        private LoginResponse(boolean isError, String message) {
+            if (isError) {
+                error = createError(message);
+            } else {
+                this.message = message;
+            }
         }
 
         @Override
         public boolean isError() {
-            return isError;
+            return error != null;
+        }
+
+        public Error getError() {
+            return error;
         }
 
         @Override
         public String getMessage() {
-            return message;
+            return (message != null) ? message : error.getContent();
         }
 
-        @Override
-        public Error toError() {
-            return new Error("Error", "Could not login in", message);
+        private static Error createError(String message) {
+            return new Error("Login error", "Could not log in", message);
         }
     }
 

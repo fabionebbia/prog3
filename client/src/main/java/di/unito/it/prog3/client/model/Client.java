@@ -1,157 +1,78 @@
 package di.unito.it.prog3.client.model;
 
-import di.unito.it.prog3.client.forms.LoginForm;
-import di.unito.it.prog3.client.fxml.model.BaseModel;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import di.unito.it.prog3.libs.communication.net.requests.DeletionRequest;
+import di.unito.it.prog3.libs.communication.net.requests.LoginRequest;
+import di.unito.it.prog3.libs.communication.net.requests.Request;
+import di.unito.it.prog3.libs.communication.net.requests.TestConnection;
+import di.unito.it.prog3.libs.communication.net.responses.Response;
 import di.unito.it.prog3.libs.email.Email;
-import di.unito.it.prog3.libs.store.*;
-import di.unito.it.prog3.libs.utils.Emails;
+import di.unito.it.prog3.libs.store.EmailStore;
+import di.unito.it.prog3.libs.store.EmailStoreException;
+import di.unito.it.prog3.libs.store.Queue;
+import di.unito.it.prog3.libs.utils.Perform;
 import javafx.application.Platform;
-import javafx.beans.property.*;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.Objects;
 
-import static di.unito.it.prog3.client.model.ClientStatus.CONNECTED;
 import static di.unito.it.prog3.client.model.ClientStatus.IDLE;
-import static di.unito.it.prog3.client.model.OldStatus.*;
+import static di.unito.it.prog3.client.model.ClientStatus.UNREACHABLE_SERVER;
 
-public class Client extends BaseModel implements EmailStore {
+class Client {
 
-    private final Timer timer;
+    private final ReadOnlyObjectWrapper<ClientStatus> status;
+
     private final Model model;
 
-    private final ReadOnlyStringWrapper serverAddress;
-    private final ReadOnlyStringWrapper userEmail;
+    private String host;
+    private int port;
+    private String user;
 
-    private final EmailStore localStore;
+    private final ObjectMapper json;
 
     public Client(Model model) {
-        super(IDLE);
         this.model = model;
 
-        timer = new Timer();
-        userEmail = new ReadOnlyStringWrapper("");
-        serverAddress = new ReadOnlyStringWrapper("localhost:1919");
-
-        localStore = new LocalJsonEmailStore("_store");
+        status = new ReadOnlyObjectWrapper<>(IDLE);
+        json = new ObjectMapper();
     }
 
-    public void start() {
-        TimerTask blinkTask = new TimerTask() {
-            @Override
-            public void run() {
-                Platform.runLater(() -> {
-                    if (getStatus() == CONNECTED)
-                        setStatus(IDLE);
-                    else setStatus(CONNECTED);
-                });
-            }
-        };
-       timer.schedule(blinkTask, 0, 2000);
+    public Response login(String host, int port, String user) {
+        this.host = host;
+        this.port = port;
+        this.user = user;
+
+        return sendRequest(new LoginRequest(null /* TODO */));
     }
 
-    private void fireIf(boolean condition, OldStatus status) {
-        model.fireIf(condition, status);
-    }
+    public Response sendRequest(Request request) {
+        Objects.requireNonNull(request);
 
-    private void fire(OldStatus status) {
-        model.fire(status);
-    }
+        request.setUser(user);
 
-/*
-
-    public LoginForm.LoginResponse login(String server, int port, String email) {
-        fireIf(server != null && !server.isBlank(), LOGIN_INVALID_SERVER_ADDRESS);
-
-        fireIf(port < 1 || port > 65535, LOGIN_INVALID_SERVER_PORT);
-
-        fireIf(email == null || email.isBlank(),
-
-        if (email == null || email.isBlank()) {
-            model.emailInputStatus.set(EmailStatus.BLANK);
-        }
-        if (Emails.isWellFormed(email)) {
-            model.emailInputStatus.set(EmailStatus.MALFORMED);
-        }
-        if (!userExists(email)) {
-            model.emailInputStatus.set(EmailStatus.UNKNOWN);
-        }
-
-        if (userExists(email)) {
-            model.emailInputStatus.set(EmailStatus.UNKNOWN);
-            serverAddress.set(server + ":" + port);
-            userEmail.set(email);
-
-            model.setStatus(LOGIN_SUCCESS);
-        } else {
-            model.setStatus(LOGIN_UNKNOWN_USER);
-        }
-
-        if (callback != null) {
-            // callback.call(model.getStatus());
-            callback.call(model.getStatus());
+        try (Socket socket = new Socket(host, port)) {
+            // ok mapper.writeValue(socket.getOutputStream(), new LoginRequest("a@b.c"));
+            // ok mapper.writeValue(socket.getOutputStream(), new ReadRequest.ReadRequestSingle(Email.ID.fromString("a@b.c/R/0b94f5c6-bf38-4048-890d-72588641a405")));
+            // ok mapper.writeValue(socket.getOutputStream(), new ReadRequest.ReadRequestMany(Email.ID.fromString("a@b.c/R/0b94f5c6-bf38-4048-890d-72588641a405"), 5));
+            json.writeValue(socket.getOutputStream(), request);
+            return json.readValue(socket.getInputStream(), Response.class);
+        } catch (UnknownHostException e) {
+            throw new IllegalArgumentException("Invalid server address");
+        } catch (IOException e) {
+            Platform.runLater(() -> status.set(UNREACHABLE_SERVER));
+            throw new RuntimeException("Cannot reach server");
         }
     }
-*/
-    public ReadOnlyStringProperty serverAddressProperty() {
-        return serverAddress.getReadOnlyProperty();
+
+    protected ReadOnlyObjectProperty<ClientStatus> statusProperty() {
+        return status.getReadOnlyProperty();
     }
-
-    public ReadOnlyStringProperty userEmailProperty() {
-        return userEmail.getReadOnlyProperty();
-    }
-
-    public void shutdown() {
-        timer.cancel();
-    }
-
-    @Override
-    public boolean userExists(String userMail) {
-        return localStore.userExists(userMail);
-    }
-
-    @Override
-    public void store(Email email) throws EmailStoreException {
-
-    }
-
-    @Override
-    public void delete(Email.ID email) throws EmailStoreException {
-
-    }
-
-    @Override
-    public Email read(Email.ID email) throws EmailStoreException, FileNotFoundException {
-        return null;
-    }
-
-    @Override
-    public List<Email> read(Email.ID offset, int many) throws EmailStoreException {
-        return null;
-    }
-
-    @Override
-    public List<Email> readAll(Queue queue) throws EmailStoreException {
-        return null;
-    }
-
-    /*
-    private class LoginFormField extends ValidableStringProperty {
-        private final Status statusToBeSetOnInvalid;
-
-        LoginFormField(String initValue, Validator<String> validator, Status statusToBeSetOnInvalid) {
-            super(initValue, validator);
-            this.statusToBeSetOnInvalid = statusToBeSetOnInvalid;
-        }
-
-        @Override
-        public void onInvalid(String value) {
-            model.setStatus(statusToBeSetOnInvalid);
-        }
-    }*/
 
 }

@@ -1,11 +1,13 @@
 package di.unito.it.prog3.client.controls;
 
-import di.unito.it.prog3.libs.utils.CssUtils;
 import di.unito.it.prog3.libs.email.Email;
+import di.unito.it.prog3.libs.utils.Callback;
+import di.unito.it.prog3.libs.utils.CssUtils;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.GridPane;
 
 import java.io.IOException;
@@ -20,21 +22,21 @@ public class EmailPreview extends ListCell<Email> {
     private final DateTimeFormatter THIS_YEAR = DateTimeFormatter.ofPattern("d MMM");
     private final DateTimeFormatter PREVIOUS_YEAR = DateTimeFormatter.ofPattern("d MMM y");
 
-    @FXML
+    @FXML @SuppressWarnings("unused")
     private Label fromLabel;
 
-    @FXML
+    @FXML @SuppressWarnings("unused")
     private Label datetimeLabel;
 
-    @FXML
+    @FXML @SuppressWarnings("unused")
     private Label subjectLabel;
 
-    @FXML
+    @FXML @SuppressWarnings("unused")
     private Label bodyLabel;
 
-    private GridPane graphic;
+    private final GridPane graphic;
 
-    public EmailPreview() {
+    public EmailPreview(Callback.TypedCallback<Integer> doubleClickCallback) {
         try {
             /*
                 TODO which folder should this fxml file be located in?
@@ -43,6 +45,13 @@ public class EmailPreview extends ListCell<Email> {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/controls/email-preview.fxml"));
             loader.setController(this);
             graphic = loader.load();
+
+            setOnMouseClicked(mouseEvent -> {
+                if (mouseEvent.getButton().equals(MouseButton.PRIMARY) && mouseEvent.getClickCount() == 2) {
+                    doubleClickCallback.call(getIndex());
+
+                }
+            });
         } catch (IOException e) {
             throw new RuntimeException("Could not load email preview", e);
         }

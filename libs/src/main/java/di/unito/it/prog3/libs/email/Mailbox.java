@@ -1,5 +1,6 @@
 package di.unito.it.prog3.libs.email;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import di.unito.it.prog3.libs.utils.Emails;
 
 public class Mailbox {
@@ -12,6 +13,7 @@ public class Mailbox {
         this.domain = domain;
     }
 
+    @JsonCreator
     public static Mailbox fromString(String email) {
         if (Emails.isWellFormed(email)) {
             String[] parts = email.split("@");

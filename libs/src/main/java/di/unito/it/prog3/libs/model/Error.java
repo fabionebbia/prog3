@@ -1,8 +1,5 @@
 package di.unito.it.prog3.libs.model;
 
-import javafx.application.Platform;
-import javafx.scene.control.Alert;
-
 public class Error {
 
     private final String title;

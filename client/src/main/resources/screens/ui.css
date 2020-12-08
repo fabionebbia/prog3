@@ -29,6 +29,33 @@
     -fx-text-fill: #d32e2e;
 }
 
+
+/*************************************
+              Status bar
+ *************************************/
+
+.status-bar-label {
+    -fx-text-fill: #8f8f8f;
+}
+
+.status-bar-label--error {
+    -fx-text-fill: #db392c;
+}
+
+.status-circle,
+.status-circle--idle {
+    -fx-fill: #AAAAAA;
+}
+
+.status-circle--connected {
+    -fx-fill: #25a434;
+}
+
+.status-circle--unreachable-server {
+    -fx-fill: #db392c;
+}
+
+
 /*************************************
            E-mail List View
  *************************************/

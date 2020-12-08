@@ -6,7 +6,7 @@ import di.unito.it.prog3.libs.email.Email.ID;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public abstract class FileBasedEmailStore implements EmailStore {
+public abstract class FileBasedEmailStore extends LocalEmailStore {
 
     private final String extension;
     private final Path storeDir;

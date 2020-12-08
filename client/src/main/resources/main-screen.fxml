@@ -11,6 +11,6 @@
       </VBox>
    </top>-->
    <bottom>
-      <fx:include fx:id="statusBar" source="status-bar.fxml" />
+      <fx:include fx:id="statusBar" source="screens/main/status-bar.fxml" />
    </bottom>
 </BorderPane>

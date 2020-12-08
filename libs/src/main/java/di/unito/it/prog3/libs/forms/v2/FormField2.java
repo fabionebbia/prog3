@@ -1,10 +1,9 @@
 package di.unito.it.prog3.libs.forms.v2;
 
-import di.unito.it.prog3.libs.forms.Form;
 import di.unito.it.prog3.libs.utils.CssUtils;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
@@ -20,91 +19,89 @@ import java.util.function.Predicate;
 
 public abstract class FormField2 {
 
+    private final ReadOnlyBooleanWrapper hasError;
+    private final ReadOnlyBooleanWrapper userInteracted;
+
     private final Field classField;
-    private final BooleanProperty isValid;
     private final StringProperty errorMessage;
     private final List<Constraint> constraints;
-    private final BooleanProperty committed;
     private UserInteractionListener userInteractionListener;
-    private String initialText;
 
-    private Label errorLabel;
     private TextInputControl control;
+    private Label errorLabel;
+
 
     protected FormField2(Field classField, Constraint[] constraints) {
         this.classField = classField;
         this.constraints = new ArrayList<>();
         this.constraints.addAll(Arrays.asList(constraints));
 
-        isValid = new SimpleBooleanProperty();
         errorMessage = new SimpleStringProperty();
-        committed = new SimpleBooleanProperty();
-    }
 
-    protected String getKey() {
-        return classField.getName();
+        hasError = new ReadOnlyBooleanWrapper();
+        userInteracted = new ReadOnlyBooleanWrapper();
     }
 
     protected abstract Object getRefined(String input);
 
     protected void bindControl(TextInputControl control) {
         this.control = control;
-        if (initialText != null) {
-            control.setText(initialText);
-        }
         userInteractionListener = new UserInteractionListener();
         control.focusedProperty().addListener(userInteractionListener);
     }
 
-    public FormField2 attachErrorLabel(Label errorLabel) {
-        this.errorLabel = errorLabel;
-        errorLabel.textProperty().bind(errorMessage);
-        CssUtils.ensureClassSet(errorLabel, "error-label");
-        CssUtils.ensureClassSetOnlyIf(errorLabel, "error-occurred", isInvalid());
+    public FormField2 set(String text) {
+        if (control == null) {
+            throw new IllegalStateException("Cannot set unregistered form field");
+        }
+
+        control.setText(text);
+        userInteracted.set(true);
+        userInteractionListener.validate();
+
         return this;
     }
 
-    public FormField2 initialize(String text) {
-        if (text != null) {
-            if (committed.get()) {
-                // TODO throw new FormException(enumKey, "already initialized");
-            }
-            if (control != null) {
-                control.setText(text);
-            } else {
-                initialText = text;
-            }
-        }
+    public FormField2 attachErrorLabel(Label errorLabel) {
+        this.errorLabel = errorLabel;
+
+        errorLabel.textProperty().bind(errorMessage);
+        CssUtils.ensureClassSet(errorLabel, "error-label");
+        CssUtils.ensureClassSetOnlyIf(errorLabel, "error-occurred", hasError);
+
         return this;
     }
 
     public void setErrorMessage(String message) {
-        isValid.set(false);
+        hasError.set(true);
         errorMessage.set(message);
     }
 
-    public BooleanBinding isValid() {
-        return committed.not().or(isValid);
+    public ReadOnlyBooleanProperty hasError() {
+        return hasError.getReadOnlyProperty();
     }
 
-    public BooleanBinding isInvalid() {
-        return isValid().not();
+    /*public BooleanBinding canSubmit() {
+        userInteractionListener.validate();
+        return hasError.not();
+    }*/
+
+    protected boolean needsFocus() {
+        return hasError.get() || (!userInteracted.get() && constraints.contains(Constraints.REQUIRED));
+    }
+
+    protected String getKey() {
+        return classField.getName();
     }
 
     protected TextInputControl getControl() {
         return control;
     }
 
-    protected boolean needsFocus() {
-        return committed.not().or(isInvalid()).get();
-    }
-
     protected boolean commit(Form2 form) {
-        committed.set(true);
-        userInteractionListener.validate();
-        boolean validated = isValid.get();
+        boolean canCommit = !hasError.get();
 
-        if (validated) {
+        if (canCommit) {
             try {
                 classField.setAccessible(true);
                 classField.set(form, getRefined(control.getText()));
@@ -114,7 +111,7 @@ public abstract class FormField2 {
             }
         }
 
-        return validated;
+        return canCommit;
     }
 
     class UserInteractionListener implements ChangeListener<Boolean> {
@@ -137,7 +134,7 @@ public abstract class FormField2 {
         private void onFocusAcquired() {
             // reset text if previous input was invalid so that the user
             // can start typing without having to clear previous input himself
-            if (isInvalid().get()) {
+            if (hasError.get()) {
                 control.setText("");
             }
         }
@@ -150,18 +147,19 @@ public abstract class FormField2 {
             String newInput = control.getText();
 
             if (condition.test(newInput)) {
-                boolean result = constraints.isEmpty()
+                boolean isValid = constraints.isEmpty()
                         || constraints.stream()
                         .map(constraint -> constraint.test(newInput))
                         .reduce(true, (prev, curr) -> prev && curr);
 
-                if (!result) {
+
+                if (!isValid) {
                     String validationError = "some error"; // TODO e.computeErrorMessage(enumKey);
                     setErrorMessage(validationError);
                 }
 
-                isValid.set(result);
-                committed.set(true);
+                hasError.set(!isValid);
+                userInteracted.set(true);
                 previousInput = newInput;
             }
         }

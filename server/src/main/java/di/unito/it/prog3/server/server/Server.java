@@ -1,0 +1,77 @@
+package di.unito.it.prog3.server.server;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import di.unito.it.prog3.libs.communication.net.requests.DeletionRequest;
+import di.unito.it.prog3.libs.communication.net.requests.LoginRequest;
+import di.unito.it.prog3.libs.communication.net.requests.ReadMultipleRequest;
+import di.unito.it.prog3.libs.communication.net.requests.ReadSingleRequest;
+import di.unito.it.prog3.server.gui.Model;
+
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+public class Server implements Runnable {
+
+    private static final ObjectMapper json;
+
+    static {
+        json = new ObjectMapper();
+        json.registerSubtypes(
+                LoginRequest.class,
+                ReadSingleRequest.class,
+                ReadMultipleRequest.class,
+                DeletionRequest.class
+        );
+    }
+
+    private final AtomicBoolean shouldContinue;
+    private final ExecutorService executor;
+    private final Model model;
+    private final int port;
+
+    private ServerSocket serverSocket;
+
+    public Server(Model model, int port) {
+        this.model = model;
+        this.port = port;
+
+        shouldContinue = new AtomicBoolean(true);
+        executor = Executors.newFixedThreadPool(3);
+    }
+
+    @Override
+    public void run() {
+        try {
+            serverSocket = new ServerSocket(port);
+
+            while (shouldContinue.get()) {
+                Socket incoming = serverSocket.accept();
+                incoming.setSoTimeout(1000);
+                executor.submit(new SocketHandler(incoming));
+            }
+        } catch (SocketException ignored) {
+            // shutdown method closed the socket
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public synchronized void shutdown() throws IOException {
+        if (!shouldContinue.get()) {
+            throw new IllegalStateException("Server is not running");
+        }
+        shouldContinue.set(false);
+        serverSocket.close();
+        executor.shutdown();
+    }
+
+    public static ObjectMapper getObjectMapper() {
+        return json;
+    }
+
+}

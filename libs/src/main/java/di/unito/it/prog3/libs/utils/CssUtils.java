@@ -35,6 +35,7 @@ public class CssUtils {
     public static void toggleModifier(Styleable styleable, String cssBaseClass, String cssModifierClass) {
         String cssClass = cssBaseClass + "--" + cssModifierClass;
         ensureClassSetOnlyIf(styleable, cssClass, !hasClass(styleable, cssClass));
+        ensureClassSet(styleable, cssBaseClass);
     }
 
     public static void ensureClassSet(Styleable styleable, String... cssClasses) {

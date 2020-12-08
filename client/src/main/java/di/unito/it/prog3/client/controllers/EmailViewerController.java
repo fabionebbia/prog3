@@ -1,6 +1,7 @@
 package di.unito.it.prog3.client.controllers;
 
-import di.unito.it.prog3.client.screen.Controller;
+import di.unito.it.prog3.client.model.Model;
+import di.unito.it.prog3.libs.screen.Controller;
 import di.unito.it.prog3.client.controls.RecipientsFlowPane;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -18,7 +19,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.RowConstraints;
 import javafx.util.Duration;
 
-public class EmailViewerController extends Controller {
+public class EmailViewerController extends Controller<Model> {
 
     @FXML
     private RecipientsFlowPane recipientsFlowPane;

@@ -135,7 +135,7 @@ public class Email {
         return new Email();
     }
 
-    public class ID {
+    public static class ID {
 
         private final Mailbox mailbox;
         private final Queue queue;
@@ -160,7 +160,7 @@ public class Email {
         }
 
         @JsonCreator
-        private ID fromString(String str) {
+        public static ID fromString(String str) {
             String[] parts = str.split("/");
 
             if (parts.length == 3) {
@@ -184,7 +184,7 @@ public class Email {
         @Override
         @JsonValue
         public String toString() {
-            return mailbox + "/" + queue.asShortPath() + "/" + String.format("%04d", relativeId);
+            return mailbox + "/" + queue.asShortPath() + "/" + relativeId;
         }
     }
 

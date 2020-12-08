@@ -15,20 +15,18 @@ import java.util.function.Predicate;
 
 public abstract class LocalFileBasedEmailStore extends FileBasedEmailStore {
 
-
     public LocalFileBasedEmailStore(String storeDir, String extension) {
         super(storeDir, extension);
     }
 
     @Override
-    public boolean userExists(String userMail) {
+    public Boolean userExists(String userMail) {
         Path userStore = Paths.get(getStoreDir().toString(), userMail);
-        System.out.println(userStore);
         return Files.exists(userStore);
     }
 
     @Override
-    public void store(Email email) throws EmailStoreException {
+    public Void store(Email email) throws EmailStoreException {
         Path emailPath = getPath(email);
 
         Path queueDir = emailPath.getParent();
@@ -53,10 +51,12 @@ public abstract class LocalFileBasedEmailStore extends FileBasedEmailStore {
         } */
 
         serialize(email, emailPath);
+
+        return null;
     }
 
     @Override
-    public void delete(ID id) throws EmailStoreException {
+    public Void delete(ID id) throws EmailStoreException {
         Path path = getPath(id);
 
         if (!Files.exists(path)) {
@@ -68,6 +68,8 @@ public abstract class LocalFileBasedEmailStore extends FileBasedEmailStore {
         } catch (IOException e) {
             throw new EmailStoreException("Could not delete " + id, e);
         }
+
+        return null;
     }
 
     @Override

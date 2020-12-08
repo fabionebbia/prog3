@@ -1,6 +1,6 @@
 package di.unito.it.prog3.client.controllers;
 
-import di.unito.it.prog3.client.screen.Controller;
+import di.unito.it.prog3.libs.screen.Controller;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;

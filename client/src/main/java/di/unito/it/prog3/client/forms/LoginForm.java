@@ -11,7 +11,7 @@ public class LoginForm implements Form<LoginForm.Field>, Form2 {
     private String server;
 
     @Bounded(min = 1, max = 65535)
-    private Integer port;
+    private int port;
 
     @Email
     private String email;

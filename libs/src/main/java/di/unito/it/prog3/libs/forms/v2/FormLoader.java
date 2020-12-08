@@ -25,7 +25,7 @@ class FormLoader {
             FormField2 field;
             if (type == String.class) {
                 field = new StringField(classField, constraints);
-            } else if (type == Integer.class) {
+            } else if (type == int.class) {
                 field = new IntegerField(classField, constraints);
             } else {
                 throw new RuntimeException(); // TODO throw unsupported field type

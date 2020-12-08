@@ -1,7 +1,8 @@
 package di.unito.it.prog3.client.controllers;
 
 import di.unito.it.prog3.client.controls.EmailPreview;
-import di.unito.it.prog3.client.screen.Controller;
+import di.unito.it.prog3.client.model.Model;
+import di.unito.it.prog3.libs.screen.Controller;
 import di.unito.it.prog3.libs.email.Email;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -9,7 +10,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionModel;
 import javafx.scene.input.MouseEvent;
 
-public class EmailListViewController extends Controller implements EventHandler<MouseEvent> {
+public class EmailListViewController extends Controller<Model> implements EventHandler<MouseEvent> {
 
     @FXML
     private ListView<Email> listView;
@@ -23,9 +24,13 @@ public class EmailListViewController extends Controller implements EventHandler<
 
     @Override
     protected void setupControl() {
-        //listView.itemsProperty().bind(model.emailsProperty());
-        listView.setCellFactory(emailListView -> new EmailPreview());
+        listView.itemsProperty().bind(model.emailsProperty());
+        listView.setCellFactory(emailListView -> new EmailPreview(this::handleDoubleClick));
         listView.setOnMouseClicked(this);
+    }
+
+    private void handleDoubleClick(int itemIndex) {
+        System.out.println("Clicked " + itemIndex);
     }
 
     @Override
