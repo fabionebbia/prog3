@@ -2,6 +2,8 @@ package di.unito.it.prog3.client.controllers;
 
 import di.unito.it.prog3.client.forms.LoginForm;
 import di.unito.it.prog3.client.model.Model;
+import di.unito.it.prog3.libs.communication.net.responses.Response;
+import di.unito.it.prog3.libs.email.Queue;
 import di.unito.it.prog3.libs.screen.SuperController;
 import di.unito.it.prog3.libs.communication.ResponseHandler;
 import di.unito.it.prog3.libs.forms.v2.CommitHandler;
@@ -21,7 +23,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.stage.Screen;
 
 public class LoginScreenController extends SuperController<Model>
-                                   implements CommitHandler<LoginForm>, ResponseHandler<Boolean> {
+                                   implements CommitHandler<LoginForm>, ResponseHandler<Response> {
 
     private FormManager2<LoginForm> form;
 
@@ -83,8 +85,8 @@ public class LoginScreenController extends SuperController<Model>
     }
 
     @Override
-    public void onResponse(Boolean loggedIn) {
-        if (loggedIn) {
+    public void onResponse(Response response) {
+        if (response.success()) {
             screenManager.loadScene("main", parent -> {
                 Rectangle2D computerScreen = Screen.getPrimary().getBounds();
                 double width = computerScreen.getWidth() / 3;

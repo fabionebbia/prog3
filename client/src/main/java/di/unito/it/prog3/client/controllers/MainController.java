@@ -67,7 +67,7 @@ public class MainController extends SuperController<Model> {
 
     @Override
     protected void onFirstSet() {
-        loadView("list-view");
+        loadView("queues");
     }
 
     @Override

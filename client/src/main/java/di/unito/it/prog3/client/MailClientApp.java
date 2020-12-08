@@ -19,7 +19,7 @@ public class MailClientApp extends Application {
 
     @Override
     public void start(Stage stage) {
-        executor = Executors.newSingleThreadExecutor();
+        Perform.init(executor = Executors.newSingleThreadExecutor());
         ScreenManager<Model> screenManager = new ScreenManager<>(stage, new Model(executor));
 
         if (System.getProperty("auto-login") != null) {

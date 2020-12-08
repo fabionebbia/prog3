@@ -1,6 +1,7 @@
 package di.unito.it.prog3.server.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import di.unito.it.prog3.libs.communication.net.JsonMapper;
 import di.unito.it.prog3.libs.communication.net.requests.DeletionRequest;
 import di.unito.it.prog3.libs.communication.net.requests.LoginRequest;
 import di.unito.it.prog3.libs.communication.net.requests.ReadMultipleRequest;
@@ -17,10 +18,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Server implements Runnable {
 
-    private static final ObjectMapper json;
+    private static final JsonMapper json;
 
     static {
-        json = new ObjectMapper();
+        json = new JsonMapper();
         json.registerSubtypes(
                 LoginRequest.class,
                 ReadSingleRequest.class,
@@ -51,13 +52,18 @@ public class Server implements Runnable {
 
             while (shouldContinue.get()) {
                 Socket incoming = serverSocket.accept();
-                incoming.setSoTimeout(1000);
                 executor.submit(new SocketHandler(incoming));
             }
         } catch (SocketException ignored) {
             // shutdown method closed the socket
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                serverSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -70,7 +76,7 @@ public class Server implements Runnable {
         executor.shutdown();
     }
 
-    public static ObjectMapper getObjectMapper() {
+    public static JsonMapper getJsonMapper() {
         return json;
     }
 

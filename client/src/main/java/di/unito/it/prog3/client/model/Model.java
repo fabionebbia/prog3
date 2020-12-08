@@ -1,19 +1,16 @@
 package di.unito.it.prog3.client.model;
 
 import di.unito.it.prog3.client.fxml.model.EmailProperty;
-import di.unito.it.prog3.libs.communication.net.requests.LoginRequest;
-import di.unito.it.prog3.libs.communication.net.requests.Request;
 import di.unito.it.prog3.libs.communication.net.responses.Response;
 import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.email.Mailbox;
+import di.unito.it.prog3.libs.email.Queue;
 import di.unito.it.prog3.libs.exceptions.MalformedEmailAddressException;
-import di.unito.it.prog3.libs.store.Queue;
 import di.unito.it.prog3.libs.utils.Emails;
 import di.unito.it.prog3.libs.utils.Perform;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 public class Model {

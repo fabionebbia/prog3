@@ -2,11 +2,13 @@ package di.unito.it.prog3.libs.utils;
 
 import di.unito.it.prog3.libs.communication.Request;
 import di.unito.it.prog3.libs.communication.RequestCallback;
+import di.unito.it.prog3.libs.communication.ResponseHandler;
 import di.unito.it.prog3.libs.communication.net.responses.Response;
 import javafx.application.Platform;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Supplier;
 
 public final class Perform {
 
@@ -39,6 +41,18 @@ public final class Perform {
                 Platform.runLater(() -> callback.onResponse(response));
             } catch (Exception e) {
                 Platform.runLater(() -> callback.onError(e));
+            }
+        });
+    }
+
+    public static void async(Supplier<Response> request,
+                             ResponseHandler<Response> responseHandler) {
+        submit(() -> {
+            try {
+                Response response = request.get();
+                Platform.runLater(() -> responseHandler.onResponse(response));
+            } catch (Exception e) {
+                Platform.runLater(() -> responseHandler.onError(e));
             }
         });
     }

@@ -1,12 +1,17 @@
 package di.unito.it.prog3.libs.email;
 
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonValue;
 import di.unito.it.prog3.libs.exceptions.MalformedEmailIDException;
-import di.unito.it.prog3.libs.store.Queue;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
 @JsonAutoDetect(fieldVisibility = Visibility.ANY)
 public class Email {

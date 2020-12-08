@@ -1,7 +1,7 @@
 package di.unito.it.prog3.server.gui;
 
-import di.unito.it.prog3.libs.store.EmailStore;
-import di.unito.it.prog3.libs.store.LocalJsonEmailStore;
+import di.unito.it.prog3.server.storage.EmailStore;
+import di.unito.it.prog3.server.storage.LocalJsonEmailStore;
 import javafx.beans.property.ReadOnlyListProperty;
 import javafx.beans.property.ReadOnlyListWrapper;
 import javafx.collections.FXCollections;
