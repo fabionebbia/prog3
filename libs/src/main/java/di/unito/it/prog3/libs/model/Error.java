@@ -1,5 +1,8 @@
 package di.unito.it.prog3.libs.model;
 
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+
 public class Error {
 
     private final String title;
@@ -22,6 +25,17 @@ public class Error {
 
     public String getContent() {
         return content;
+    }
+
+    public void display() {
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.initOwner(null);
+            alert.setTitle(title);
+            alert.setHeaderText(header);
+            alert.setContentText(content);
+            alert.showAndWait();
+        });
     }
 
 }

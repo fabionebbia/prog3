@@ -1,9 +1,7 @@
 package di.unito.it.prog3.client.model;
 
 import di.unito.it.prog3.client.forms.LoginForm;
-import di.unito.it.prog3.client.model.LoginRequest.LoginResponse;
-import di.unito.it.prog3.libs.communication.Request;
-import di.unito.it.prog3.libs.communication.Response;
+import di.unito.it.prog3.libs.net.Response;
 import di.unito.it.prog3.libs.model.Error;
 
 public class LoginRequest {

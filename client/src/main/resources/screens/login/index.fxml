@@ -35,17 +35,17 @@
                 <Insets bottom="20.0" />
             </padding>
         </Label>
-        <Label alignment="CENTER_RIGHT" text="Server:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.valignment="TOP">
+        <Label alignment="CENTER_RIGHT" styleClass="label-bold" text="Server:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.valignment="TOP">
             <GridPane.margin>
                 <Insets top="5.0" />
             </GridPane.margin>
       </Label>
-        <Label text="E-mail:" GridPane.halignment="RIGHT" GridPane.rowIndex="3" GridPane.valignment="TOP">
+        <Label styleClass="label-bold" text="E-mail:" GridPane.halignment="RIGHT" GridPane.rowIndex="3" GridPane.valignment="TOP">
             <GridPane.margin>
                 <Insets top="5.0" />
             </GridPane.margin></Label>
         <Button fx:id="submitButton" mnemonicParsing="false" onAction="#submit" text="Connect" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="4" />
-        <Label text="Port:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.valignment="TOP">
+        <Label styleClass="label-bold" text="Port:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.valignment="TOP">
             <GridPane.margin>
                 <Insets top="5.0" />
             </GridPane.margin>

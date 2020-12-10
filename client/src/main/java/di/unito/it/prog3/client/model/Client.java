@@ -1,11 +1,13 @@
 package di.unito.it.prog3.client.model;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import di.unito.it.prog3.libs.communication.net.JsonMapper;
-import di.unito.it.prog3.libs.communication.net.requests.LoginRequest;
-import di.unito.it.prog3.libs.communication.net.requests.Request;
-import di.unito.it.prog3.libs.communication.net.responses.Response;
+import di.unito.it.prog3.libs.net.JsonMapper;
+import di.unito.it.prog3.libs.net.requests.LoginRequest;
+import di.unito.it.prog3.libs.net.requests.Request;
+import di.unito.it.prog3.libs.net.responses.Response;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 
@@ -16,10 +18,9 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Objects;
 
-import static di.unito.it.prog3.client.model.ClientStatus.IDLE;
-import static di.unito.it.prog3.client.model.ClientStatus.UNREACHABLE_SERVER;
+import static di.unito.it.prog3.client.model.ClientStatus.*;
 
-class Client {
+public class Client {
 
     private final ReadOnlyObjectWrapper<ClientStatus> status;
 
@@ -31,14 +32,14 @@ class Client {
 
     private final JsonMapper json;
 
-    public Client(Model model) {
+    Client(Model model) {
         this.model = model;
 
         status = new ReadOnlyObjectWrapper<>(IDLE);
         json = new JsonMapper();
     }
 
-    public Response login(String host, int port, String user) {
+    Response login(String host, int port, String user) {
         this.host = host;
         this.port = port;
         this.user = user;
@@ -46,7 +47,7 @@ class Client {
         return sendRequest(new LoginRequest(null /* TODO */));
     }
 
-    public Response sendRequest(Request request) {
+     Response sendRequest(Request request) {
         Objects.requireNonNull(request, "Empty request");
 
         request.setUser(user);
@@ -56,8 +57,14 @@ class Client {
                 InputStreamReader inputStreamReader = new InputStreamReader(socket.getInputStream());
                 BufferedReader bufferedReader = new BufferedReader(inputStreamReader)
         ) {
+            Platform.runLater(() -> status.set(CONNECTED));
+
             json.writeValue(socket.getOutputStream(), request);
-            return json.readValue(bufferedReader, Response.class);
+            Response response = json.readValue(bufferedReader, Response.class);
+
+            Platform.runLater(() -> status.set(IDLE));
+
+            return response;
         } catch (UnknownHostException e) {
             throw new IllegalArgumentException("Invalid server address");
         } catch (IOException e) {
@@ -67,8 +74,12 @@ class Client {
         }
     }
 
-    protected ReadOnlyObjectProperty<ClientStatus> statusProperty() {
+    public ReadOnlyObjectProperty<ClientStatus> statusProperty() {
         return status.getReadOnlyProperty();
+    }
+
+    public BooleanBinding connectedProperty() {
+        return Bindings.createBooleanBinding(() -> status.get().equals(CONNECTED), status);
     }
 
 }

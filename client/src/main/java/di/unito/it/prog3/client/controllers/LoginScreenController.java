@@ -1,31 +1,28 @@
 package di.unito.it.prog3.client.controllers;
 
 import di.unito.it.prog3.client.forms.LoginForm;
-import di.unito.it.prog3.client.model.Model;
-import di.unito.it.prog3.libs.communication.net.responses.Response;
-import di.unito.it.prog3.libs.email.Queue;
-import di.unito.it.prog3.libs.screen.SuperController;
-import di.unito.it.prog3.libs.communication.ResponseHandler;
+import di.unito.it.prog3.client.screen.Controller;
+import di.unito.it.prog3.libs.net.ResponseHandler;
+import di.unito.it.prog3.libs.net.responses.Response;
 import di.unito.it.prog3.libs.forms.v2.CommitHandler;
 import di.unito.it.prog3.libs.forms.v2.FormField2;
 import di.unito.it.prog3.libs.forms.v2.FormManager2;
 import di.unito.it.prog3.libs.model.Error;
+import di.unito.it.prog3.libs.utils.Callback;
 import di.unito.it.prog3.libs.utils.Perform;
 import javafx.event.Event;
 import javafx.fxml.FXML;
-import javafx.geometry.Rectangle2D;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.stage.Screen;
 
-public class LoginScreenController extends SuperController<Model>
+public class LoginScreenController extends Controller
                                    implements CommitHandler<LoginForm>, ResponseHandler<Response> {
 
     private FormManager2<LoginForm> form;
+    private Callback successCallback;
 
     @FXML private TextField serverField;
     @FXML private TextField portField;
@@ -84,15 +81,16 @@ public class LoginScreenController extends SuperController<Model>
         Perform.async(() -> model.login(server, port, user), this);
     }
 
+    public void onSuccessfulLogin(Callback successCallback) { // TODO check already set
+        this.successCallback = successCallback;
+    }
+
     @Override
     public void onResponse(Response response) {
         if (response.success()) {
-            screenManager.loadScene("main", parent -> {
-                Rectangle2D computerScreen = Screen.getPrimary().getBounds();
-                double width = computerScreen.getWidth() / 3;
-                double height = computerScreen.getHeight();
-                return new Scene(parent, width, height);
-            });
+            if (successCallback != null) {
+                successCallback.call();
+            }
         } else {
             onError(new Exception("Unknown error"));
         }
@@ -100,7 +98,7 @@ public class LoginScreenController extends SuperController<Model>
 
     @Override
     public void onError(Throwable e) {
-        screenManager.displayError(new Error("Login error", "Could not login", e.getMessage()));
+        new Error("Login error", "Could not login", e.getMessage()).display();
     }
 
 }

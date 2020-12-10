@@ -1,7 +1,12 @@
-.scene {
+.scene,
+.scene .label {
     -fx-font-family: Arial;
-    -fx-font-size: 14px;
+    -fx-font-size: 15px;
     -fx-text-fill: #0c0c0c;
+}
+
+.label-bold {
+    -fx-font-weight: bold;
 }
 
 #toolbar > .button {
@@ -34,12 +39,8 @@
               Status bar
  *************************************/
 
-.status-bar-label {
+#status-bar .label {
     -fx-text-fill: #8f8f8f;
-}
-
-.status-bar-label--error {
-    -fx-text-fill: #db392c;
 }
 
 .status-circle,
@@ -70,6 +71,7 @@
     -fx-padding: 0;
     -fx-focus-color: transparent;
     -fx-faint-focus-color: transparent;
+    -fx-background-color: transparent;
 }
 
 .email-preview {
@@ -84,7 +86,7 @@
 }
 
 .email-preview .subject-label {
-    -fx-font-size: 15px;
+    -fx-font-size: 16px;
     -fx-text-fill: #006cb8;
 }
 

@@ -1,53 +1,47 @@
 package di.unito.it.prog3.client.model;
 
-import di.unito.it.prog3.client.fxml.model.EmailProperty;
-import di.unito.it.prog3.libs.communication.net.responses.Response;
+import di.unito.it.prog3.libs.net.requests.DeletionRequest;
+import di.unito.it.prog3.libs.net.requests.StoreRequest;
+import di.unito.it.prog3.libs.net.responses.Response;
 import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.email.Mailbox;
 import di.unito.it.prog3.libs.email.Queue;
 import di.unito.it.prog3.libs.exceptions.MalformedEmailAddressException;
+import di.unito.it.prog3.libs.model.EmailProperty;
 import di.unito.it.prog3.libs.utils.Emails;
-import di.unito.it.prog3.libs.utils.Perform;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.*;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
-import java.util.concurrent.ExecutorService;
+import java.util.ArrayList;
+import java.util.UUID;
 
 public class Model {
 
     // Login
-    private final ReadOnlyStringWrapper serverURL;
+    private final ReadOnlyStringWrapper server;
     private final ReadOnlyStringWrapper user;
 
-    private final ListProperty<Email> emails;
+    private final UserQueueHolder userQueueHolder;
     private final EmailProperty currentEmail;
 
     private final Client client;
 
     private boolean loggedIn;
 
-    private final ExecutorService executor;
 
-    public Model(ExecutorService executor) {
-        this.executor = executor;
-
+    public Model() {
         client = new Client(this);
 
         // Login
-        serverURL = new ReadOnlyStringWrapper();
+        server = new ReadOnlyStringWrapper();
         user = new ReadOnlyStringWrapper();
 
         currentEmail = new EmailProperty();
 
-        Email e = new Email();
-        e.setSender(Mailbox.fromString("a@b.c"));
-        e.setQueue(Queue.RECEIVED);
-        e.setSubject("Subject");
-        e.setBody("Body");
-        e.setMailbox(Mailbox.fromString("tmp@lacrime.assai"));
-        e.timestamp();
-
-        emails = new SimpleListProperty<>(FXCollections.observableArrayList(e));
+        userQueueHolder = new UserQueueHolder();
     }
 
     public Response login(String host, int port, String user) {
@@ -73,31 +67,92 @@ public class Model {
 
         Response response = client.login(host, port, user);
 
-        this.serverURL.set(host + ":" + port);
-        this.user.set(user);
-        loggedIn = true;
+        if (response.success()) {
+            Email.ID sentEmailId = Email.ID.fromString("me@email.tld/S/" + UUID.randomUUID().toString());
+            Email.ID receivedReplyId = Email.ID.fromString("me@email.tld/R/" + UUID.randomUUID().toString());
+
+            Email sentEmail = new Email();
+            sentEmail.setId(sentEmailId);
+            sentEmail.setSender(Mailbox.fromString("me@email.tld"));
+            sentEmail.setSubject("This is my original message");
+            sentEmail.setBody("With its interesting body");
+            sentEmail.addRecipient(Mailbox.fromString("someone@email.tld"));
+            sentEmail.timestamp();
+            sentEmail.addReply(receivedReplyId);
+
+            Email receivedReply = new Email();
+            receivedReply.setId(receivedReplyId);
+            receivedReply.setSender(Mailbox.fromString("someone@email.tld"));
+            receivedReply.setSubject("This is someone else's reply");
+            receivedReply.setBody("With its interesting body too");
+            receivedReply.addRecipient(Mailbox.fromString("me@email.tld"));
+            receivedReply.addRecipient(Mailbox.fromString("whoknows@email.tld"));
+            receivedReply.timestamp();
+            receivedReply.setReplyOf(sentEmailId);
+
+            ArrayList<Email> tmp = new ArrayList<>();
+            tmp.add(sentEmail);
+            tmp.add(receivedReply);
+            userQueueHolder.init(user, new SimpleListProperty<>(FXCollections.observableList(tmp)));
+            loggedIn = true;
+            this.server.set(host + ":" + port);
+            this.user.set(user);
+        }
 
         return response;
+    }
+
+    public Client getClient() {
+        return client;
+    }
+
+    public void setCurrentEmail(Email email) {
+        currentEmail.set(email);
+    }
+
+    public void unsetCurrentEmail() {
+        setCurrentEmail(null);
+    }
+
+    public BooleanBinding isCurrentEmailSet() {
+        return currentEmail.isNotNull();
+    }
+
+    public Response send() {
+        StoreRequest request = new StoreRequest(
+                currentEmail.recipientsProperty().get(),
+                currentEmail.subjectProperty().get(),
+                currentEmail.bodyProperty().get()
+        );
+        return client.sendRequest(request);
+    }
+
+    public Response delete() {
+        return client.sendRequest(new DeletionRequest(currentEmail.get().getId()));
     }
 
     public ReadOnlyObjectProperty<ClientStatus> clientStatusProperty() {
         return client.statusProperty();
     }
 
-    public ListProperty<Email> emailsProperty() {
-        return emails;
-    }
-
     public EmailProperty currentEmailProperty() {
         return currentEmail;
     }
 
-    public ReadOnlyStringProperty serverURLProperty() {
-        return serverURL.getReadOnlyProperty();
+    public ReadOnlyStringProperty serverProperty() {
+        return server.getReadOnlyProperty();
     }
 
     public ReadOnlyStringProperty userProperty() {
         return user.getReadOnlyProperty();
+    }
+
+    public ObservableValue<ObservableList<Email>> receivedQueue() {
+        return userQueueHolder.getQueue(Queue.RECEIVED);
+    }
+
+    public ObservableValue<ObservableList<Email>> sentQueue() {
+        return userQueueHolder.getQueue(Queue.SENT);
     }
 
 }

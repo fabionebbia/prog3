@@ -1,8 +1,11 @@
 package di.unito.it.prog3.client;
 
+import di.unito.it.prog3.client.controllers.LoginScreenController;
+import di.unito.it.prog3.client.controllers.MainController;
 import di.unito.it.prog3.client.model.Model;
-import di.unito.it.prog3.libs.screen.ScreenManager;
+import di.unito.it.prog3.libs.utils.FXWrapper;
 import di.unito.it.prog3.libs.utils.Perform;
+import di.unito.it.prog3.libs.utils.WrappedFXMLLoader;
 import javafx.application.Application;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
@@ -16,24 +19,33 @@ import java.util.concurrent.Executors;
 public class MailClientApp extends Application {
 
     private ExecutorService executor;
+    private Stage stage;
 
     @Override
-    public void start(Stage stage) {
+    public void start(Stage stage) throws Exception {
+        this.stage = stage;
+
         Perform.init(executor = Executors.newSingleThreadExecutor());
-        ScreenManager<Model> screenManager = new ScreenManager<>(stage, new Model(executor));
+        Model model = new Model();
 
-        if (System.getProperty("auto-login") != null) {
-            screenManager.loadScene("main", parent -> {
-                Rectangle2D computerScreen = Screen.getPrimary().getBounds();
-                double width = computerScreen.getWidth() / 3;
-                double height = computerScreen.getHeight();
-                return new Scene(parent, width, height);
-            });
-        } else {
-            screenManager.loadScene("login");
-        }
+        WrappedFXMLLoader loader = new WrappedFXMLLoader();
 
-        screenManager.show();
+        FXWrapper<MainController> main = loader.load("/screens/main/index.fxml");
+        Rectangle2D screenBounds = Screen.getPrimary().getBounds();
+        double screenWidth = screenBounds.getWidth();
+        double screenHeight = screenBounds.getHeight();
+        Scene mainScene = new Scene(main.getContent(), screenWidth / 3, screenHeight);
+
+        FXWrapper<LoginScreenController> login = loader.load("/screens/login/index.fxml");
+        Scene loginScene = new Scene(login.getContent());
+
+        login.getController().init(model);
+        login.getController().onSuccessfulLogin(() -> stage.setScene(mainScene));
+
+        main.getController().init(model);
+
+        stage.setScene(loginScene);
+        stage.show();
     }
 
     @Override

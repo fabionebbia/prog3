@@ -1,26 +1,99 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.Separator?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.shape.Circle?>
 
-
-<BorderPane fx:id="container" stylesheets="@../ui.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="di.unito.it.prog3.client.controllers.MainController">
-    <bottom>
-        <HBox spacing="7.0" stylesheets="@../../status-bar.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<BorderPane fx:id="borderPane" styleClass="scene" stylesheets="@../ui.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="di.unito.it.prog3.client.controllers.MainController">
+    <top>
+        <HBox id="toolbar" spacing="15.0">
             <children>
-                <Circle fx:id="statusCircle" fill="#21ab24" radius="5.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0">
+            <Button fx:id="backButton" contentDisplay="TOP" mnemonicParsing="false" onAction="#back" text="Back">
+               <graphic>
+                  <ImageView fitHeight="30.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../../786392-user-interface/png/007-back.png" />
+                     </image>
+                  </ImageView>
+               </graphic>
+            </Button>
+                <Button fx:id="writeButton" contentDisplay="TOP" mnemonicParsing="false" onAction="#write" text="Write">
+                    <graphic>
+                        <ImageView fitHeight="30.0" pickOnBounds="true" preserveRatio="true">
+                            <image>
+                                <Image url="@../../893229-email/png/041-email-2.png" />
+                            </image>
+                        </ImageView>
+                    </graphic>
+                </Button>
+                <Button fx:id="forwardButton" contentDisplay="TOP" mnemonicParsing="false" onAction="#forward" text="Forward">
+                    <graphic>
+                        <ImageView fitHeight="30.0" pickOnBounds="true" preserveRatio="true">
+                            <image>
+                                <Image url="@../../893229-email/png/010-email-25.png" />
+                            </image>
+                        </ImageView>
+                    </graphic>
+                </Button>
+                <Button fx:id="replyButton" contentDisplay="TOP" mnemonicParsing="false" onAction="#reply" text="Reply">
+                    <graphic>
+                        <ImageView fitHeight="30.0" pickOnBounds="true" preserveRatio="true">
+                            <image>
+                                <Image url="@../../893229-email/png/008-reply.png" />
+                            </image>
+                        </ImageView>
+                    </graphic>
+                </Button>
+                <Button fx:id="replyAllButton" contentDisplay="TOP" mnemonicParsing="false" onAction="#replyAll" text="Reply All">
+                    <graphic>
+                        <ImageView fitHeight="30.0" pickOnBounds="true" preserveRatio="true">
+                            <image>
+                                <Image url="@../../893229-email/png/009-reply-all.png" />
+                            </image>
+                        </ImageView>
+                    </graphic>
+                </Button>
+                <Button fx:id="sendButton" contentDisplay="TOP" mnemonicParsing="false" onAction="#send" text="Send">
+                    <graphic>
+                        <ImageView fitHeight="30.0" pickOnBounds="true" preserveRatio="true">
+                            <image>
+                                <Image url="@../../893229-email/png/006-email-27.png" />
+                            </image>
+                        </ImageView>
+                    </graphic>
+                </Button>
+                <Button fx:id="deleteButton" contentDisplay="TOP" mnemonicParsing="false" onAction="#delete" text="Delete">
+                    <graphic>
+                        <ImageView fitHeight="30.0" pickOnBounds="true" preserveRatio="true">
+                            <image>
+                                <Image url="@../../893229-email/png/024-mailbox-2.png" />
+                            </image>
+                        </ImageView>
+                    </graphic>
+                </Button>
+            </children>
+            <padding>
+                <Insets bottom="7.0" left="15.0" right="15.0" top="15.0" />
+            </padding>
+        </HBox>
+    </top>
+    <bottom>
+        <HBox id="status-bar" spacing="7.0" stylesheets="@../../status-bar.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
+            <children>
+                <Circle fx:id="statusCircle" radius="5.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" styleClass="status-circle--idle">
                     <HBox.margin>
                         <Insets top="8.0" />
                     </HBox.margin>
                 </Circle>
-                <Label fx:id="statusLabel" maxHeight="25.0" minHeight="25.0" prefHeight="25.0" styleClass="status-bar-label" text="Status message" textFill="#888888" />
+                <Label fx:id="serverLabel" maxHeight="25.0" minHeight="25.0" prefHeight="25.0" text="0.0.0.0" />
                 <Region HBox.hgrow="ALWAYS" />
-                <Label fx:id="emailLabel" maxHeight="25.0" minHeight="25.0" prefHeight="25.0" styleClass="status-bar-label" text="user@domain.tld" textFill="#888888" />
-                <Separator orientation="VERTICAL" />
-                <Label fx:id="serverLabel" maxHeight="25.0" minHeight="25.0" prefHeight="25.0" styleClass="status-bar-label" text="0.0.0.0" textFill="#888888" />
+                <Label fx:id="userLabel" maxHeight="25.0" minHeight="25.0" prefHeight="25.0" text="user@domain.tld" />
             </children>
             <padding>
                 <Insets left="7.0" right="7.0" />

@@ -9,11 +9,11 @@ public enum Queue {
     }
 
     public static Queue fromShortPath(String shortPath) {
-        switch (shortPath.toUpperCase()) {
-            case "R": return RECEIVED;
-            case "S": return SENT;
-            case "D": return DRAFTS;
-            default: throw new IllegalArgumentException("Non-existing e-mail queue " + shortPath);
-        }
+        return switch (shortPath.toUpperCase()) {
+            case "R" -> RECEIVED;
+            case "S" -> SENT;
+            case "D" -> DRAFTS;
+            default -> throw new IllegalArgumentException("Non-existing e-mail queue " + shortPath);
+        };
     }
 }

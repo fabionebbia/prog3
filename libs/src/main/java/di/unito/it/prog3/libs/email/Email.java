@@ -33,27 +33,23 @@ public class Email {
     private LocalDateTime timestamp;
     private String body;
     private boolean read;
+    private boolean draft;
+    private ID replyOf;
+    private List<ID> replies;
 
-    @JsonCreator // for Jackson deserialization
     public Email() {
         recipients = new ArrayList<>();
-    }
-
-    public Email(Email e) {
-        this.mailbox = e.getMailbox();
-        this.queue = e.getQueue();
-        this.relativeId = e.getRelativeId();
-
-        this.read = e.isRead();
-        this.body = e.getBody();
-        this.sender = e.getSender();
-        this.subject = e.getSubject();
-        this.timestamp = e.getTimestamp();
-        this.recipients = e.getRecipients();
+        replies = new ArrayList<>();
     }
 
     public ID getId() {
         return new ID(mailbox, queue, relativeId);
+    }
+
+    public void setId(ID id) {
+        mailbox = id.mailbox;
+        queue = id.queue;
+        relativeId = id.relativeId;
     }
 
     public String getBody() {
@@ -66,6 +62,10 @@ public class Email {
 
     public boolean isRead() {
         return read;
+    }
+
+    public boolean isDraft() {
+        return draft;
     }
 
     @JsonIgnore
@@ -129,6 +129,22 @@ public class Email {
 
     public UUID getRelativeId() {
         return relativeId;
+    }
+
+    public void setReplyOf(ID replyOf) {
+        this.replyOf = replyOf;
+    }
+
+    public boolean hasReplies() {
+        return replies.size() > 0;
+    }
+
+    public void addReply(ID reply) {
+        replies.add(reply);
+    }
+
+    public List<ID> getReplies() {
+        return Collections.unmodifiableList(replies);
     }
 
     @Override

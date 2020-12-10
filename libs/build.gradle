@@ -7,9 +7,6 @@ plugins {
     id 'org.openjfx.javafxplugin' version '0.0.9'
 }
 
-sourceCompatibility = JavaVersion.VERSION_11
-targetCompatibility = JavaVersion.VERSION_11
-
 javafx {
     version = "15.0.1"
     modules = [ 'javafx.base', 'javafx.controls', 'javafx.graphics', 'javafx.fxml' ]

@@ -1,9 +1,9 @@
 package di.unito.it.prog3.libs.utils;
 
-import di.unito.it.prog3.libs.communication.Request;
-import di.unito.it.prog3.libs.communication.RequestCallback;
-import di.unito.it.prog3.libs.communication.ResponseHandler;
-import di.unito.it.prog3.libs.communication.net.responses.Response;
+import di.unito.it.prog3.libs.net.Request;
+import di.unito.it.prog3.libs.net.RequestCallback;
+import di.unito.it.prog3.libs.net.ResponseHandler;
+import di.unito.it.prog3.libs.net.responses.Response;
 import javafx.application.Platform;
 
 import java.util.Objects;

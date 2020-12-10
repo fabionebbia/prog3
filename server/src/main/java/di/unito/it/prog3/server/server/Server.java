@@ -1,11 +1,7 @@
 package di.unito.it.prog3.server.server;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import di.unito.it.prog3.libs.communication.net.JsonMapper;
-import di.unito.it.prog3.libs.communication.net.requests.DeletionRequest;
-import di.unito.it.prog3.libs.communication.net.requests.LoginRequest;
-import di.unito.it.prog3.libs.communication.net.requests.ReadMultipleRequest;
-import di.unito.it.prog3.libs.communication.net.requests.ReadSingleRequest;
+import di.unito.it.prog3.libs.net.JsonMapper;
+import di.unito.it.prog3.libs.net.requests.*;
 import di.unito.it.prog3.server.gui.Model;
 
 import java.io.IOException;
@@ -26,6 +22,7 @@ public class Server implements Runnable {
                 LoginRequest.class,
                 ReadSingleRequest.class,
                 ReadMultipleRequest.class,
+                StoreRequest.class,
                 DeletionRequest.class
         );
     }
