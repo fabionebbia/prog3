@@ -1,6 +1,6 @@
 package di.unito.it.prog3.client;
 
-import di.unito.it.prog3.client.controllers.LoginScreenController;
+import di.unito.it.prog3.client.trashed.LoginScreenController;
 import di.unito.it.prog3.client.controllers.MainController;
 import di.unito.it.prog3.client.model.Model;
 import di.unito.it.prog3.libs.utils.FXWrapper;
@@ -19,12 +19,9 @@ import java.util.concurrent.Executors;
 public class MailClientApp extends Application {
 
     private ExecutorService executor;
-    private Stage stage;
 
     @Override
     public void start(Stage stage) throws Exception {
-        this.stage = stage;
-
         Perform.init(executor = Executors.newSingleThreadExecutor());
         Model model = new Model();
 

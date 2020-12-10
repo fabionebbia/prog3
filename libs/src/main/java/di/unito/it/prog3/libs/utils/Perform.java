@@ -1,14 +1,9 @@
 package di.unito.it.prog3.libs.utils;
 
-import di.unito.it.prog3.libs.net.Request;
-import di.unito.it.prog3.libs.net.RequestCallback;
-import di.unito.it.prog3.libs.net.ResponseHandler;
-import di.unito.it.prog3.libs.net.responses.Response;
 import javafx.application.Platform;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Supplier;
 
 public final class Perform {
 
@@ -33,7 +28,7 @@ public final class Perform {
             Platform.runLater(callback::call);
         });
     }
-
+/*
     public static <T> void async(Request<T> request, RequestCallback<T> callback) {
         submit(() -> {
             try {
@@ -55,6 +50,6 @@ public final class Perform {
                 Platform.runLater(() -> responseHandler.onError(e));
             }
         });
-    }
+    }*/
 
 }

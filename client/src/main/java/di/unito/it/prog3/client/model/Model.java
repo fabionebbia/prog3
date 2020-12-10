@@ -1,16 +1,17 @@
 package di.unito.it.prog3.client.model;
 
-import di.unito.it.prog3.libs.net.requests.DeletionRequest;
-import di.unito.it.prog3.libs.net.requests.StoreRequest;
-import di.unito.it.prog3.libs.net.responses.Response;
 import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.email.Mailbox;
 import di.unito.it.prog3.libs.email.Queue;
 import di.unito.it.prog3.libs.exceptions.MalformedEmailAddressException;
 import di.unito.it.prog3.libs.model.EmailProperty;
+import di.unito.it.prog3.libs.net.Response;
 import di.unito.it.prog3.libs.utils.Emails;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.property.*;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.property.SimpleListProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -67,7 +68,7 @@ public class Model {
 
         Response response = client.login(host, port, user);
 
-        if (response.success()) {
+        if (response.successful()) {
             Email.ID sentEmailId = Email.ID.fromString("me@email.tld/S/" + UUID.randomUUID().toString());
             Email.ID receivedReplyId = Email.ID.fromString("me@email.tld/R/" + UUID.randomUUID().toString());
 
@@ -93,7 +94,7 @@ public class Model {
             ArrayList<Email> tmp = new ArrayList<>();
             tmp.add(sentEmail);
             tmp.add(receivedReply);
-            userQueueHolder.init(user, new SimpleListProperty<>(FXCollections.observableList(tmp)));
+            userQueueHolder.bind(new SimpleListProperty<>(FXCollections.observableList(tmp)));
             loggedIn = true;
             this.server.set(host + ":" + port);
             this.user.set(user);
@@ -116,19 +117,6 @@ public class Model {
 
     public BooleanBinding isCurrentEmailSet() {
         return currentEmail.isNotNull();
-    }
-
-    public Response send() {
-        StoreRequest request = new StoreRequest(
-                currentEmail.recipientsProperty().get(),
-                currentEmail.subjectProperty().get(),
-                currentEmail.bodyProperty().get()
-        );
-        return client.sendRequest(request);
-    }
-
-    public Response delete() {
-        return client.sendRequest(new DeletionRequest(currentEmail.get().getId()));
     }
 
     public ReadOnlyObjectProperty<ClientStatus> clientStatusProperty() {

@@ -17,10 +17,9 @@ import java.util.function.Predicate;
 
 class UserQueueHolder {
 
-    private ListProperty<Email> all;
-    private ObjectProperty<ObservableList<Email>> received;
-    private ObjectProperty<ObservableList<Email>> sent;
-    private Mailbox user;
+    private final ListProperty<Email> all;
+    private final ObjectProperty<ObservableList<Email>> received;
+    private final ObjectProperty<ObservableList<Email>> sent;
 
     UserQueueHolder() {
         all = new SimpleListProperty<>();
@@ -28,12 +27,8 @@ class UserQueueHolder {
         sent = new SimpleObjectProperty<>(createQueue(Queue.SENT));
     }
 
-    void init(String user, ListProperty<Email> all) {
-        this.user = Mailbox.fromString(user);
+    void bind(ListProperty<Email> all) {
         this.all.bind(all);
-
-        /*received.set();
-        sent.set();*/
     }
 
     ObservableValue<ObservableList<Email>> getQueue(Queue queue) {

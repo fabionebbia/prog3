@@ -1,13 +1,11 @@
 package di.unito.it.prog3.client.model;
 
 import di.unito.it.prog3.libs.net.JsonMapper;
-import di.unito.it.prog3.libs.net.requests.LoginRequest;
+import di.unito.it.prog3.libs.net.Response;
 import di.unito.it.prog3.libs.net.requests.Request;
-import di.unito.it.prog3.libs.net.responses.Response;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 
@@ -44,7 +42,7 @@ public class Client {
         this.port = port;
         this.user = user;
 
-        return sendRequest(new LoginRequest(null /* TODO */));
+        return null; // sendRequest(new LoginRequest(null /* TODO */));
     }
 
      Response sendRequest(Request request) {

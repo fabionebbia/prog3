@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<GridPane hgap="10.0" onKeyPressed="#submit" styleClass="scene" stylesheets="@../ui.css" vgap="10.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="di.unito.it.prog3.client.controllers.LoginScreenController">
+<GridPane hgap="10.0" onKeyPressed="#submit" styleClass="scene" stylesheets="@../ui.css" vgap="10.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="di.unito.it.prog3.client.trashed.LoginScreenController">
     <columnConstraints>
         <ColumnConstraints />
         <ColumnConstraints hgrow="NEVER" maxWidth="125.0" minWidth="125.0" prefWidth="125.0" />

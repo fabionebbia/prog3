@@ -1,9 +1,9 @@
-package di.unito.it.prog3.client.controllers;
+package di.unito.it.prog3.client.trashed;
 
 import di.unito.it.prog3.client.forms.LoginForm;
 import di.unito.it.prog3.client.screen.Controller;
 import di.unito.it.prog3.libs.net.ResponseHandler;
-import di.unito.it.prog3.libs.net.responses.Response;
+import di.unito.it.prog3.libs.net.Response;
 import di.unito.it.prog3.libs.forms.v2.CommitHandler;
 import di.unito.it.prog3.libs.forms.v2.FormField2;
 import di.unito.it.prog3.libs.forms.v2.FormManager2;
@@ -18,8 +18,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 
-public class LoginScreenController extends Controller
-                                   implements CommitHandler<LoginForm>, ResponseHandler<Response> {
+public class LoginScreenController extends Controller implements CommitHandler<LoginForm> {
 
     private FormManager2<LoginForm> form;
     private Callback successCallback;
@@ -78,27 +77,19 @@ public class LoginScreenController extends Controller
         int port = lf.getPort();
         String user = lf.getEmail();
 
-        Perform.async(() -> model.login(server, port, user), this);
+       /* Perform.async(() -> model.login(server, port, user), response -> {
+            if (response.successful()) {
+                if (successCallback != null) {
+                    successCallback.call();
+                }
+            } else {
+                Error.display("Login error", "Could not login", response);
+            }
+        });*/
     }
 
     public void onSuccessfulLogin(Callback successCallback) { // TODO check already set
         this.successCallback = successCallback;
-    }
-
-    @Override
-    public void onResponse(Response response) {
-        if (response.success()) {
-            if (successCallback != null) {
-                successCallback.call();
-            }
-        } else {
-            onError(new Exception("Unknown error"));
-        }
-    }
-
-    @Override
-    public void onError(Throwable e) {
-        new Error("Login error", "Could not login", e.getMessage()).display();
     }
 
 }

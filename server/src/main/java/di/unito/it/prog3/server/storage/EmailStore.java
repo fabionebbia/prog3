@@ -5,19 +5,21 @@ import di.unito.it.prog3.libs.email.Email.ID;
 import di.unito.it.prog3.libs.email.Queue;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.List;
 
-public interface EmailStore<NoResponse, BooleanResponse, ObjectResponse, ObjectListResponse> {
+public interface EmailStore {
 
-    BooleanResponse userExists(String userMail);
+    boolean userExists(String userMail);
 
-    NoResponse store(Email email) throws EmailStoreException;
+    void store(Email email) throws EmailStoreException, IOException;
 
-    NoResponse delete(ID email) throws EmailStoreException;
+    void delete(ID email) throws EmailStoreException;
 
-    ObjectResponse read(ID email) throws EmailStoreException, FileNotFoundException;
+    Email read(ID email) throws EmailStoreException, FileNotFoundException;
 
-    ObjectListResponse read(ID offset, int many)  throws EmailStoreException;
+    List<Email> read(ID offset, int many)  throws EmailStoreException;
 
-    ObjectListResponse readAll(Queue queue)  throws EmailStoreException;
+    List<Email> readAll(Queue queue)  throws EmailStoreException;
 
 }

@@ -1,5 +1,6 @@
 package di.unito.it.prog3.libs.model;
 
+import di.unito.it.prog3.libs.net.Response;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 
@@ -36,6 +37,10 @@ public class Error {
             alert.setContentText(content);
             alert.showAndWait();
         });
+    }
+
+    public static void display(String title, String header, Response response) {
+        new Error(title, header, response.getMessage()).display();
     }
 
 }

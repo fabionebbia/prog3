@@ -1,8 +1,6 @@
 package di.unito.it.prog3.client.controllers;
 
 import di.unito.it.prog3.client.screen.Controller;
-import di.unito.it.prog3.libs.net.RequestCallback;
-import di.unito.it.prog3.libs.net.responses.Response;
 import di.unito.it.prog3.libs.utils.*;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -17,7 +15,8 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.shape.Circle;
 import javafx.util.Duration;
 
-import static di.unito.it.prog3.client.controllers.MainController.View.*;
+import static di.unito.it.prog3.client.controllers.MainController.View.QUEUES;
+import static di.unito.it.prog3.client.controllers.MainController.View.WRITE;
 import static di.unito.it.prog3.client.model.ClientStatus.CONNECTED;
 
 public class MainController extends Controller {
@@ -166,22 +165,12 @@ public class MainController extends Controller {
 
     @FXML
     private void send() {
-        Perform.async(model::send); // model.addEmail
+
     }
 
     @FXML
     private void delete() {
-        Perform.async(model::delete, new RequestCallback<>() {
-            @Override
-            public void onResponse(Response response) {
-                System.out.println(response.success());
-            }
 
-            @Override
-            public void onError(Throwable e) {
-                System.out.println(e.getMessage());
-            }
-        });
     }
 
     // Subviews

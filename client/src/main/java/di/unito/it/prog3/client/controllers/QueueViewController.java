@@ -37,7 +37,7 @@ public class QueueViewController extends Controller implements EventHandler<Mous
                 case 0 -> listView.setItems(model.receivedQueue().getValue());
                 case 1 -> listView.setItems(model.sentQueue().getValue());
                 default -> throw new IllegalStateException("Unexpected value: " + newValue.intValue());
-            };
+            }
             //listView.setItems(currentQueue.getValue());
             System.out.println(oldValue + " -> " + newValue);
             tabPane.getTabs().get(oldValue.intValue()).setContent(null);
