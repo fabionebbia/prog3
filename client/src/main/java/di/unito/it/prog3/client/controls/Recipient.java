@@ -28,11 +28,11 @@ public class Recipient extends HBox {
         loader.load();
     }
 
-    public StringProperty emailProperty() {
-        return emailDisplay.textProperty();
+    public void setEmail(String email) {
+        emailDisplay.setText(email);
     }
 
-    public void onRemove(EventHandler<ActionEvent> eventHandler) {
+    public void onRemoveButtonPressed(EventHandler<ActionEvent> eventHandler) {
         removeButton.setOnAction(eventHandler);
     }
 

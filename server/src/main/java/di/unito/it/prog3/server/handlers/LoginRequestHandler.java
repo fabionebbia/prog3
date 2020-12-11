@@ -1,19 +1,16 @@
 package di.unito.it.prog3.server.handlers;
 
 import di.unito.it.prog3.libs.net.Response;
-import di.unito.it.prog3.libs.net.requests.Request;
+import di.unito.it.prog3.libs.net.Request;
+import di.unito.it.prog3.server.gui.Logger;
 import di.unito.it.prog3.server.storage.EmailStore;
 
 public class LoginRequestHandler implements RequestHandler {
 
     @Override
-    public Response handle(EmailStore emailStore, Request request) {
-        String user = request.getUser();
-        if (emailStore.userExists(user)) {
-            return Response.SUCCESS;
-        } else {
-            return Response.failure("Unknown user " + user);
-        }
+    public Response handle(EmailStore emailStore, Logger logger, Request request) {
+        // If execution got here, the user exists therefore the login is successful
+        return Response.success();
     }
 
     @Override

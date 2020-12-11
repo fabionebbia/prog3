@@ -2,30 +2,33 @@ package di.unito.it.prog3.server.server;
 
 import di.unito.it.prog3.libs.net.JsonMapper;
 import di.unito.it.prog3.libs.net.Response;
-import di.unito.it.prog3.libs.net.requests.*;
+import di.unito.it.prog3.libs.net.Request;
 import di.unito.it.prog3.server.gui.Logger;
 import di.unito.it.prog3.server.gui.Model;
 import di.unito.it.prog3.server.handlers.LoginRequestHandler;
-import di.unito.it.prog3.server.handlers.RequestException;
 import di.unito.it.prog3.server.handlers.RequestHandler;
+import di.unito.it.prog3.server.handlers.SendRequestHandler;
 import di.unito.it.prog3.server.storage.ConcurrentJsonEmailStore;
 import di.unito.it.prog3.server.storage.EmailStore;
 import javafx.application.Application;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Server extends Thread {
 
-    private final Map<RequestType, RequestHandler> handlers;
+    private final Map<Request.Type, RequestHandler> handlers;
     private final EmailStore emailStore;
     private final JsonMapper json;
 
@@ -35,26 +38,30 @@ public class Server extends Thread {
     private Logger logger;
     private int port;
 
-
     public Server() {
         super("Server Thread");
 
-        emailStore = new ConcurrentJsonEmailStore("_store");
         json = new JsonMapper();
+        emailStore = new ConcurrentJsonEmailStore("_store");
 
         handlers = new ConcurrentHashMap<>();
-        handlers.put(RequestType.LOGIN, new LoginRequestHandler());
-    }
-
-    @Override
-    public synchronized void start() {
-        throw new UnsupportedOperationException("Use start(Model, Parameters) instead");
+        handlers.put(Request.Type.LOGIN, new LoginRequestHandler());
+        handlers.put(Request.Type.SEND, new SendRequestHandler());
     }
 
     public synchronized void start(Model model, Application.Parameters parameters) {
+        int nWorkers;
+
         Map<String, String> params = parameters.getNamed();
-        port = Integer.parseInt(params.getOrDefault("port", "2525"));
-        int nWorkers = Integer.parseInt(params.getOrDefault("n-workers", "3"));
+        String nWorkersParam = params.getOrDefault("n-workers", "3");
+        String portParam = params.getOrDefault("port", "9999");
+
+        try {
+            nWorkers = Integer.parseInt(nWorkersParam);
+            port = Integer.parseInt(portParam);
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("Invalid config params", e);
+        }
 
         logger = new Logger(model);
         shouldContinue = new AtomicBoolean(true);
@@ -96,6 +103,12 @@ public class Server extends Thread {
         }
     }
 
+    @Override
+    public synchronized void start() {
+        throw new UnsupportedOperationException("Use start(Model, Parameters) instead");
+    }
+
+
     private class SocketHandler implements Runnable {
 
         private final Socket socket;
@@ -106,15 +119,27 @@ public class Server extends Thread {
 
         @Override
         public void run() {
-            try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-                Request request = json.readValue(bufferedReader, Request.class);
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+                Request request = json.readValue(br, Request.class);
+                Response response = Response.failure("Server error");
 
-                RequestType type = request.getType();
-                RequestHandler handler = handlers.get(type);
-                Response response = handler.execute(emailStore, request);
-                
+                logger.info("Received " + request.getType());
+
+                if (request != null) {
+                    Request.Type type = request.getType();
+                    RequestHandler handler = handlers.get(type);
+
+                    logger.info("Retrieved handler (" + handler + ")");
+
+                    if (handler != null) {
+                        response = handler.execute(emailStore, logger, request);
+                    } else {
+                        response = Response.failure("Unknown request type");
+                    }
+                }
+
                 json.writeValue(socket.getOutputStream(), response);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             } finally {
                 try {
@@ -124,8 +149,5 @@ public class Server extends Thread {
                 }
             }
         }
-
     }
-
-
 }

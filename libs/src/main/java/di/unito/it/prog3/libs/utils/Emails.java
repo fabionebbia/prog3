@@ -18,6 +18,7 @@ public class Emails {
     // private static final Pattern emailRegex = Pattern.compile("^([_a-zA-Z0-9-]+(\\\\.[_a-zA-Z0-9-]+)*@[a-zA-Z0-9-]+(\\\\.[a-zA-Z0-9-]+)*(\\\\.[a-zA-Z]{1,6}))?$");
 
     public static boolean isWellFormed(String email) {
+        if (email == null) return false;
         return emailRegex.matcher(email).matches();
     }
 

@@ -31,12 +31,16 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
 
     @Override
     public boolean userExists(String userMail) {
-        Path userStore = Paths.get(getStoreDir().toString(), userMail);
+        String[] mailboxParts = userMail.split("@"); // TODO can this error?
+        String user = mailboxParts[0];
+        String domain = mailboxParts[1];
+
+        Path userStore = Paths.get(getStoreDir().toString(), domain, user);
         return Files.exists(userStore);
     }
 
     @Override
-    public void store(Email email) throws EmailStoreException, IOException {
+    public void store(Email email) throws Exception {
         Path emailPath = getPath(email);
 
         Path queueDir = emailPath.getParent();
@@ -133,9 +137,13 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
     }
 
     protected Path getPath(ID id) {
+        String[] mailboxParts = id.getMailbox().split("@"); // TODO can this error?
+        String user = mailboxParts[0];
+        String domain = mailboxParts[1];
+
         String path = storeDir
-                + "/" + id.getMailbox().getUser()
-                + "/" + id.getMailbox().getDomain()
+                + "/" + domain
+                + "/" + user
                 + "/" + id.getQueue().asShortPath()
                 + "/" + id.getRelativeId() + extension;
         return Paths.get(path);

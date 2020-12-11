@@ -3,7 +3,6 @@ package di.unito.it.prog3.client.controls;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;
-import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -15,7 +14,6 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 // Oracle - Creating a Custom Control with FXML
@@ -56,9 +54,9 @@ public class RecipientsFlowPane extends GridPane implements ListChangeListener<S
                     int offset = c.getFrom() + i;
                     try {
                         Recipient recipient = new Recipient();
-                        recipient.emailProperty().bind(Bindings.stringValueAt(recipientsProperty, offset));
-                        recipient.onRemove(e -> recipientsProperty.remove(offset));
-                        recipient.onClick(e -> recipientField.textProperty().bind(recipient.emailProperty()));
+                        //recipient.emailProperty().bind(Bindings.stringValueAt(recipientsProperty, offset));
+                        recipient.onRemoveButtonPressed(e -> recipientsProperty.remove(offset));
+                        //recipient.onClick(e -> recipientField.textProperty().bind(recipient.emailProperty()));
                         children.add(recipient);
                     } catch (IOException e) {
                         e.printStackTrace();

@@ -2,82 +2,141 @@ package di.unito.it.prog3.client.model;
 
 import di.unito.it.prog3.libs.net.JsonMapper;
 import di.unito.it.prog3.libs.net.Response;
-import di.unito.it.prog3.libs.net.requests.Request;
+import di.unito.it.prog3.libs.net.Request;
+import di.unito.it.prog3.libs.net.ResponseHandler;
+import di.unito.it.prog3.libs.utils.Emails;
+import di.unito.it.prog3.libs.utils.ValueCallback;
+import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.ReadOnlyStringWrapper;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
-import java.net.UnknownHostException;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.*;
 
 import static di.unito.it.prog3.client.model.ClientStatus.*;
+import static di.unito.it.prog3.libs.net.Request.Type.LOGIN;
 
 public class Client {
 
     private final ReadOnlyObjectWrapper<ClientStatus> status;
+    private final ReadOnlyStringWrapper server;
+    private final ReadOnlyStringWrapper user;
 
+    private final ScheduledExecutorService poller;
+    private final ExecutorService executor;
+    private final JsonMapper json;
     private final Model model;
 
     private String host;
     private int port;
-    private String user;
 
-    private final JsonMapper json;
+    Client(Model model, Application.Parameters parameters) {
+        Map<String, String> params = parameters.getNamed();
+        String serverParam = params.getOrDefault("server", "localhost:9999");
+        String userParam = params.get("user");
 
-    Client(Model model) {
+        String[] serverParts = serverParam.split(":");
+        boolean serverInvalid = serverParts.length != 2;
+
+        if (!serverInvalid) {
+            try {
+                host = serverParts[0];
+                port = Integer.parseInt(serverParts[1]);
+            } catch (NumberFormatException ignored) {
+                serverInvalid = true;
+            }
+        }
+
+        if (serverInvalid) {
+            throw new IllegalArgumentException("Invalid server address");
+        }
+
+        if (Emails.isMalformed(userParam)) {
+            throw new IllegalArgumentException("Invalid user e-mail");
+        }
+
         this.model = model;
-
+        this.user = new ReadOnlyStringWrapper(userParam);
+        this.server = new ReadOnlyStringWrapper(serverParam);
         status = new ReadOnlyObjectWrapper<>(IDLE);
         json = new JsonMapper();
-    }
 
-    Response login(String host, int port, String user) {
-        this.host = host;
-        this.port = port;
-        this.user = user;
+        executor = Executors.newSingleThreadExecutor();
 
-        return null; // sendRequest(new LoginRequest(null /* TODO */));
-    }
-
-     Response sendRequest(Request request) {
-        Objects.requireNonNull(request, "Empty request");
-
-        request.setUser(user);
-
-        try (
-                Socket socket = new Socket(host, port);
-                InputStreamReader inputStreamReader = new InputStreamReader(socket.getInputStream());
-                BufferedReader bufferedReader = new BufferedReader(inputStreamReader)
-        ) {
-            Platform.runLater(() -> status.set(CONNECTED));
-
-            json.writeValue(socket.getOutputStream(), request);
-            Response response = json.readValue(bufferedReader, Response.class);
-
-            Platform.runLater(() -> status.set(IDLE));
-
-            return response;
-        } catch (UnknownHostException e) {
-            throw new IllegalArgumentException("Invalid server address");
-        } catch (IOException e) {
-            e.printStackTrace();
-            Platform.runLater(() -> status.set(UNREACHABLE_SERVER));
-            throw new RuntimeException("Cannot reach server");
+        long pollingInterval;
+        try {
+            pollingInterval = Integer.parseInt(params.getOrDefault("polling-interval", "5"));
+        } catch (NumberFormatException ignored) {
+            pollingInterval = -1;
         }
+
+        if (pollingInterval <= 0) {
+            throw new IllegalArgumentException("Invalid polling interval");
+        }
+
+        poller = Executors.newSingleThreadScheduledExecutor();
+        poller.scheduleAtFixedRate(
+                () -> {} /* newRequest(LOGIN).send(r -> System.out.println("POLL"))*/,
+                0, pollingInterval, TimeUnit.SECONDS);
+    }
+
+    public Request.RequestBuilder newRequest(Request.Type type) {
+        return new Request.RequestBuilder(type, user.get(), this::sendRequest);
+    }
+
+    void sendRequest(Request request) {
+        Objects.requireNonNull(request);
+
+        executor.submit(() -> {
+            try (Socket socket = new Socket(host, port);
+                 BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+                // TODO dovel lo metto?
+                socket.setSoTimeout(5000);
+
+                setStatus(CONNECTED);
+
+                System.out.println(json.writeValueAsString(request));
+                json.writeValue(socket.getOutputStream(), request);
+                Response response = json.readValue(br, Response.class);
+                Platform.runLater(() -> request.gotResponse(response));
+
+                setStatus(IDLE);
+            } catch (Exception e) {
+                e.printStackTrace();
+                setStatus(UNREACHABLE_SERVER);
+            }
+        });
     }
 
     public ReadOnlyObjectProperty<ClientStatus> statusProperty() {
         return status.getReadOnlyProperty();
     }
 
-    public BooleanBinding connectedProperty() {
-        return Bindings.createBooleanBinding(() -> status.get().equals(CONNECTED), status);
+    public ReadOnlyStringProperty serverProperty() {
+        return server.getReadOnlyProperty();
+    }
+
+    public ReadOnlyStringProperty userProperty() {
+        return user.getReadOnlyProperty();
+    }
+
+    public void shutdown() throws InterruptedException {
+        poller.shutdown();
+        executor.shutdown();
+        executor.awaitTermination(3, TimeUnit.SECONDS);
+        poller.awaitTermination(3, TimeUnit.SECONDS);
+    }
+
+    private void setStatus(ClientStatus newStatus) {
+        Platform.runLater(() -> status.set(newStatus));
     }
 
 }

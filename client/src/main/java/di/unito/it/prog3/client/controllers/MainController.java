@@ -1,16 +1,19 @@
 package di.unito.it.prog3.client.controllers;
 
-import di.unito.it.prog3.client.screen.Controller;
-import di.unito.it.prog3.libs.utils.*;
+import di.unito.it.prog3.libs.model.Error;
+import di.unito.it.prog3.libs.utils.CssUtils;
+import di.unito.it.prog3.libs.utils.FXWrapper;
+import di.unito.it.prog3.libs.utils.Utils;
+import di.unito.it.prog3.libs.utils.WrappedFXMLLoader;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXML;
-import javafx.scene.Parent;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.shape.Circle;
 import javafx.util.Duration;
@@ -18,6 +21,7 @@ import javafx.util.Duration;
 import static di.unito.it.prog3.client.controllers.MainController.View.QUEUES;
 import static di.unito.it.prog3.client.controllers.MainController.View.WRITE;
 import static di.unito.it.prog3.client.model.ClientStatus.CONNECTED;
+import static di.unito.it.prog3.client.model.ClientStatus.UNREACHABLE_SERVER;
 
 public class MainController extends Controller {
 
@@ -67,6 +71,8 @@ public class MainController extends Controller {
 
     @Override
     protected void setupControl() {
+        Thread.setDefaultUncaughtExceptionHandler((thread, exception) -> catchException(exception));
+
         loadSubviews();
 
         setupToolbar();
@@ -75,16 +81,15 @@ public class MainController extends Controller {
 
         // Setup view change listener to manipulate the GUI
         currentView.addListener((observable, oldView, newView) -> {
-            FXWrapper<?> next = switch (newView) {
-                case QUEUES -> queueView;
-                case READ -> readView;
-                case WRITE -> writeView;
-            };
-            Parent nextContent = next.getContent();
-            borderPane.setCenter(nextContent);
+            if (oldView != null) {
+                FXWrapper<? extends Controller> previous = getWrapper(oldView);
+                previous.getController().onHidden();
+            }
+            FXWrapper<? extends Controller> next = getWrapper(newView);
+            borderPane.setCenter(next.getContent());
+            next.getController().onDisplayed();
         });
 
-        // Start on the
         currentView.set(QUEUES);
     }
 
@@ -130,15 +135,45 @@ public class MainController extends Controller {
     }
 
     private void setupStatusBar() {
-        serverLabel.textProperty().bind(model.serverProperty());
-        userLabel.textProperty().bind(model.userProperty());
+        serverLabel.textProperty().bind(model.getClient().serverProperty());
+        userLabel.textProperty().bind(model.getClient().userProperty());
 
-        // Restarts blinking animation on client connected
-        model.clientStatusProperty().addListener((observable, oldStatus, newStatus) -> {
-            if (newStatus == CONNECTED) {
-                statusCircleBlinker.playFromStart();
+        // TODO
+        ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+        Alert unreachableAlert = new Alert(
+                AlertType.ERROR,
+                "Cannot reach server\nRetrying..",
+                cancelButton
+        );
+        unreachableAlert.setTitle("Server connection error");
+        unreachableAlert.setOnHidden(event -> {
+            if (model.getClient().statusProperty().get().equals(UNREACHABLE_SERVER)) {
+                Platform.exit();
             }
         });
+
+        // Restarts blinking animation on client connected
+        model.getClient().statusProperty().addListener((observable, oldStatus, newStatus) -> {
+            if (newStatus == CONNECTED) {
+                // statusCircleBlinker.playFromStart();
+            }
+
+            if (unreachableAlert.isShowing()) {
+                unreachableAlert.hide();
+            }
+
+            CssUtils.ensureClassSetGroupExclusive(
+                    statusCircle,
+                    "status-circle--" + newStatus.name().toLowerCase().replace('_', '-')
+            );
+
+            switch (newStatus) {
+                case CONNECTED -> statusCircleBlinker.playFromStart();
+                case UNREACHABLE_SERVER -> unreachableAlert.showAndWait();
+            }
+        });
+
+
     }
 
     @FXML
@@ -148,6 +183,7 @@ public class MainController extends Controller {
 
     @FXML
     private void write() {
+        model.clearCurrentEmail();
         currentView.set(WRITE);
     }
 
@@ -165,12 +201,25 @@ public class MainController extends Controller {
 
     @FXML
     private void send() {
-
+        writeView.getController().sendRequested();
     }
 
     @FXML
     private void delete() {
 
+    }
+
+    private void catchException(Throwable e) {
+        e.printStackTrace();
+        new Error("", "", e.getMessage()).display();
+    }
+
+    private FXWrapper<? extends Controller> getWrapper(View view) {
+        return switch (view) {
+            case QUEUES -> queueView;
+            case READ -> readView;
+            case WRITE -> writeView;
+        };
     }
 
     // Subviews

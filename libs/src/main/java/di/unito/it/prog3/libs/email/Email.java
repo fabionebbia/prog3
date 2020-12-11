@@ -8,10 +8,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import di.unito.it.prog3.libs.exceptions.MalformedEmailIDException;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @JsonAutoDetect(fieldVisibility = Visibility.ANY)
 public class Email {
@@ -19,7 +16,7 @@ public class Email {
     public static final Email EMPTY = new Email();
 
     @JsonIgnore
-    private Mailbox mailbox;
+    private String mailbox;
 
     @JsonIgnore
     private Queue queue;
@@ -27,19 +24,19 @@ public class Email {
     @JsonIgnore
     private UUID relativeId;
 
-    private Mailbox sender;
+    private String sender;
     private String subject;
-    private final List<Mailbox> recipients;
+    private final Set<String> recipients;
     private LocalDateTime timestamp;
     private String body;
     private boolean read;
     private boolean draft;
     private ID replyOf;
-    private List<ID> replies;
+    private Set<ID> replies;
 
     public Email() {
-        recipients = new ArrayList<>();
-        replies = new ArrayList<>();
+        recipients = new HashSet<>();
+        replies = new HashSet<>();
     }
 
     public ID getId() {
@@ -73,11 +70,11 @@ public class Email {
         return !isRead();
     }
 
-    public Mailbox getSender() {
+    public String getSender() {
         return sender;
     }
 
-    public void setSender(Mailbox sender) {
+    public void setSender(String sender) {
         this.sender = sender;
     }
 
@@ -97,25 +94,23 @@ public class Email {
         timestamp = LocalDateTime.now();
     }
 
-    public List<Mailbox> getRecipients() {
-        return Collections.unmodifiableList(recipients);
+    public Set<String> getRecipients() {
+        return Collections.unmodifiableSet(recipients);
     }
 
-    public void addRecipient(Mailbox recipient) {
+    public void addRecipient(String recipient) {
         recipients.add(recipient);
     }
 
-    public void addRecipients(Mailbox... recipients) {
-        for (Mailbox recipient : recipients) {
-            addRecipient(recipient);
-        }
+    public void addAllRecipients(Collection<String> recipients) {
+        this.recipients.addAll(recipients);
     }
 
-    public Mailbox getMailbox() {
+    public String getMailbox() {
         return mailbox;
     }
 
-    public void setMailbox(Mailbox mailbox) {
+    public void setMailbox(String mailbox) {
         this.mailbox = mailbox;
     }
 
@@ -143,8 +138,8 @@ public class Email {
         replies.add(reply);
     }
 
-    public List<ID> getReplies() {
-        return Collections.unmodifiableList(replies);
+    public Set<ID> getReplies() {
+        return Collections.unmodifiableSet(replies);
     }
 
     @Override
@@ -158,17 +153,17 @@ public class Email {
 
     public static class ID {
 
-        private final Mailbox mailbox;
+        private final String mailbox;
         private final Queue queue;
         private final UUID relativeId;
 
-        private ID(Mailbox mailbox, Queue queue, UUID relativeId) {
+        private ID(String mailbox, Queue queue, UUID relativeId) {
             this.relativeId = relativeId;
             this.mailbox = mailbox;
             this.queue = queue;
         }
 
-        public Mailbox getMailbox() {
+        public String getMailbox() {
             return mailbox;
         }
 
@@ -185,7 +180,7 @@ public class Email {
             String[] parts = str.split("/");
 
             if (parts.length == 3) {
-                Mailbox mailbox = Mailbox.fromString(parts[0]);
+                String mailbox = parts[0];
                 Queue queue = Queue.fromShortPath(parts[1]);
                 UUID uuid = UUID.fromString(parts[2]);
 

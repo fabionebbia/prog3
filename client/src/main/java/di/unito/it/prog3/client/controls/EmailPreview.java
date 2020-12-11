@@ -83,20 +83,6 @@ public class EmailPreview extends ListCell<Email> implements EventHandler<MouseE
             update(email);
             setGraphic(graphic);
         }
-
-        /*ScaleTransition st = new ScaleTransition(Duration.millis(2000), graphic);
-        st.setByX(1f);
-        st.setByY(1.5f);
-        st.setCycleCount(4);
-        st.setAutoReverse(true);
-
-        st.play();*/
-/*
-        KeyValue widthValue = new KeyValue(graphic.heightProperty(), graphic.getHeight() + 100);
-        KeyFrame frame = new KeyFrame(Duration.seconds(2), widthValue);
-        Timeline timeline = new Timeline(frame);
-        timeline.play();
-        timeline.setOnFinished(finishedEvent -> System.out.println("Animation end: width = " );*/
     }
 
 

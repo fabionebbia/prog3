@@ -1,5 +1,6 @@
 package di.unito.it.prog3.server.gui;
 
+import di.unito.it.prog3.libs.net.Response;
 import javafx.application.Platform;
 
 public class Logger {
@@ -16,6 +17,15 @@ public class Logger {
 
     public void error(String message) {
         doLog(true, message);
+    }
+
+    public void log(Response response) {
+        String message = response.getMessage();
+        if (response.successful()) {
+            info(message);
+        } else {
+            error(message);
+        }
     }
 
     private void doLog(boolean isError, String message) {

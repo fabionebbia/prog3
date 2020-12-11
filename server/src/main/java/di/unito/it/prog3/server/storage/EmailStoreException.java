@@ -10,9 +10,8 @@ public class EmailStoreException extends Exception {
         super(message);
     }
 
-    public static class NonExistingUserException extends EmailStoreException {
-        public NonExistingUserException(String user) {
-            super("Non-existing user " + user);
-        }
+    public EmailStoreException(Throwable t) {
+        super(t);
     }
+
 }

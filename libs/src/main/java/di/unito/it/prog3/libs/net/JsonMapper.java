@@ -1,5 +1,7 @@
 package di.unito.it.prog3.libs.net;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -13,6 +15,9 @@ public class JsonMapper extends ObjectMapper {
         JsonFactory defaultJsonFactory = getFactory();
         defaultJsonFactory.disable(JsonParser.Feature.AUTO_CLOSE_SOURCE);
         defaultJsonFactory.disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET);
+
+        // Excludes null fields
+        setSerializationInclusion(Include.NON_NULL);
     }
 
 }

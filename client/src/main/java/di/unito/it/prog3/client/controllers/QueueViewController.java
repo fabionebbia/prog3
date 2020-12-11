@@ -1,7 +1,6 @@
 package di.unito.it.prog3.client.controllers;
 
 import di.unito.it.prog3.client.controls.EmailPreview;
-import di.unito.it.prog3.client.screen.Controller;
 import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.utils.Callback;
 import javafx.event.EventHandler;
@@ -50,7 +49,6 @@ public class QueueViewController extends Controller implements EventHandler<Mous
             return preview;
         });
 
-        System.out.println(model.receivedQueue().getValue());
         listView.setItems(model.receivedQueue().getValue());
         tabPane.getTabs().get(0).setContent(listView);
         tabPane.getSelectionModel().selectFirst();

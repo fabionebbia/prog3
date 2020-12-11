@@ -12,7 +12,7 @@ public interface EmailStore {
 
     boolean userExists(String userMail);
 
-    void store(Email email) throws EmailStoreException, IOException;
+    void store(Email email) throws Exception;
 
     void delete(ID email) throws EmailStoreException;
 

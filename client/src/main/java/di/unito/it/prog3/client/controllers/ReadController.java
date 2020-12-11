@@ -1,6 +1,5 @@
 package di.unito.it.prog3.client.controllers;
 
-import di.unito.it.prog3.client.screen.Controller;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
@@ -31,7 +30,6 @@ public class ReadController extends Controller {
                 recipientsFlowPane.getChildren().add(new Label(recipient));
             }*/
             for (int i = 0; i < newValue.size(); i++) {
-                System.out.println(newValue.get(i));
                 Label recipientLabel = new Label(
                         newValue.get(i) + ((i < newValue.size() - 1) ? "," : "")
                 );
@@ -42,7 +40,6 @@ public class ReadController extends Controller {
         fromLabel.textProperty().bind(model.currentEmailProperty().fromProperty());
         subjectLabel.textProperty().bind(model.currentEmailProperty().subjectProperty());
         bodyTextArea.textProperty().bind(model.currentEmailProperty().bodyProperty());
-
     }
 
 }

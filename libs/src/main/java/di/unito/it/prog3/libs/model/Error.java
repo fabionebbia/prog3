@@ -16,6 +16,10 @@ public class Error {
         this.content = content;
     }
 
+    public Error(String title, String content) {
+        this(title, null, content);
+    }
+
     public String getTitle() {
         return title;
     }
@@ -33,7 +37,9 @@ public class Error {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.initOwner(null);
             alert.setTitle(title);
-            alert.setHeaderText(header);
+            if (header != null) {
+                alert.setHeaderText(header);
+            }
             alert.setContentText(content);
             alert.showAndWait();
         });

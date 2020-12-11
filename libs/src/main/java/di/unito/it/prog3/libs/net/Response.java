@@ -1,24 +1,29 @@
 package di.unito.it.prog3.libs.net;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import di.unito.it.prog3.libs.email.Email;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+@JsonAutoDetect(fieldVisibility = Visibility.ANY)
 public class Response {
 
     private boolean success;
     private String message;
-    private List<Email> emails;
+    private Set<Email> emails;
 
     @JsonCreator
-    private Response() {}
+    private Response() {
+        emails = new HashSet<>();
+    }
 
-    private Response(boolean success, String message, List<Email> emails) {
+    private Response(boolean success, String message, Set<Email> emails) {
         this.success = success;
         this.message = message;
         this.emails = emails;
@@ -32,13 +37,22 @@ public class Response {
         return message;
     }
 
-    public List<Email> getEmails() {
+    public Set<Email> getEmails() {
         return emails;
     }
 
-    public static final Response SUCCESS = new Response(true, "", null);
 
-    public static Response success(List<Email> emails) {
+    private static final Response SUCCESS = new Response(true, "", null);
+
+    public static Response success() {
+        return SUCCESS;
+    }
+
+    public static Response success(Email... emails) {
+        return success(Set.of(emails));
+    }
+
+    public static Response success(Set<Email> emails) {
         return new Response(true, "", emails);
     }
 
