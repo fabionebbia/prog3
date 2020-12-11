@@ -1,0 +1,11 @@
+{
+  "sender": "user1@email.tld",
+  "subject": "subject",
+  "recipients": [
+    "user2@email.tld"
+  ],
+  "body": "body",
+  "read": true,
+  "draft": false,
+  "replies": []
+}

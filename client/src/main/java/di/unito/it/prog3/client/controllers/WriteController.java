@@ -140,7 +140,6 @@ public class WriteController extends Controller {
 
     void sendRequested() {
         Email email = new Email();
-        System.out.println(recipients.get());
         email.addAllRecipients(recipients.get());
         email.setSubject(subject.get());
         email.setBody(body.get());

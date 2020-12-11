@@ -6,20 +6,24 @@ import di.unito.it.prog3.libs.email.Queue;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.locks.Lock;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.*;
 import java.util.function.Predicate;
 
 public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
+
+    private final ConcurrentMap<String, ReentrantReadWriteLock> queueLocks;
 
     private final String extension;
     private final Path storeDir;
@@ -27,6 +31,7 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
     public ConcurrentFileBasedEmailStore(String storeDir, String extension) {
         this.storeDir = Paths.get(storeDir);
         this.extension = extension;
+        queueLocks = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -52,20 +57,28 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
             }
         }
 
-        emailPath = Paths.get(queueDir.toString(), UUID.randomUUID().toString() + ".json");
+        if (email.getRelativeId() == null) {
+            email.setRelativeId(UUID.randomUUID());
+        }
 
-        FileLock lock = lockExclusive(queueDir);
-
+        emailPath = Paths.get(queueDir.toString(), email.getRelativeId() + ".json");
 
         try {
-            Files.createFile(emailPath);
+            WriteLock lock = getQueueWriteLock(email);
+            lock.tryLock();
+
+            Path created = Files.createFile(emailPath);
+
+            serialize(email, emailPath);
+
+            BasicFileAttributes attrs = Files.readAttributes(created, BasicFileAttributes.class);
+            FileTime creationTime = attrs.creationTime();
+            LocalDateTime timestamp = LocalDateTime.ofInstant(creationTime.toInstant(), ZoneId.systemDefault());
+
+            email.setTimestamp(timestamp);
         } catch (IOException e) {
             throw new EmailStoreException("Could not create " + email.getId() + " file", e);
         }
-
-        serialize(email, emailPath);
-
-        lock.release();
     }
 
     @Override
@@ -149,18 +162,26 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
         return Paths.get(path);
     }
 
-    private FileLock lockExclusive(Path path) throws IOException {
-        FileChannel channel = FileChannel.open(path, StandardOpenOption.APPEND);
-        return channel.lock(0, Long.MAX_VALUE, false);
-    }
-
-    private FileLock lockShared(Path path) throws IOException {
-        FileChannel channel = FileChannel.open(path, StandardOpenOption.READ);
-        return channel.lock(0, Long.MAX_VALUE, true);
-    }
-
     protected abstract void serialize(Email email, Path path) throws EmailStoreException;
 
     protected abstract Email deserialize(Path path) throws EmailStoreException;
+
+    private ReentrantReadWriteLock getQueueLock(Email email) {
+        return getQueueLock(email.getMailbox(), email.getQueue());
+    }
+
+    private ReentrantReadWriteLock getQueueLock(String mailbox, Queue queue) {
+        String key = mailbox + "." + queue.asShortPath();
+        System.out.println("Queue lock: " + key);
+        return queueLocks.computeIfAbsent(key, k -> new ReentrantReadWriteLock());
+    }
+
+    private ReentrantReadWriteLock.ReadLock getQueueReadLock(Email email) {
+        return getQueueLock(email).readLock();
+    }
+
+    private ReentrantReadWriteLock.WriteLock getQueueWriteLock(Email email) {
+        return getQueueLock(email).writeLock();
+    }
 
 }

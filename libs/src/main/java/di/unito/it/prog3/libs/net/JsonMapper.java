@@ -6,10 +6,16 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 public class JsonMapper extends ObjectMapper {
 
     public JsonMapper() {
+        // configure to write timestamps as strings instead of structured objects
+        registerModule(new JavaTimeModule());
+        disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
         // Prevents JsonMapper from automatically closing the socket
         // on read/write operation completion
         JsonFactory defaultJsonFactory = getFactory();

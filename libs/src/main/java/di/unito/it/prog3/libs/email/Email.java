@@ -39,6 +39,22 @@ public class Email {
         replies = new HashSet<>();
     }
 
+    public Email(Email other) {
+        this();
+        this.mailbox = other.mailbox;
+        this.queue = other.queue;
+        this.relativeId = other.relativeId;
+        this.sender = other.sender;
+        this.subject = other.subject;
+        this.recipients.addAll(other.recipients);
+        this.timestamp = other.timestamp;
+        this.body = other.body;
+        this.read = other.read;
+        this.draft = other.draft;
+        this.replyOf = other.replyOf;
+        this.replies.addAll(other.replies);
+    }
+
     public ID getId() {
         return new ID(mailbox, queue, relativeId);
     }
@@ -47,6 +63,10 @@ public class Email {
         mailbox = id.mailbox;
         queue = id.queue;
         relativeId = id.relativeId;
+    }
+
+    public void setRelativeId(UUID relativeId) {
+        this.relativeId = relativeId;
     }
 
     public String getBody() {
@@ -61,13 +81,17 @@ public class Email {
         return read;
     }
 
-    public boolean isDraft() {
-        return draft;
-    }
-
     @JsonIgnore
     public boolean isUnread() {
         return !isRead();
+    }
+
+    public void setRead(boolean read) {
+        this.read = read;
+    }
+
+    public boolean isDraft() {
+        return draft;
     }
 
     public String getSender() {
@@ -90,8 +114,8 @@ public class Email {
         return timestamp;
     }
 
-    public void timestamp() {
-        timestamp = LocalDateTime.now();
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
     }
 
     public Set<String> getRecipients() {
@@ -150,6 +174,7 @@ public class Email {
     public static Email writeNew() {
         return new Email();
     }
+
 
     public static class ID {
 

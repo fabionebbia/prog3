@@ -13,17 +13,13 @@ import di.unito.it.prog3.server.storage.EmailStore;
 import javafx.application.Application;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Server extends Thread {
@@ -34,7 +30,8 @@ public class Server extends Thread {
 
     private AtomicBoolean shouldContinue;
     private ServerSocket serverSocket;
-    private ExecutorService executor;
+    private ExecutorService socketAcceptingExecutor;
+    private ExecutorService requestHandlingExecutor;
     private Logger logger;
     private int port;
 
@@ -50,14 +47,16 @@ public class Server extends Thread {
     }
 
     public synchronized void start(Model model, Application.Parameters parameters) {
-        int nWorkers;
+        int nAcceptingWorkers, nHandlingWorkers;
 
         Map<String, String> params = parameters.getNamed();
-        String nWorkersParam = params.getOrDefault("n-workers", "3");
+        String nAcceptingWorkersParam = params.getOrDefault("accepting-workers", "3");
+        String nHandlingWorkersParam = params.getOrDefault("handling-workers", "3");
         String portParam = params.getOrDefault("port", "9999");
 
         try {
-            nWorkers = Integer.parseInt(nWorkersParam);
+            nAcceptingWorkers = Integer.parseInt(nAcceptingWorkersParam);
+            nHandlingWorkers = Integer.parseInt(nHandlingWorkersParam);
             port = Integer.parseInt(portParam);
         } catch (NumberFormatException e) {
             throw new RuntimeException("Invalid config params", e);
@@ -65,7 +64,8 @@ public class Server extends Thread {
 
         logger = new Logger(model);
         shouldContinue = new AtomicBoolean(true);
-        executor = Executors.newFixedThreadPool(nWorkers);
+        socketAcceptingExecutor = Executors.newFixedThreadPool(nAcceptingWorkers);
+        requestHandlingExecutor = Executors.newFixedThreadPool(nHandlingWorkers);
 
         super.start();
     }
@@ -78,7 +78,7 @@ public class Server extends Thread {
             serverSocket = new ServerSocket(port);
             while (shouldContinue.get()) {
                 Socket incoming = serverSocket.accept();
-                executor.submit(new SocketHandler(incoming));
+                socketAcceptingExecutor.submit(new SocketHandler(incoming));
             }
         } catch (SocketException ignored) {
             // shutdown method closed the socket
@@ -92,8 +92,8 @@ public class Server extends Thread {
         try {
             shouldContinue.set(false);
             serverSocket.close();
-            executor.shutdown();
-            executor.awaitTermination(3, TimeUnit.SECONDS);
+            socketAcceptingExecutor.shutdown();
+            socketAcceptingExecutor.awaitTermination(3, TimeUnit.SECONDS);
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("Unable to close server socket");
@@ -119,6 +119,9 @@ public class Server extends Thread {
 
         @Override
         public void run() {
+            CompletionService<Response> completionService
+                    = new ExecutorCompletionService<>(requestHandlingExecutor);
+
             try (BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
                 Request request = json.readValue(br, Request.class);
                 Response response = Response.failure("Server error");
@@ -132,7 +135,7 @@ public class Server extends Thread {
                     logger.info("Retrieved handler (" + handler + ")");
 
                     if (handler != null) {
-                        response = handler.execute(emailStore, logger, request);
+                        response = handler.execute(completionService, emailStore, logger, request);
                     } else {
                         response = Response.failure("Unknown request type");
                     }

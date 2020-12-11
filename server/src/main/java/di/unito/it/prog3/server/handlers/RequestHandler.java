@@ -5,13 +5,21 @@ import di.unito.it.prog3.libs.net.Request;
 import di.unito.it.prog3.server.gui.Logger;
 import di.unito.it.prog3.server.storage.EmailStore;
 
+import java.util.concurrent.CompletionService;
+
 public interface RequestHandler {
 
-    Response handle(EmailStore emailStore, Logger logger, Request request);
+    Response handle(CompletionService<Response> completionService,
+                    EmailStore emailStore,
+                    Logger logger,
+                    Request request) throws Exception;
 
     void validate(Request request) throws RequestException;
 
-    default Response execute(EmailStore emailStore, Logger logger, Request request) {
+    default Response execute(CompletionService<Response> completionService,
+                             EmailStore emailStore,
+                             Logger logger,
+                             Request request) {
         try {
             String user = request.getUser();
             logger.info("Checking user existence " + emailStore.userExists(user));
@@ -20,7 +28,7 @@ public interface RequestHandler {
             }
             logger.info("User exist");
             validate(request);
-            Response response = handle(emailStore, logger, request);
+            Response response = handle(completionService, emailStore, logger, request);
             logger.info("Done");
             logger.log(response);
             return response;

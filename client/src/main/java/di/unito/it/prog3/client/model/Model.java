@@ -16,6 +16,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.UUID;
@@ -51,7 +52,7 @@ public class Model {
         sentEmail.setSubject("This is my original message");
         sentEmail.setBody("With its interesting body");
         sentEmail.addRecipient("someone@email.tld");
-        sentEmail.timestamp();
+        sentEmail.setTimestamp(LocalDateTime.now());
         sentEmail.addReply(receivedReplyId);
 
 
@@ -62,7 +63,7 @@ public class Model {
         receivedReply.setBody("With its interesting body too");
         receivedReply.addRecipient("me@email.tld");
         receivedReply.addRecipient("whoknows@email.tld");
-        receivedReply.timestamp();
+        receivedReply.setTimestamp(LocalDateTime.now());
         receivedReply.setReplyOf(sentEmailId);
 
         all.addAll(sentEmail, receivedReply);

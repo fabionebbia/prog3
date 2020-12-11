@@ -6,6 +6,7 @@ import di.unito.it.prog3.libs.email.Queue;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface EmailStore {
