@@ -3,23 +3,26 @@ package di.unito.it.prog3.server.storage;
 import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.email.Email.ID;
 import di.unito.it.prog3.libs.email.Queue;
+import di.unito.it.prog3.libs.net.Chrono;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock.*;
-import java.util.function.Predicate;
+import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
+import java.util.stream.Collectors;
 
 public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
 
@@ -34,7 +37,7 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
         queueLocks = new ConcurrentHashMap<>();
     }
 
-    @Override
+    @Override // No lock needed as users are preregistered
     public boolean userExists(String userMail) {
         String[] mailboxParts = userMail.split("@"); // TODO can this error?
         String user = mailboxParts[0];
@@ -44,7 +47,7 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
         return Files.exists(userStore);
     }
 
-    @Override
+    @Override // Lock exclusive queue
     public void store(Email email) throws Exception {
         Path emailPath = getPath(email);
 
@@ -63,25 +66,32 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
 
         emailPath = Paths.get(queueDir.toString(), email.getRelativeId() + ".json");
 
+        FileTime creationTime;
+        WriteLock lock = getQueueLock(email).writeLock();
         try {
-            WriteLock lock = getQueueWriteLock(email);
-            lock.tryLock();
+            lock.lock();
 
-            Path created = Files.createFile(emailPath);
+            Path file = Files.createFile(emailPath);
 
-            serialize(email, emailPath);
+            serialize(email, file);
 
-            BasicFileAttributes attrs = Files.readAttributes(created, BasicFileAttributes.class);
+            creationTime = Files.getLastModifiedTime(file);
+            /*BasicFileAttributes attrs = Files.readAttributes(file, BasicFileAttributes.class);
             FileTime creationTime = attrs.creationTime();
-            LocalDateTime timestamp = LocalDateTime.ofInstant(creationTime.toInstant(), ZoneId.systemDefault());
+            LocalDateTime timestamp = LocalDateTime.ofInstant(creationTime.toInstant(), ZoneId.systemDefault());*/
 
-            email.setTimestamp(timestamp);
+            //email.setTimestamp(timestamp);
         } catch (IOException e) {
             throw new EmailStoreException("Could not create " + email.getId() + " file", e);
+        } finally {
+            lock.unlock();
         }
+
+        LocalDateTime timestamp = LocalDateTime.ofInstant(creationTime.toInstant(), ZoneId.systemDefault());
+        email.setTimestamp(timestamp);
     }
 
-    @Override
+    @Override // Lock exclusive queue
     public void delete(ID id) throws EmailStoreException {
         Path path = getPath(id);
 
@@ -89,48 +99,114 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
             throw new EmailStoreException("Could not delete missing " + id);
         }
 
+        WriteLock lock = getQueueLock(id).writeLock();
         try {
+            lock.lock();;
             Files.delete(path);
         } catch (IOException e) {
             throw new EmailStoreException("Could not delete " + id, e);
+        } finally {
+            lock.unlock();
         }
     }
 
-    @Override
+    @Override // Lock shared email
     public Email read(ID id) throws EmailStoreException {
         Path path = getPath(id);
         File file = path.toFile();
 
-        if (!Files.exists(path)) {
-            throw new EmailStoreException(id + " is missing");
+        ReadLock lock = getEmailLock(id).readLock();
+        try {
+            lock.lock();
+
+            if (!Files.exists(path)) {
+                throw new EmailStoreException(id + " is missing");
+            }
+        } finally {
+            lock.unlock();
         }
 
-        return deserialize(file.toPath());
+        return deserialize(file);
     }
 
-    @Override
-    public List<Email> read(ID offset, int many) {
+    @Override // Lock shared queue
+    public List<Email> read(String mailbox, Queue queue, int many) throws EmailStoreException {
         List<Email> emails = new ArrayList<>();
-        Path queuePath = getPath(offset).getParent();
+        Path queuePath = getQueuePath(mailbox, queue);
 
+        ReadLock lock = getQueueLock(mailbox, queue).readLock();
         try {
+            lock.lock();
 
-            int n = 0;
-            Files.list(queuePath)
+            List<Path> emailPathsOrdered = Files.list(queuePath)
                     .map(Path::toFile)
-                    .sorted(Comparator.comparingLong(File::lastModified))
-                    .map(File::getName)
-                    .takeWhile(new Predicate<String>() {
-                        @Override
-                        public boolean test(String s) {
-                            return false;
-                        }
-                    })
-                    .forEach(System.out::println);
+                    .sorted(Comparator.comparingLong(File::lastModified).reversed())
+                    .map(File::toPath)
+                    .limit(many)
+                    .collect(Collectors.toList());
 
+            int toBeDeserialized = Math.min(many, emailPathsOrdered.size());
+            for (int i = 0; i < toBeDeserialized; i++) {
+                Path emailPath = emailPathsOrdered.get(i);
+                Email deserializedEmail = deserialize(emailPath);
 
+                ID id = ID.fromString(
+                        mailbox
+                                + "/" + queue.asShortPath()
+                                + "/" + emailPath.getFileName().toString().split("\\.")[0]);
+                deserializedEmail.setId(id);
+
+                FileTime lastModifiedTime = Files.getLastModifiedTime(emailPath);
+                LocalDateTime timestamp = LocalDateTime.ofInstant(lastModifiedTime.toInstant(), ZoneId.systemDefault());
+                deserializedEmail.setTimestamp(timestamp);
+
+                emails.add(deserializedEmail);
+            }
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
+
+        return emails;
+    }
+
+    @Override // Lock shared queue
+    public List<Email> read(Chrono direction, ID offset, int many) {
+        List<Email> emails = new ArrayList<>();
+        Path offsetPath = getPath(offset);
+        Path queuePath = offsetPath.getParent();
+
+        ReadLock lock = getQueueLock(offset).readLock();
+        try {
+            lock.lock();
+
+            // From most recent to oldest
+            List<Path> emailPathsOrdered = Files.list(queuePath)
+                    .map(Path::toFile)
+                    .sorted(Comparator.comparingLong(File::lastModified).reversed())
+                    .map(File::toPath)
+                    .collect(Collectors.toList());
+
+            // Reach and discard offset
+            for (Path emailPath : emailPathsOrdered) {
+                emailPathsOrdered.remove(emailPath);
+                if (Files.isSameFile(emailPath, offsetPath)) {
+                    break;
+                }
+            }
+
+            // Deserialize min{many, emailPathsOrder.size()} e-mails
+            int toBeDeserialized = Math.min(many, emailPathsOrdered.size());
+            for (int i = 0; i < toBeDeserialized; i++) {
+                Path emailPath = emailPathsOrdered.get(i);
+                Email deserializedEmail = deserialize(emailPath);
+                emails.add(deserializedEmail);
+            }
+        } catch (IOException | EmailStoreException e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
         }
 
         return emails;
@@ -143,6 +219,18 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
 
     protected Path getStoreDir() {
         return storeDir;
+    }
+
+    protected Path getQueuePath(String mailbox, Queue queue) {
+        String[] mailboxParts = mailbox.split("@"); // TODO can this error?
+        String user = mailboxParts[0];
+        String domain = mailboxParts[1];
+
+        String path = storeDir
+                + "/" + domain
+                + "/" + user
+                + "/" + queue.asShortPath();
+        return Paths.get(path);
     }
 
     protected Path getPath(Email email) {
@@ -166,22 +254,30 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
 
     protected abstract Email deserialize(Path path) throws EmailStoreException;
 
+    protected abstract Email deserialize(File file) throws EmailStoreException;
+
+
+    private ReentrantReadWriteLock getQueueLock(ID id) {
+        return getQueueLock(id.getMailbox(), id.getQueue());
+    }
+
     private ReentrantReadWriteLock getQueueLock(Email email) {
         return getQueueLock(email.getMailbox(), email.getQueue());
     }
 
     private ReentrantReadWriteLock getQueueLock(String mailbox, Queue queue) {
-        String key = mailbox + "." + queue.asShortPath();
+        String key = mailbox + "/" + queue.asShortPath();
+        return getLock(key);
+    }
+
+    private ReentrantReadWriteLock getEmailLock(ID id) {
+        String key = id.getMailbox() + "/" + id.getQueue().asShortPath() + "/" + id.getRelativeId();
+        return getLock(key);
+    }
+
+    private ReentrantReadWriteLock getLock(String key) {
         System.out.println("Queue lock: " + key);
-        return queueLocks.computeIfAbsent(key, k -> new ReentrantReadWriteLock());
-    }
-
-    private ReentrantReadWriteLock.ReadLock getQueueReadLock(Email email) {
-        return getQueueLock(email).readLock();
-    }
-
-    private ReentrantReadWriteLock.WriteLock getQueueWriteLock(Email email) {
-        return getQueueLock(email).writeLock();
+        return queueLocks.computeIfAbsent(key, k -> new ReentrantReadWriteLock(true));
     }
 
 }

@@ -3,13 +3,14 @@ package di.unito.it.prog3.client.model;
 import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.email.Queue;
 import di.unito.it.prog3.libs.model.EmailProperty;
-import di.unito.it.prog3.libs.net.Response;
+import di.unito.it.prog3.libs.net.Chrono;
 import javafx.application.Application;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -17,12 +18,12 @@ import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
-import java.util.Map;
 import java.util.UUID;
 import java.util.function.Predicate;
 
-import static di.unito.it.prog3.libs.net.Request.Type.LOGIN;
+import static di.unito.it.prog3.libs.net.Request.Type.READ;
 import static di.unito.it.prog3.libs.net.Request.Type.SEND;
 
 public class Model {
@@ -43,8 +44,8 @@ public class Model {
         received = new SimpleObjectProperty<>(createQueue(Queue.RECEIVED));
         sent = new SimpleObjectProperty<>(createQueue(Queue.SENT));
 
-        Email.ID sentEmailId = Email.ID.fromString("me@email.tld/S/" + UUID.randomUUID().toString());
-        Email.ID receivedReplyId = Email.ID.fromString("me@email.tld/R/" + UUID.randomUUID().toString());
+        Email.ID sentEmailId = Email.ID.fromString("me@email.tld/R/" + UUID.randomUUID().toString());
+        Email.ID receivedReplyId = Email.ID.fromString("me@email.tld/S/" + UUID.randomUUID().toString());
 
         Email sentEmail = new Email();
         sentEmail.setId(sentEmailId);
@@ -53,7 +54,6 @@ public class Model {
         sentEmail.setBody("With its interesting body");
         sentEmail.addRecipient("someone@email.tld");
         sentEmail.setTimestamp(LocalDateTime.now());
-        sentEmail.addReply(receivedReplyId);
 
 
         Email receivedReply = new Email();
@@ -63,10 +63,15 @@ public class Model {
         receivedReply.setBody("With its interesting body too");
         receivedReply.addRecipient("me@email.tld");
         receivedReply.addRecipient("whoknows@email.tld");
-        receivedReply.setTimestamp(LocalDateTime.now());
-        receivedReply.setReplyOf(sentEmailId);
+        receivedReply.setTimestamp(LocalDateTime.now().minus(1, ChronoUnit.MINUTES));
 
         all.addAll(sentEmail, receivedReply);
+
+        client.newRequest(READ)
+                .setQueue(Queue.RECEIVED)
+                .setMany(10)
+                .onSuccess(response -> all.addAll(response.getEmails()))
+                .send();
     }
 
     public void send(Email email) {
@@ -94,7 +99,7 @@ public class Model {
     }
 
     public void clearCurrentEmail() {
-        setCurrentEmail(Email.EMPTY);
+        setCurrentEmail(null);
     }
 
     public BooleanBinding isCurrentEmailSet() {
@@ -121,7 +126,7 @@ public class Model {
     private ObservableList<Email> createQueue(Queue queue) {
         Predicate<Email> filter = email -> email.getQueue().equals(queue);
         FilteredList<Email> filtered = new FilteredList<>(all, filter);
-        return new SortedList<>(filtered, Comparator.comparing(Email::getTimestamp));
+        return new SortedList<>(filtered, Comparator.comparing(Email::getTimestamp).reversed());
     }
 
 }

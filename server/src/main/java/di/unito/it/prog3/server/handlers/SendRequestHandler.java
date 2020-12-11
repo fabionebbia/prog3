@@ -54,7 +54,6 @@ public class SendRequestHandler implements RequestHandler {
 
     @Override
     public void validate(Request request) throws RequestException {
-        System.out.println(request.getRecipients());
         ensure(request.getRecipients().size() > 0, "No recipients");
     }
 

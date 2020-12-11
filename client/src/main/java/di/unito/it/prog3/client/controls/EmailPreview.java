@@ -1,15 +1,7 @@
 package di.unito.it.prog3.client.controls;
 
-import com.sun.javafx.geom.Rectangle;
 import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.utils.CssUtils;
-import di.unito.it.prog3.libs.utils.Utils;
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.ScaleTransition;
-import javafx.animation.Timeline;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -17,8 +9,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
-import javafx.scene.paint.Color;
-import javafx.util.Duration;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -44,15 +34,9 @@ public class EmailPreview extends ListCell<Email> implements EventHandler<MouseE
     @FXML @SuppressWarnings("unused")
     private Label bodyLabel;
 
-    @FXML
-    private Label reLabel;
-
     private final GridPane graphic;
 
-
-    private final BooleanProperty preview;
     private Email email;
-
 
 
     public EmailPreview() {
@@ -66,9 +50,6 @@ public class EmailPreview extends ListCell<Email> implements EventHandler<MouseE
             graphic = loader.load();
 
             setOnMouseClicked(this);
-            preview = new SimpleBooleanProperty(true);
-
-            Utils.bindVisibility(preview.not(), reLabel);
         } catch (IOException e) {
             throw new RuntimeException("Could not load email preview", e);
         }
@@ -103,13 +84,8 @@ public class EmailPreview extends ListCell<Email> implements EventHandler<MouseE
 
         datetimeLabel.setText(formattedSentDate);
         subjectLabel.setText(email.getSubject());
-        fromLabel.setText(email.getSender().toString());
+        fromLabel.setText(email.getSender());
         bodyLabel.setText(compactBody);
-
-       // Utils.setVisibility(email.hasReplies(), reLabel);
-        if (email.hasReplies()) {
-            reLabel.setText("RE: " + email.getSubject());
-        }
     }
 
     @Override

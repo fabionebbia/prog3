@@ -1,11 +1,12 @@
 package di.unito.it.prog3.server.server;
 
 import di.unito.it.prog3.libs.net.JsonMapper;
-import di.unito.it.prog3.libs.net.Response;
 import di.unito.it.prog3.libs.net.Request;
+import di.unito.it.prog3.libs.net.Response;
 import di.unito.it.prog3.server.gui.Logger;
 import di.unito.it.prog3.server.gui.Model;
 import di.unito.it.prog3.server.handlers.LoginRequestHandler;
+import di.unito.it.prog3.server.handlers.ReadRequestHandler;
 import di.unito.it.prog3.server.handlers.RequestHandler;
 import di.unito.it.prog3.server.handlers.SendRequestHandler;
 import di.unito.it.prog3.server.storage.ConcurrentJsonEmailStore;
@@ -19,7 +20,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Server extends Thread {
@@ -30,8 +34,7 @@ public class Server extends Thread {
 
     private AtomicBoolean shouldContinue;
     private ServerSocket serverSocket;
-    private ExecutorService socketAcceptingExecutor;
-    private ExecutorService requestHandlingExecutor;
+    private ExecutorService executor;
     private Logger logger;
     private int port;
 
@@ -44,19 +47,18 @@ public class Server extends Thread {
         handlers = new ConcurrentHashMap<>();
         handlers.put(Request.Type.LOGIN, new LoginRequestHandler());
         handlers.put(Request.Type.SEND, new SendRequestHandler());
+        handlers.put(Request.Type.READ, new ReadRequestHandler());
     }
 
     public synchronized void start(Model model, Application.Parameters parameters) {
-        int nAcceptingWorkers, nHandlingWorkers;
+        int nWorkers;
 
         Map<String, String> params = parameters.getNamed();
-        String nAcceptingWorkersParam = params.getOrDefault("accepting-workers", "3");
-        String nHandlingWorkersParam = params.getOrDefault("handling-workers", "3");
+        String nWorkersParam = params.getOrDefault("accepting-workers", "3");
         String portParam = params.getOrDefault("port", "9999");
 
         try {
-            nAcceptingWorkers = Integer.parseInt(nAcceptingWorkersParam);
-            nHandlingWorkers = Integer.parseInt(nHandlingWorkersParam);
+            nWorkers = Integer.parseInt(nWorkersParam);
             port = Integer.parseInt(portParam);
         } catch (NumberFormatException e) {
             throw new RuntimeException("Invalid config params", e);
@@ -64,8 +66,7 @@ public class Server extends Thread {
 
         logger = new Logger(model);
         shouldContinue = new AtomicBoolean(true);
-        socketAcceptingExecutor = Executors.newFixedThreadPool(nAcceptingWorkers);
-        requestHandlingExecutor = Executors.newFixedThreadPool(nHandlingWorkers);
+        executor = Executors.newFixedThreadPool(nWorkers);
 
         super.start();
     }
@@ -78,7 +79,7 @@ public class Server extends Thread {
             serverSocket = new ServerSocket(port);
             while (shouldContinue.get()) {
                 Socket incoming = serverSocket.accept();
-                socketAcceptingExecutor.submit(new SocketHandler(incoming));
+                executor.submit(new SocketHandler(incoming));
             }
         } catch (SocketException ignored) {
             // shutdown method closed the socket
@@ -92,8 +93,8 @@ public class Server extends Thread {
         try {
             shouldContinue.set(false);
             serverSocket.close();
-            socketAcceptingExecutor.shutdown();
-            socketAcceptingExecutor.awaitTermination(3, TimeUnit.SECONDS);
+            executor.shutdown();
+            executor.awaitTermination(3, TimeUnit.SECONDS);
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("Unable to close server socket");
@@ -119,9 +120,6 @@ public class Server extends Thread {
 
         @Override
         public void run() {
-            CompletionService<Response> completionService
-                    = new ExecutorCompletionService<>(requestHandlingExecutor);
-
             try (BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
                 Request request = json.readValue(br, Request.class);
                 Response response = Response.failure("Server error");
@@ -135,7 +133,7 @@ public class Server extends Thread {
                     logger.info("Retrieved handler (" + handler + ")");
 
                     if (handler != null) {
-                        response = handler.execute(completionService, emailStore, logger, request);
+                        response = handler.execute(emailStore, logger, request);
                     } else {
                         response = Response.failure("Unknown request type");
                     }

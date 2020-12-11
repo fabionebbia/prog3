@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import di.unito.it.prog3.libs.email.Email;
+import di.unito.it.prog3.libs.email.Queue;
 import di.unito.it.prog3.libs.utils.Emails;
 import di.unito.it.prog3.libs.utils.ValueCallback;
 import javafx.util.Callback;
@@ -21,6 +22,10 @@ public class Request {
     private String user;
     private Email.ID id;
     private Type type;
+    private Chrono direction;
+    private int many;
+    private String mailbox;
+    private Queue queue;
 
     private Set<String> recipients;
     private String subject;
@@ -56,12 +61,44 @@ public class Request {
         return id;
     }
 
+    public Queue getQueue() {
+        return queue;
+    }
+
+    public void setQueue(Queue queue) {
+        this.queue = queue;
+    }
+
     public void setId(Email.ID id) {
         this.id = id;
     }
 
     public Type getType() {
         return type;
+    }
+
+    public Chrono getDirection() {
+        return direction;
+    }
+
+    public String getMailbox() {
+        return mailbox;
+    }
+
+    public void setMailbox(String mailbox) {
+        this.mailbox = mailbox;
+    }
+
+    public void setDirection(Chrono direction) {
+        this.direction = direction;
+    }
+
+    public int getMany() {
+        return many;
+    }
+
+    public void setMany(int many) {
+        this.many = many;
     }
 
     public Set<String> getRecipients() {
@@ -116,8 +153,32 @@ public class Request {
             return this;
         }
 
+        public RequestBuilder setMailbox(String mailbox) {
+            request.mailbox = mailbox;
+            return this;
+        }
+
+        public RequestBuilder setQueue(Queue queue) {
+            request.queue = queue;
+            return this;
+        }
+
         public RequestBuilder addRecipient(String recipient) {
             request.recipients.add(recipient);
+            return this;
+        }
+
+        public RequestBuilder setDirection(Chrono direction) {
+            request.direction = direction;
+            return this;
+        }
+
+        public RequestBuilder setOffset(Email.ID offset) {
+            return setId(offset);
+        }
+
+        public RequestBuilder setMany(int many) {
+            request.many = many;
             return this;
         }
 
@@ -157,7 +218,8 @@ public class Request {
 
     public enum Type {
         LOGIN,
-        SEND;
+        SEND,
+        READ;
 
         @JsonValue
         public String forJackson() {

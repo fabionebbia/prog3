@@ -14,6 +14,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.net.JsonMapper;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -56,10 +57,15 @@ public class ConcurrentJsonEmailStore extends ConcurrentFileBasedEmailStore {
 
     @Override
     protected Email deserialize(Path path) throws EmailStoreException {
+        return deserialize(path.toFile());
+    }
+
+    @Override
+    protected Email deserialize(File file) throws EmailStoreException {
         try {
-            return reader.readValue(path.toFile(), Email.class);
+            return reader.readValue(file, Email.class);
         } catch (IOException e) {
-            throw new EmailStoreException("Could not deserialize e-mail from path " + path, e);
+            throw new EmailStoreException("Could not deserialize e-mail from path " + file.getPath(), e);
         }
     }
 

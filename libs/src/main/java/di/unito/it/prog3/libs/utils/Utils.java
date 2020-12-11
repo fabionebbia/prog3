@@ -9,10 +9,7 @@ import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.Node;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -109,4 +106,18 @@ public class Utils {
         }
     }
 
+    public static String join(Collection<String> strings) {
+        String[] tokens = strings.toArray(new String[0]);
+        StringBuilder sb = new StringBuilder();
+        int n = strings.size();
+
+        for (int i = 0; i < n; i++) {
+            sb.append(tokens[i]);
+            if (i < n - 1) {
+                sb.append(", ");
+            }
+        }
+
+        return sb.toString();
+    }
 }

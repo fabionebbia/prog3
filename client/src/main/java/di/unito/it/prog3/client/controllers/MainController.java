@@ -189,6 +189,7 @@ public class MainController extends Controller {
 
     @FXML
     private void forward() {
+        currentView.set(WRITE);
     }
 
     @FXML

@@ -14,7 +14,6 @@
       <RowConstraints vgrow="NEVER" />
       <RowConstraints vgrow="NEVER" />
       <RowConstraints vgrow="NEVER" />
-      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
    </rowConstraints>
    <children>
       <Label fx:id="fromLabel" styleClass="sender-label" text="sender@email.tld" GridPane.vgrow="NEVER">
@@ -24,6 +23,5 @@
       <Label fx:id="subjectLabel" maxHeight="17.0" styleClass="subject-label" text="Subject" wrapText="true" GridPane.columnSpan="2" GridPane.rowIndex="1" GridPane.vgrow="NEVER">
       </Label>
       <Label fx:id="bodyLabel" maxHeight="17.0" styleClass="body-label" text="Body" wrapText="true" GridPane.columnSpan="2" GridPane.rowIndex="2" GridPane.vgrow="NEVER" />
-      <Label fx:id="reLabel" text="Re: Reply Email ID" GridPane.rowIndex="3" />
    </children>
 </GridPane>

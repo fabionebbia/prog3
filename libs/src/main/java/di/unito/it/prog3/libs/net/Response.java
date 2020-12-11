@@ -6,24 +6,21 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import di.unito.it.prog3.libs.email.Email;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @JsonAutoDetect(fieldVisibility = Visibility.ANY)
 public class Response {
 
     private boolean success;
     private String message;
-    private Set<Email> emails;
+    private List<Email> emails;
 
     @JsonCreator
     private Response() {
-        emails = new HashSet<>();
+        emails = new ArrayList<>();
     }
 
-    private Response(boolean success, String message, Set<Email> emails) {
+    private Response(boolean success, String message, ArrayList<Email> emails) {
         this.success = success;
         this.message = message;
         this.emails = emails;
@@ -37,7 +34,7 @@ public class Response {
         return message;
     }
 
-    public Set<Email> getEmails() {
+    public List<Email> getEmails() {
         return emails;
     }
 
@@ -48,12 +45,14 @@ public class Response {
         return SUCCESS;
     }
 
-    public static Response success(Email... emails) {
-        return success(Set.of(emails));
+    public static Response success(Email email) {
+        ArrayList<Email> list = new ArrayList<>();
+        list.add(email);
+        return success(list);
     }
 
-    public static Response success(Set<Email> emails) {
-        return new Response(true, "", emails);
+    public static Response success(Collection<Email> emails) {
+        return new Response(true, "", new ArrayList<>(emails));
     }
 
     public static Response failure(String message) {

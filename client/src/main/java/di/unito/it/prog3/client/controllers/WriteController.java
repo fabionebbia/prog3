@@ -2,6 +2,7 @@ package di.unito.it.prog3.client.controllers;
 
 import di.unito.it.prog3.client.controls.Recipient;
 import di.unito.it.prog3.libs.email.Email;
+import di.unito.it.prog3.libs.model.EmailProperty;
 import di.unito.it.prog3.libs.utils.Emails;
 import di.unito.it.prog3.libs.utils.Utils;
 import javafx.beans.binding.Bindings;
@@ -17,8 +18,11 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
 
 public class WriteController extends Controller {
+
+    private final DateTimeFormatter FORWARD_DATE_FORMAT = DateTimeFormatter.ofPattern("d MMM yyyy HH:mm");
 
     @FXML private GridPane gridPane;
     @FXML private TextField subjectField;
@@ -95,31 +99,6 @@ public class WriteController extends Controller {
         recipients.add(newRecipient);
         recipientField.setText("");
     }
-/*
-    @Override
-    public void onChanged(Change<? extends String> c) {
-        ObservableList<Node> children = flowPane.getChildren();
-
-        while (c.next()) {
-            if (c.wasAdded()) {
-                List<? extends String> addedSubList = c.getAddedSubList();
-                for (int i = 0; i < addedSubList.size(); i++) {
-                    int offset = c.getFrom() + i;
-                    try {
-                        Recipient recipient = new Recipient();
-                        recipient.emailProperty().bind(Bindings.stringValueAt(recipients, offset));
-                        recipient.onRemove(e -> recipients.removeIf());
-                        recipient.onClick(e -> recipientField.textProperty().bind(recipient.emailProperty()));
-                        children.add(recipient);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            } else if (c.wasRemoved()) {
-                children.remove(children.size() - 1);
-            }
-        }
-    }*/
 
     @Override
     void onDisplayed() {
@@ -128,9 +107,31 @@ public class WriteController extends Controller {
                 addRecipient();
             }
         });
+
+        String newSubject = "";
+        String newBody = "";
+        if (model.isCurrentEmailSet().get()) { // forwarding
+            Email email = model.getCurrentEmail();
+            StringBuilder sb = new StringBuilder();
+            sb.append("----------- Forwarded e-mail -----------")
+                    .append("\nFrom: ").append(email.getSender())
+                    .append("\nTo: ").append(Utils.join(email.getRecipients()))
+                    .append("\nSubject: ").append(email.getSubject())
+                    .append("\nDate: ").append(FORWARD_DATE_FORMAT.format(email.getTimestamp()))
+                    .append("\n\n--------------- Message ----------------")
+                    .append("\n").append(email.getBody());
+            newBody = sb.toString();
+
+            String prevSubject = email.getSubject();
+            if (prevSubject != null && !prevSubject.isBlank()) {
+                newSubject = "Fwd: " + prevSubject;
+            }
+        }
+
+        recipientField.requestFocus();
         recipients.clear();
-        subject.set("");
-        body.set("");
+        subject.set(newSubject);
+        body.set(newBody);
     }
 
     @Override

@@ -3,6 +3,7 @@ package di.unito.it.prog3.server.storage;
 import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.email.Email.ID;
 import di.unito.it.prog3.libs.email.Queue;
+import di.unito.it.prog3.libs.net.Chrono;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -19,8 +20,10 @@ public interface EmailStore {
 
     Email read(ID email) throws EmailStoreException, FileNotFoundException;
 
-    List<Email> read(ID offset, int many)  throws EmailStoreException;
+    List<Email> read(String mailbox, Queue queue, int many) throws EmailStoreException;
 
-    List<Email> readAll(Queue queue)  throws EmailStoreException;
+    List<Email> read(Chrono direction, ID offset, int many)  throws EmailStoreException;
+
+    List<Email> readAll(Queue queue) throws EmailStoreException;
 
 }

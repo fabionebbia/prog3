@@ -5,12 +5,15 @@ import di.unito.it.prog3.libs.net.Request;
 import di.unito.it.prog3.server.gui.Logger;
 import di.unito.it.prog3.server.storage.EmailStore;
 
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutorService;
+
 public class LoginRequestHandler implements RequestHandler {
 
     @Override
     public Response handle(EmailStore emailStore, Logger logger, Request request) {
         // If execution got here, the user exists therefore the login is successful
-        return Response.success();
+       return Response.success();
     }
 
     @Override

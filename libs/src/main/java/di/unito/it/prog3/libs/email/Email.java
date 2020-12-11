@@ -31,12 +31,9 @@ public class Email {
     private String body;
     private boolean read;
     private boolean draft;
-    private ID replyOf;
-    private Set<ID> replies;
 
     public Email() {
         recipients = new HashSet<>();
-        replies = new HashSet<>();
     }
 
     public Email(Email other) {
@@ -51,8 +48,6 @@ public class Email {
         this.body = other.body;
         this.read = other.read;
         this.draft = other.draft;
-        this.replyOf = other.replyOf;
-        this.replies.addAll(other.replies);
     }
 
     public ID getId() {
@@ -150,22 +145,6 @@ public class Email {
         return relativeId;
     }
 
-    public void setReplyOf(ID replyOf) {
-        this.replyOf = replyOf;
-    }
-
-    public boolean hasReplies() {
-        return replies.size() > 0;
-    }
-
-    public void addReply(ID reply) {
-        replies.add(reply);
-    }
-
-    public Set<ID> getReplies() {
-        return Collections.unmodifiableSet(replies);
-    }
-
     @Override
     public String toString() {
         return getId().toString();
@@ -225,7 +204,9 @@ public class Email {
         @Override
         @JsonValue
         public String toString() {
-            return mailbox + "/" + queue.asShortPath() + "/" + relativeId;
+            return (mailbox != null ? mailbox : "NO_MAILBOX")
+                    + "/" + (queue != null ? queue.asShortPath() : "NO_QUEUE")
+                    + "/" + (relativeId != null ? relativeId : "NO_RELATIVE_ID");
         }
     }
 

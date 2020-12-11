@@ -106,6 +106,7 @@ public class Client {
                 System.out.println(json.writeValueAsString(request));
                 json.writeValue(socket.getOutputStream(), request);
                 Response response = json.readValue(br, Response.class);
+                System.out.println(json.writeValueAsString(response));
                 Platform.runLater(() -> request.gotResponse(response));
 
                 setStatus(IDLE);
