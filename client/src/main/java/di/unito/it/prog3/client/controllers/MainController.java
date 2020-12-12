@@ -1,22 +1,26 @@
 package di.unito.it.prog3.client.controllers;
 
+import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.model.Error;
-import di.unito.it.prog3.libs.utils.CssUtils;
-import di.unito.it.prog3.libs.utils.FXWrapper;
-import di.unito.it.prog3.libs.utils.Utils;
-import di.unito.it.prog3.libs.utils.WrappedFXMLLoader;
+import di.unito.it.prog3.libs.utils.*;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.shape.Circle;
 import javafx.util.Duration;
+
+import java.awt.desktop.SystemEventListener;
+import java.util.List;
 
 import static di.unito.it.prog3.client.controllers.MainController.View.QUEUES;
 import static di.unito.it.prog3.client.controllers.MainController.View.WRITE;
@@ -124,7 +128,11 @@ public class MainController extends Controller {
         );
 
         // Show Send button only when writing a new e-mail
-        Utils.bindVisibility(currentView.isEqualTo(WRITE), sendButton);
+        Utils.bindVisibility(
+                currentView.isEqualTo(WRITE),
+                writeView.getController().isEmailWellFormed(),
+                sendButton
+        );
 
         // Disable Delete/Discard button on root view if no e-mail is selected
         // Change button text based on the current view
@@ -194,6 +202,7 @@ public class MainController extends Controller {
 
     @FXML
     private void reply() {
+
     }
 
     @FXML
@@ -202,12 +211,16 @@ public class MainController extends Controller {
 
     @FXML
     private void send() {
-        writeView.getController().sendRequested();
+        writeView.getController().sendRequested(() -> currentView.set(QUEUES));
+        queueView.getController().selectTab(QueueViewController.SENT_TAB);
     }
 
     @FXML
     private void delete() {
-
+        if (currentView.get().equals(QUEUES)) {
+            Email.ID id = model.getCurrentEmail().getId();
+            model.delete(id);
+        }
     }
 
     private void catchException(Throwable e) {

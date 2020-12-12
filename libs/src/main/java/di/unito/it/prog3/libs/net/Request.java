@@ -24,7 +24,6 @@ public class Request {
     private Type type;
     private Chrono direction;
     private int many;
-    private String mailbox;
     private Queue queue;
 
     private Set<String> recipients;
@@ -79,14 +78,6 @@ public class Request {
 
     public Chrono getDirection() {
         return direction;
-    }
-
-    public String getMailbox() {
-        return mailbox;
-    }
-
-    public void setMailbox(String mailbox) {
-        this.mailbox = mailbox;
     }
 
     public void setDirection(Chrono direction) {
@@ -153,11 +144,6 @@ public class Request {
             return this;
         }
 
-        public RequestBuilder setMailbox(String mailbox) {
-            request.mailbox = mailbox;
-            return this;
-        }
-
         public RequestBuilder setQueue(Queue queue) {
             request.queue = queue;
             return this;
@@ -219,7 +205,8 @@ public class Request {
     public enum Type {
         LOGIN,
         SEND,
-        READ;
+        READ,
+        DELETE;
 
         @JsonValue
         public String forJackson() {

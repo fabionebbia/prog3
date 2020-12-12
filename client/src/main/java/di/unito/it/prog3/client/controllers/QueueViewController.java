@@ -10,6 +10,7 @@ import javafx.scene.control.SelectionModel;
 import javafx.scene.control.TabPane;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
 
 public class QueueViewController extends Controller implements EventHandler<MouseEvent> {
 
@@ -95,8 +96,18 @@ public class QueueViewController extends Controller implements EventHandler<Mous
         }
     }
 
-    protected void onEmailDoubleClick(Callback doubleClickCallback) {
+    void onEmailDoubleClick(Callback doubleClickCallback) {
         this.doubleClickCallback = doubleClickCallback;
     }
+
+    void selectTab(int index) {
+        if (index < 0 || index > tabPane.getTabs().size()) {
+            throw new IllegalArgumentException("Tab index out of boundes");
+        }
+        tabPane.getSelectionModel().select(index);
+    }
+
+    static int RECEIVED_TAB = 0;
+    static int SENT_TAB = 1;
 
 }

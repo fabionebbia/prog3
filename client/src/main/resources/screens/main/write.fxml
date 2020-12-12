@@ -5,6 +5,8 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.GridPane?>
@@ -50,15 +52,25 @@
          </rowConstraints>
          <children>
             <FlowPane id="flow-pane" fx:id="flowPane" hgap="10.0" vgap="10.0" GridPane.columnSpan="2" />
-            <Button fx:id="addButton" mnemonicParsing="false" onAction="#addRecipient" text="Add" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <Button fx:id="addButton" contentDisplay="RIGHT" mnemonicParsing="false" onAction="#addRecipient" text="Add" GridPane.columnIndex="1" GridPane.rowIndex="1">
+               <graphic>
+                  <ImageView fitHeight="17.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../../../../../../libs/src/main/resources/179347-control/png/plus.png" />
+                     </image>
+                  </ImageView>
+               </graphic></Button>
             <TextField fx:id="recipientField" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" />
          </children>
       </GridPane>
 
-      <TextArea fx:id="bodyTextArea" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.vgrow="ALWAYS">
+      <TextArea fx:id="bodyTextArea" text="----------- Forwarded e-mail -----------&#10;From: user1@email.tld&#10;To: user1@email.tld&#10;Subject: voglio bene a mio fratello&#10;Date: 11 dic 2020 20:42" wrapText="true" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.vgrow="ALWAYS">
          <GridPane.margin>
             <Insets top="20.0" />
          </GridPane.margin>
+         <font>
+            <Font name="Menlo Regular" size="13.0" />
+         </font>
       </TextArea>
    </children>
    <padding>

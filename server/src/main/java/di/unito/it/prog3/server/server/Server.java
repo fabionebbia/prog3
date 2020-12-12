@@ -5,10 +5,7 @@ import di.unito.it.prog3.libs.net.Request;
 import di.unito.it.prog3.libs.net.Response;
 import di.unito.it.prog3.server.gui.Logger;
 import di.unito.it.prog3.server.gui.Model;
-import di.unito.it.prog3.server.handlers.LoginRequestHandler;
-import di.unito.it.prog3.server.handlers.ReadRequestHandler;
-import di.unito.it.prog3.server.handlers.RequestHandler;
-import di.unito.it.prog3.server.handlers.SendRequestHandler;
+import di.unito.it.prog3.server.handlers.*;
 import di.unito.it.prog3.server.storage.ConcurrentJsonEmailStore;
 import di.unito.it.prog3.server.storage.EmailStore;
 import javafx.application.Application;
@@ -48,6 +45,7 @@ public class Server extends Thread {
         handlers.put(Request.Type.LOGIN, new LoginRequestHandler());
         handlers.put(Request.Type.SEND, new SendRequestHandler());
         handlers.put(Request.Type.READ, new ReadRequestHandler());
+        handlers.put(Request.Type.DELETE, new DeletionRequestHandler());
     }
 
     public synchronized void start(Model model, Application.Parameters parameters) {

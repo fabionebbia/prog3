@@ -2,11 +2,15 @@ package di.unito.it.prog3.client.controllers;
 
 import di.unito.it.prog3.client.controls.Recipient;
 import di.unito.it.prog3.libs.email.Email;
-import di.unito.it.prog3.libs.model.EmailProperty;
+import di.unito.it.prog3.libs.utils.Callback;
 import di.unito.it.prog3.libs.utils.Emails;
 import di.unito.it.prog3.libs.utils.Utils;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.*;
+import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.SetProperty;
+import javafx.beans.property.SimpleSetProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.SetChangeListener;
 import javafx.fxml.FXML;
@@ -18,11 +22,8 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 
 import java.io.IOException;
-import java.time.format.DateTimeFormatter;
 
 public class WriteController extends Controller {
-
-    private final DateTimeFormatter FORWARD_DATE_FORMAT = DateTimeFormatter.ofPattern("d MMM yyyy HH:mm");
 
     @FXML private GridPane gridPane;
     @FXML private TextField subjectField;
@@ -32,7 +33,6 @@ public class WriteController extends Controller {
     @FXML private TextField recipientField;
     @FXML private TextArea bodyTextArea;
 
-    private ListProperty<String> recipientsProperty;
     private SetProperty<String> recipients;
     private StringProperty subject;
     private StringProperty body;
@@ -82,6 +82,9 @@ public class WriteController extends Controller {
         recipientsFlowPaneContainer.vgapProperty().bind(Bindings.createDoubleBinding(
                 () -> recipients.size() > 0 ? 10d : 0d, recipients
         ));
+
+        //bodyTextArea.lookup(".scroll-bar:vertical").setDisable(true);
+
     }
 
     private boolean canAddRecipient() {
@@ -114,10 +117,10 @@ public class WriteController extends Controller {
             Email email = model.getCurrentEmail();
             StringBuilder sb = new StringBuilder();
             sb.append("----------- Forwarded e-mail -----------")
-                    .append("\nFrom: ").append(email.getSender())
-                    .append("\nTo: ").append(Utils.join(email.getRecipients()))
                     .append("\nSubject: ").append(email.getSubject())
-                    .append("\nDate: ").append(FORWARD_DATE_FORMAT.format(email.getTimestamp()))
+                    .append("\nFrom:    ").append(email.getSender())
+                    .append("\nTo:      ").append(Utils.join(email.getRecipients()))
+                    .append("\nDate:    ").append(Emails.VISUAL_TIMESTAMP_DATE_FORMAT.format(email.getTimestamp()))
                     .append("\n\n--------------- Message ----------------")
                     .append("\n").append(email.getBody());
             newBody = sb.toString();
@@ -139,12 +142,16 @@ public class WriteController extends Controller {
         gridPane.getScene().setOnKeyPressed(null);
     }
 
-    void sendRequested() {
+    void sendRequested(Callback callback) {
         Email email = new Email();
         email.addAllRecipients(recipients.get());
         email.setSubject(subject.get());
         email.setBody(body.get());
-        model.send(email);
+        model.send(email, callback);
+    }
+
+    BooleanBinding isEmailWellFormed() {
+        return recipients.sizeProperty().greaterThan(0);
     }
 
 }

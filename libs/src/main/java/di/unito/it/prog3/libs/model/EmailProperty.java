@@ -14,7 +14,7 @@ public class EmailProperty extends SimpleObjectProperty<Email> {
     private final ReadOnlyStringWrapper sender;
     private final ListProperty<String> recipients;
     private final ReadOnlyStringWrapper subject;
-    private final ReadOnlyObjectWrapper<LocalDateTime> dateSent;
+    private final ReadOnlyObjectWrapper<LocalDateTime> timestamp;
     private final ReadOnlyStringWrapper body;
 
     public EmailProperty() {
@@ -22,7 +22,7 @@ public class EmailProperty extends SimpleObjectProperty<Email> {
         sender = new ReadOnlyStringWrapper();
         recipients = new SimpleListProperty<>(FXCollections.observableArrayList(new ArrayList<>()));
         subject = new ReadOnlyStringWrapper();
-        dateSent = new ReadOnlyObjectWrapper<>();
+        timestamp = new ReadOnlyObjectWrapper<>();
         body = new ReadOnlyStringWrapper();
 
         addListener(((observable, oldMail, newEmail) -> {
@@ -32,7 +32,7 @@ public class EmailProperty extends SimpleObjectProperty<Email> {
             sender.set(newEmail.getSender());
             recipients.setAll(newEmail.getRecipients());
             subject.set(newEmail.getSubject());
-            dateSent.set(newEmail.getTimestamp());
+            timestamp.set(newEmail.getTimestamp());
             body.set(newEmail.getBody());
         }));
     }
@@ -51,6 +51,10 @@ public class EmailProperty extends SimpleObjectProperty<Email> {
 
     public StringProperty bodyProperty() {
         return body;
+    }
+
+    public ObjectPropertyBase<LocalDateTime> timestampProperty() {
+        return timestamp;
     }
 
 }

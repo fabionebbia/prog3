@@ -4,6 +4,7 @@ import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.email.Queue;
 import di.unito.it.prog3.libs.model.EmailProperty;
 import di.unito.it.prog3.libs.net.Chrono;
+import di.unito.it.prog3.libs.utils.Callback;
 import javafx.application.Application;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ListProperty;
@@ -23,8 +24,7 @@ import java.util.Comparator;
 import java.util.UUID;
 import java.util.function.Predicate;
 
-import static di.unito.it.prog3.libs.net.Request.Type.READ;
-import static di.unito.it.prog3.libs.net.Request.Type.SEND;
+import static di.unito.it.prog3.libs.net.Request.Type.*;
 
 public class Model {
 
@@ -43,7 +43,7 @@ public class Model {
         all = new SimpleListProperty<>(FXCollections.observableArrayList());
         received = new SimpleObjectProperty<>(createQueue(Queue.RECEIVED));
         sent = new SimpleObjectProperty<>(createQueue(Queue.SENT));
-
+/*
         Email.ID sentEmailId = Email.ID.fromString("me@email.tld/R/" + UUID.randomUUID().toString());
         Email.ID receivedReplyId = Email.ID.fromString("me@email.tld/S/" + UUID.randomUUID().toString());
 
@@ -65,24 +65,65 @@ public class Model {
         receivedReply.addRecipient("whoknows@email.tld");
         receivedReply.setTimestamp(LocalDateTime.now().minus(1, ChronoUnit.MINUTES));
 
-        all.addAll(sentEmail, receivedReply);
+        all.addAll(sentEmail, receivedReply);*/
 
         client.newRequest(READ)
                 .setQueue(Queue.RECEIVED)
-                .setMany(10)
                 .onSuccess(response -> all.addAll(response.getEmails()))
                 .send();
+
+        client.newRequest(READ)
+                .setQueue(Queue.SENT)
+                .onSuccess(response -> all.addAll(response.getEmails()))
+                .send();
+
+        client.statusProperty().addListener(new ChangeListener<ClientStatus>() {
+            @Override
+            public void changed(ObservableValue<? extends ClientStatus> observable, ClientStatus oldValue, ClientStatus newValue) {
+                System.out.println(newValue);
+            }
+        });
+
+        client.startPoller();
     }
 
     public void send(Email email) {
+        send(email, null);
+    }
+
+    public void send(Email email, Callback callback) {
         client.newRequest(SEND)
                 .addAllRecipients(email.getRecipients())
                 .setSubject(email.getSubject())
                 .setBody(email.getBody())
                 .onSuccess(response -> {
-                    System.out.println(response.getEmails());
+                    if (callback != null) callback.call();
                     all.addAll(response.getEmails());
                 })
+                .send();
+    }
+
+    public void delete(Email.ID id) {
+        delete(id, null);
+    }
+
+    public void delete(Email.ID id, Callback callback) {
+        client.newRequest(DELETE)
+                .setId(id)
+                .onSuccess(response -> {
+                    if (callback != null) callback.call();
+                    all.removeIf(email -> email.getId().equals(id));
+                })
+                .send();
+    }
+
+    void loadNewerReceived() {
+        Email lastReceived = received.getValue().get(0);
+        Email.ID offset = lastReceived.getId();
+System.out.println("ciao");
+        client.newRequest(READ)
+                .setOffset(offset)
+                .onSuccess(response -> all.addAll(response.getEmails()))
                 .send();
     }
 

@@ -8,12 +8,14 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import di.unito.it.prog3.libs.exceptions.MalformedEmailIDException;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @JsonAutoDetect(fieldVisibility = Visibility.ANY)
 public class Email {
 
     public static final Email EMPTY = new Email();
+
 
     @JsonIgnore
     private String mailbox;

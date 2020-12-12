@@ -1,38 +1,33 @@
 package di.unito.it.prog3.server.handlers;
 
 import di.unito.it.prog3.libs.email.Email;
-import di.unito.it.prog3.libs.net.Chrono;
 import di.unito.it.prog3.libs.net.Request;
 import di.unito.it.prog3.libs.net.Response;
-import di.unito.it.prog3.libs.utils.Emails;
 import di.unito.it.prog3.server.gui.Logger;
 import di.unito.it.prog3.server.storage.EmailStore;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class ReadRequestHandler implements RequestHandler {
 
     @Override
     public Response handle(EmailStore emailStore, Logger logger, Request request) throws Exception {
-        Chrono direction = request.getDirection();
         Email.ID offset = request.getId();
-        int many = request.getMany();
+
+        List<Email> emails;
 
         if (request.getQueue() != null) {
-            List<Email> emails = emailStore.read(request.getUser(), request.getQueue(), many);
+            emails = emailStore.readAll(request.getUser(), request.getQueue());
+            return Response.success(emails);
+        }
+
+        if (offset != null) {
+            emails = emailStore.readNewer(offset);
             return Response.success(emails);
         }
 
         System.out.println("Non doveva arrivare qui");
-
-        if (offset != null && many == 1) {
-            Email email = emailStore.read(offset);
-            return Response.success(email);
-        } else {
-            List<Email> emails = emailStore.read(direction, offset, many);
-            return Response.success(emails);
-        }
+        return Response.failure("Non doveva arrivare qui");
     }
 
     /**

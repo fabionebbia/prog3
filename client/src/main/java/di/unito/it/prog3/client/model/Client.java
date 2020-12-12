@@ -1,11 +1,9 @@
 package di.unito.it.prog3.client.model;
 
 import di.unito.it.prog3.libs.net.JsonMapper;
-import di.unito.it.prog3.libs.net.Response;
 import di.unito.it.prog3.libs.net.Request;
-import di.unito.it.prog3.libs.net.ResponseHandler;
+import di.unito.it.prog3.libs.net.Response;
 import di.unito.it.prog3.libs.utils.Emails;
-import di.unito.it.prog3.libs.utils.ValueCallback;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -14,15 +12,16 @@ import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static di.unito.it.prog3.client.model.ClientStatus.*;
-import static di.unito.it.prog3.libs.net.Request.Type.LOGIN;
 
 public class Client {
 
@@ -35,8 +34,11 @@ public class Client {
     private final JsonMapper json;
     private final Model model;
 
-    private String host;
-    private int port;
+    private final long pollingInterval;
+    private final String host;
+    private final int port;
+
+    private boolean pollerStarted;
 
     Client(Model model, Application.Parameters parameters) {
         Map<String, String> params = parameters.getNamed();
@@ -44,20 +46,16 @@ public class Client {
         String userParam = params.get("user");
 
         String[] serverParts = serverParam.split(":");
-        boolean serverInvalid = serverParts.length != 2;
-
-        if (!serverInvalid) {
-            try {
-                host = serverParts[0];
-                port = Integer.parseInt(serverParts[1]);
-            } catch (NumberFormatException ignored) {
-                serverInvalid = true;
+        try {
+            if (serverParts.length != 2) {
+                throw new IllegalArgumentException();
             }
-        }
-
-        if (serverInvalid) {
+            host = serverParts[0];
+            port = Integer.parseInt(serverParts[1]);
+        } catch (Exception ignored) {
             throw new IllegalArgumentException("Invalid server address");
         }
+
 
         if (Emails.isMalformed(userParam)) {
             throw new IllegalArgumentException("Invalid user e-mail");
@@ -71,21 +69,28 @@ public class Client {
 
         executor = Executors.newSingleThreadExecutor();
 
-        long pollingInterval;
         try {
             pollingInterval = Integer.parseInt(params.getOrDefault("polling-interval", "5"));
-        } catch (NumberFormatException ignored) {
-            pollingInterval = -1;
-        }
-
-        if (pollingInterval <= 0) {
+            if (pollingInterval <= 0) {
+                throw new IllegalArgumentException();
+            }
+        } catch (Exception ignored) {
             throw new IllegalArgumentException("Invalid polling interval");
         }
 
         poller = Executors.newSingleThreadScheduledExecutor();
-        poller.scheduleAtFixedRate(
-                () -> {} /* newRequest(LOGIN).send(r -> System.out.println("POLL"))*/,
-                0, pollingInterval, TimeUnit.SECONDS);
+    }
+
+    void startPoller() {
+        if (!pollerStarted) {
+            poller.scheduleAtFixedRate(
+                    model::loadNewerReceived,
+                    pollingInterval,
+                    pollingInterval,
+                    TimeUnit.SECONDS
+            );
+        }
+        pollerStarted = true;
     }
 
     public Request.RequestBuilder newRequest(Request.Type type) {

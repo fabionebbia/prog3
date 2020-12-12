@@ -12,7 +12,7 @@ import java.util.List;
 
 public interface EmailStore {
 
-    boolean userExists(String userMail);
+    boolean userExists(String userMail) throws EmailStoreException;
 
     void store(Email email) throws Exception;
 
@@ -22,8 +22,10 @@ public interface EmailStore {
 
     List<Email> read(String mailbox, Queue queue, int many) throws EmailStoreException;
 
+    List<Email> readNewer(ID offset) throws EmailStoreException;
+
     List<Email> read(Chrono direction, ID offset, int many)  throws EmailStoreException;
 
-    List<Email> readAll(Queue queue) throws EmailStoreException;
+    List<Email> readAll(String mailbox, Queue queue) throws EmailStoreException, IOException;
 
 }

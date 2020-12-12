@@ -46,10 +46,13 @@
          </font>
       </Label>
       <Label fx:id="dateLabel" text="date" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="3" GridPane.vgrow="NEVER" />
-      <TextArea fx:id="bodyTextArea" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS" GridPane.rowIndex="4" GridPane.vgrow="ALWAYS">
+      <TextArea fx:id="bodyTextArea" wrapText="true" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS" GridPane.rowIndex="4" GridPane.vgrow="ALWAYS">
          <GridPane.margin>
             <Insets top="20.0" />
          </GridPane.margin>
+         <font>
+            <Font name="Menlo Regular" size="13.0" />
+         </font>
       </TextArea>
       <Label fx:id="subjectLabel" text="subject" GridPane.columnIndex="1" GridPane.rowIndex="2" />
       <FlowPane fx:id="recipientsFlowPane" alignment="CENTER_LEFT" hgap="5.0" vgap="5.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />

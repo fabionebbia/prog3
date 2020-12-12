@@ -1,10 +1,12 @@
 package di.unito.it.prog3.libs.utils;
 
-import di.unito.it.prog3.libs.email.Mailbox;
-
+import java.time.format.DateTimeFormatter;
 import java.util.regex.Pattern;
 
 public class Emails {
+
+    public static final DateTimeFormatter VISUAL_TIMESTAMP_DATE_FORMAT = DateTimeFormatter.ofPattern("d MMM yyyy HH:mm");
+
 
     // RFC822 compliant e-mail regex
     // Source: http://www.ex-parrot.com/pdw/Mail-RFC822-Address.html

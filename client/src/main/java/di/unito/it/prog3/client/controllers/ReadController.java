@@ -1,9 +1,13 @@
 package di.unito.it.prog3.client.controllers;
 
+import di.unito.it.prog3.libs.utils.Emails;
+import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.FlowPane;
+
+import java.time.LocalDateTime;
 
 public class ReadController extends Controller {
 
@@ -40,6 +44,12 @@ public class ReadController extends Controller {
         fromLabel.textProperty().bind(model.currentEmailProperty().fromProperty());
         subjectLabel.textProperty().bind(model.currentEmailProperty().subjectProperty());
         bodyTextArea.textProperty().bind(model.currentEmailProperty().bodyProperty());
+
+        dateLabel.textProperty().bind(Bindings.createStringBinding(() -> {
+            LocalDateTime timestamp = model.currentEmailProperty().timestampProperty().get();
+            if (timestamp == null) return "";
+            else return Emails.VISUAL_TIMESTAMP_DATE_FORMAT.format(timestamp);
+        }, model.currentEmailProperty().timestampProperty()));
     }
 
 }

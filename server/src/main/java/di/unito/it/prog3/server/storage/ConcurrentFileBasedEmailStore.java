@@ -38,13 +38,29 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
     }
 
     @Override // No lock needed as users are preregistered
-    public boolean userExists(String userMail) {
+    public boolean userExists(String userMail) throws EmailStoreException {
         String[] mailboxParts = userMail.split("@"); // TODO can this error?
         String user = mailboxParts[0];
         String domain = mailboxParts[1];
 
         Path userStore = Paths.get(getStoreDir().toString(), domain, user);
-        return Files.exists(userStore);
+
+        if (!Files.exists(userStore)) {
+            throw new EmailStoreException("Unknown user " + userMail);
+        }
+
+        for (Queue queue : Queue.values()) {
+            Path queuePath = Paths.get(userStore.toString(), queue.asShortPath());
+            if (!Files.exists(queuePath)) {
+                try {
+                    Files.createDirectories(queuePath);
+                } catch (IOException e) {
+                    throw new EmailStoreException("Could not create queue folders");
+                }
+            }
+        }
+
+        return true;
     }
 
     @Override // Lock exclusive queue
@@ -201,6 +217,7 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
             for (int i = 0; i < toBeDeserialized; i++) {
                 Path emailPath = emailPathsOrdered.get(i);
                 Email deserializedEmail = deserialize(emailPath);
+
                 emails.add(deserializedEmail);
             }
         } catch (IOException | EmailStoreException e) {
@@ -213,12 +230,93 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
     }
 
     @Override
-    public List<Email> readAll(Queue queue) {
-        return null;
+    public List<Email> readNewer(ID offset) throws EmailStoreException {
+        List<Email> emails = new ArrayList<>();
+        Path offsetPath = getPath(offset);
+        Path queuePath = offsetPath.getParent();
+
+        ReadLock lock = getQueueLock(offset).readLock();
+        try {
+            lock.lock();
+
+            List<Path> emailPathsOrdered = Files.list(queuePath)
+                    .map(Path::toFile)
+                    .sorted(Comparator.comparingLong(File::lastModified).reversed())
+                    .map(File::toPath)
+                    .collect(Collectors.toList());
+
+            // Reach and discard offset
+            for (Path emailPath : emailPathsOrdered) {
+                if (Files.isSameFile(emailPath, offsetPath)) {
+                    break;
+                }
+
+                Email deserializedEmail = deserialize(emailPath);
+
+                ID id = ID.fromString(
+                        offset.getMailbox()
+                                + "/" + offset.getQueue().asShortPath()
+                                + "/" + emailPath.getFileName().toString().split("\\.")[0]);
+                deserializedEmail.setId(id);
+
+                FileTime lastModifiedTime = Files.getLastModifiedTime(emailPath);
+                LocalDateTime timestamp = LocalDateTime.ofInstant(lastModifiedTime.toInstant(), ZoneId.systemDefault());
+                deserializedEmail.setTimestamp(timestamp);
+
+                emails.add(deserializedEmail);
+            }
+        } catch (IOException e) {
+            throw new EmailStoreException("Could not retrieve new e-mails");
+        } finally {
+            lock.unlock();
+        }
+
+        return emails;
+    }
+
+    @Override
+    public List<Email> readAll(String mailbox, Queue queue) throws IOException, EmailStoreException {
+        List<Email> emails = new ArrayList<>();
+        Path queuePath = getQueuePath(mailbox, queue);
+
+        ReadLock lock = getQueueLock(mailbox, queue).readLock();
+        try {
+            lock.lock();
+
+            List<Path> emailPathsOrdered = Files.list(queuePath)
+                    .map(Path::toFile)
+                    .sorted(Comparator.comparingLong(File::lastModified).reversed())
+                    .map(File::toPath)
+                    .collect(Collectors.toList());
+
+            for (Path emailPath : emailPathsOrdered) {
+                Email deserializedEmail = deserialize(emailPath);
+
+                ID id = ID.fromString(
+                        mailbox
+                                + "/" + queue.asShortPath()
+                                + "/" + emailPath.getFileName().toString().split("\\.")[0]);
+                deserializedEmail.setId(id);
+
+                FileTime lastModifiedTime = Files.getLastModifiedTime(emailPath);
+                LocalDateTime timestamp = LocalDateTime.ofInstant(lastModifiedTime.toInstant(), ZoneId.systemDefault());
+                deserializedEmail.setTimestamp(timestamp);
+
+                emails.add(deserializedEmail);
+            }
+        } finally {
+            lock.unlock();
+        }
+
+        return emails;
     }
 
     protected Path getStoreDir() {
         return storeDir;
+    }
+
+    protected Path getQueuePath(ID id) {
+        return getQueuePath(id.getMailbox(), id.getQueue());
     }
 
     protected Path getQueuePath(String mailbox, Queue queue) {
