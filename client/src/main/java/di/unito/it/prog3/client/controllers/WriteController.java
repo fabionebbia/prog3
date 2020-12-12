@@ -142,6 +142,89 @@ public class WriteController extends Controller {
         gridPane.getScene().setOnKeyPressed(null);
     }
 
+    void open(WriteMode mode) {
+        gridPane.getScene().setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER && canAddRecipient()) {
+                addRecipient();
+            }
+        });
+
+        switch (mode) {
+            case NEW:
+                recipientField.requestFocus();
+                recipients.clear();
+                subject.set("");
+                body.set("");
+                break;
+            case FORWARD:
+                openForward();
+                break;
+            case REPLY:
+                openReply(false);
+                break;
+            case REPLY_ALL:
+                openReply(true);
+                break;
+        }
+    }
+
+    private void openForward() {
+        recipients.clear();
+
+        Email email = model.getCurrentEmail();
+        StringBuilder sb = new StringBuilder();
+        sb.append("----------- Forwarded e-mail -----------")
+                .append("\nSubject: ").append(email.getSubject())
+                .append("\nFrom:    ").append(email.getSender())
+                .append("\nTo:      ").append(Utils.join(email.getRecipients()))
+                .append("\nDate:    ").append(Emails.VISUAL_TIMESTAMP_DATE_FORMAT.format(email.getTimestamp()))
+                .append("\n\n--------------- Message ----------------")
+                .append("\n").append(email.getBody());
+        String newBody = sb.toString();
+
+        String newSubject = "";
+        String prevSubject = email.getSubject();
+        if (prevSubject != null && !prevSubject.isBlank()) {
+            newSubject = "Fwd: " + prevSubject;
+        }
+
+        subject.set(newSubject);
+        body.set(newBody);
+    }
+
+    private void openReply(boolean all) {
+        Email currentEmail = model.getCurrentEmail();
+
+        recipients.clear();
+        recipients.add(currentEmail.getSender());
+        if (all) {
+            recipients.addAll(currentEmail.getRecipients());
+            if (recipients.size() > 1) {
+                recipients.remove(model.getClient().userProperty().get());
+            }
+        }
+
+        Email email = model.getCurrentEmail();
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n\n------------ Previous e-mail -----------")
+                .append("\n").append(email.getSender())
+                .append(" wrote \"").append(email.getSubject()).append("\"\non ")
+                .append(Emails.VISUAL_TIMESTAMP_DATE_FORMAT.format(email.getTimestamp()))
+                .append("\n\n\n").append(email.getBody());
+        String newBody = sb.toString();
+
+        String newSubject = "";
+        String prevSubject = email.getSubject();
+        if (prevSubject != null && !prevSubject.isBlank()) {
+            newSubject = "Re: " + prevSubject;
+        }
+
+        subject.set(newSubject);
+        body.set(newBody);
+
+        bodyTextArea.requestFocus();
+    }
+
     void sendRequested(Callback callback) {
         Email email = new Email();
         email.addAllRecipients(recipients.get());

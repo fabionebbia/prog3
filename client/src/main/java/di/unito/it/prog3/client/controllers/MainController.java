@@ -180,8 +180,6 @@ public class MainController extends Controller {
                 case UNREACHABLE_SERVER -> unreachableAlert.showAndWait();
             }
         });
-
-
     }
 
     @FXML
@@ -193,20 +191,25 @@ public class MainController extends Controller {
     private void write() {
         model.clearCurrentEmail();
         currentView.set(WRITE);
+        writeView.getController().open(WriteMode.NEW);
     }
 
     @FXML
     private void forward() {
         currentView.set(WRITE);
+        writeView.getController().open(WriteMode.FORWARD);
     }
 
     @FXML
     private void reply() {
-
+        currentView.set(WRITE);
+        writeView.getController().open(WriteMode.REPLY);
     }
 
     @FXML
     private void replyAll() {
+        currentView.set(WRITE);
+        writeView.getController().open(WriteMode.REPLY_ALL);
     }
 
     @FXML

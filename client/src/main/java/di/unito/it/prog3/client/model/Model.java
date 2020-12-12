@@ -69,7 +69,10 @@ public class Model {
 
         client.newRequest(READ)
                 .setQueue(Queue.RECEIVED)
-                .onSuccess(response -> all.addAll(response.getEmails()))
+                .onSuccess(response -> {
+                    all.addAll(response.getEmails());
+                    client.startPoller();
+                })
                 .send();
 
         client.newRequest(READ)
@@ -83,8 +86,6 @@ public class Model {
                 System.out.println(newValue);
             }
         });
-
-        client.startPoller();
     }
 
     public void send(Email email) {
