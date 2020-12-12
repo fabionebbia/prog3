@@ -21,6 +21,7 @@ import javafx.collections.transformation.SortedList;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Predicate;
 
@@ -67,25 +68,7 @@ public class Model {
 
         all.addAll(sentEmail, receivedReply);*/
 
-        client.newRequest(READ)
-                .setQueue(Queue.RECEIVED)
-                .onSuccess(response -> {
-                    all.addAll(response.getEmails());
-                    client.startPoller();
-                })
-                .send();
-
-        client.newRequest(READ)
-                .setQueue(Queue.SENT)
-                .onSuccess(response -> all.addAll(response.getEmails()))
-                .send();
-
-        client.statusProperty().addListener(new ChangeListener<ClientStatus>() {
-            @Override
-            public void changed(ObservableValue<? extends ClientStatus> observable, ClientStatus oldValue, ClientStatus newValue) {
-                System.out.println(newValue);
-            }
-        });
+        client.populateQueues();
     }
 
     public void send(Email email) {
@@ -102,6 +85,20 @@ public class Model {
                     all.addAll(response.getEmails());
                 })
                 .send();
+    }
+
+    public void setOpened(Email email) {
+        email.setRead(true);
+
+        client.newRequest(OPEN)
+                .setId(email.getId())
+                .send();
+    }
+
+    public Email openCurrentEmail() {
+        Email email = currentEmail.get();
+        setOpened(email);
+        return email;
     }
 
     public void delete(Email.ID id) {
@@ -121,7 +118,7 @@ public class Model {
     void loadNewerReceived() {
         Email lastReceived = received.getValue().get(0);
         Email.ID offset = lastReceived.getId();
-System.out.println("ciao");
+
         client.newRequest(READ)
                 .setOffset(offset)
                 .onSuccess(response -> all.addAll(response.getEmails()))
@@ -158,6 +155,10 @@ System.out.println("ciao");
 
     public ObservableValue<ObservableList<Email>> sentQueue() {
         return sent;
+    }
+
+    ListProperty<Email> allQueue() {
+        return all;
     }
 
     // TODO public ???

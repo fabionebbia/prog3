@@ -44,11 +44,6 @@ public class WriteController extends Controller {
         subject = new SimpleStringProperty();
         body = new SimpleStringProperty();
 
-        // recipientsProperty = model.currentEmailProperty().recipientsProperty();
-        // recipientsProperty.addListener(this);
-
-        // subjectField.textProperty().bindBidirectional(model.currentEmailProperty().subjectProperty());
-        // bodyTextArea.textProperty().bindBidirectional(model.currentEmailProperty().bodyProperty());
         subjectField.textProperty().bindBidirectional(subject);
         bodyTextArea.textProperty().bindBidirectional(body);
 
@@ -67,33 +62,16 @@ public class WriteController extends Controller {
             }
         });
 
+        Utils.bindVisibility(recipients.sizeProperty().greaterThan(0), flowPane);
+
         addButton.disableProperty().bind(
                 Bindings.createBooleanBinding(this::cannotAddRecipient, recipientField.textProperty())
         );
 
-        // Utils.bindVisibility(recipientsProperty.sizeProperty().greaterThan(0), flowPane);
-        Utils.bindVisibility(recipients.sizeProperty().greaterThan(0), flowPane);
-
-        /* TODO remove (use css instead: some padding)
-        recipientsFlowPaneContainer.vgapProperty().bind(Bindings.createDoubleBinding(
-                () -> recipientsProperty.size() > 0 ? 10d : 0d, recipientsProperty
-        )); */
-
-        recipientsFlowPaneContainer.vgapProperty().bind(Bindings.createDoubleBinding(
-                () -> recipients.size() > 0 ? 10d : 0d, recipients
-        ));
-
-        //bodyTextArea.lookup(".scroll-bar:vertical").setDisable(true);
-
-    }
-
-    private boolean canAddRecipient() {
-        String newRecipient = recipientField.textProperty().get();
-        return Emails.isWellFormed(newRecipient) && !recipients.contains(newRecipient);
-    }
-
-    private boolean cannotAddRecipient() {
-        return !canAddRecipient();
+        // TODO usare CSS instead?
+        recipientsFlowPaneContainer.vgapProperty().bind(
+                Bindings.createDoubleBinding(() -> recipients.size() > 0 ? 10d : 0d, recipients)
+        );
     }
 
     @FXML
@@ -110,31 +88,6 @@ public class WriteController extends Controller {
                 addRecipient();
             }
         });
-
-        String newSubject = "";
-        String newBody = "";
-        if (model.isCurrentEmailSet().get()) { // forwarding
-            Email email = model.getCurrentEmail();
-            StringBuilder sb = new StringBuilder();
-            sb.append("----------- Forwarded e-mail -----------")
-                    .append("\nSubject: ").append(email.getSubject())
-                    .append("\nFrom:    ").append(email.getSender())
-                    .append("\nTo:      ").append(Utils.join(email.getRecipients()))
-                    .append("\nDate:    ").append(Emails.VISUAL_TIMESTAMP_DATE_FORMAT.format(email.getTimestamp()))
-                    .append("\n\n--------------- Message ----------------")
-                    .append("\n").append(email.getBody());
-            newBody = sb.toString();
-
-            String prevSubject = email.getSubject();
-            if (prevSubject != null && !prevSubject.isBlank()) {
-                newSubject = "Fwd: " + prevSubject;
-            }
-        }
-
-        recipientField.requestFocus();
-        recipients.clear();
-        subject.set(newSubject);
-        body.set(newBody);
     }
 
     @Override
@@ -143,84 +96,59 @@ public class WriteController extends Controller {
     }
 
     void open(WriteMode mode) {
-        gridPane.getScene().setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.ENTER && canAddRecipient()) {
-                addRecipient();
-            }
-        });
-
         switch (mode) {
-            case NEW:
+            case NEW -> {
                 recipientField.requestFocus();
                 recipients.clear();
                 subject.set("");
                 body.set("");
-                break;
-            case FORWARD:
-                openForward();
-                break;
-            case REPLY:
-                openReply(false);
-                break;
-            case REPLY_ALL:
-                openReply(true);
-                break;
+            }
+            case FORWARD -> openForward();
+            case REPLY -> openReply(false);
+            case REPLY_ALL -> openReply(true);
         }
     }
 
     private void openForward() {
+        Email currentEmail = model.openCurrentEmail();
+
         recipients.clear();
 
-        Email email = model.getCurrentEmail();
-        StringBuilder sb = new StringBuilder();
-        sb.append("----------- Forwarded e-mail -----------")
-                .append("\nSubject: ").append(email.getSubject())
-                .append("\nFrom:    ").append(email.getSender())
-                .append("\nTo:      ").append(Utils.join(email.getRecipients()))
-                .append("\nDate:    ").append(Emails.VISUAL_TIMESTAMP_DATE_FORMAT.format(email.getTimestamp()))
-                .append("\n\n--------------- Message ----------------")
-                .append("\n").append(email.getBody());
-        String newBody = sb.toString();
+        String newBody = "----------- Forwarded e-mail -----------"
+                       + "\nSubject: " + currentEmail.getSubject()
+                       + "\nFrom:    " + currentEmail.getSender()
+                       + "\nTo:      " + Utils.join(currentEmail.getRecipients())
+                       + "\nDate:    " + Emails.VISUAL_TIMESTAMP_DATE_FORMAT.format(currentEmail.getTimestamp())
+                       + "\n\n--------------- Message ----------------"
+                       + "\n" + currentEmail.getBody();
 
-        String newSubject = "";
-        String prevSubject = email.getSubject();
-        if (prevSubject != null && !prevSubject.isBlank()) {
-            newSubject = "Fwd: " + prevSubject;
-        }
+        String newSubject = computeNewSubject("Fwd", currentEmail);
 
         subject.set(newSubject);
         body.set(newBody);
     }
 
     private void openReply(boolean all) {
-        Email currentEmail = model.getCurrentEmail();
+        Email currentEmail = model.openCurrentEmail();
 
         recipients.clear();
         recipients.add(currentEmail.getSender());
         if (all) {
             recipients.addAll(currentEmail.getRecipients());
             if (recipients.size() > 1) {
-                recipients.remove(model.getClient().userProperty().get());
+                recipients.remove(model.getClient().userProperty().get()); // TODO togliere o tenere?
             }
         }
 
-        Email email = model.getCurrentEmail();
-        StringBuilder sb = new StringBuilder();
-        sb.append("\n\n------------ Previous e-mail -----------")
-                .append("\n").append(email.getSender())
-                .append(" wrote \"").append(email.getSubject()).append("\"\non ")
-                .append(Emails.VISUAL_TIMESTAMP_DATE_FORMAT.format(email.getTimestamp()))
-                .append("\n\n\n").append(email.getBody());
-        String newBody = sb.toString();
+        String newBody = "\n\n------------ Previous e-mail -----------\n"
+                       + currentEmail.getSender() + " wrote \"" + currentEmail.getSubject()
+                       + "\"\non " + Emails.VISUAL_TIMESTAMP_DATE_FORMAT.format(currentEmail.getTimestamp())
+                       + "\n\n\n" + currentEmail.getBody();
 
-        String newSubject = "";
-        String prevSubject = email.getSubject();
-        if (prevSubject != null && !prevSubject.isBlank()) {
-            newSubject = "Re: " + prevSubject;
-        }
+        String newSubject = computeNewSubject("Re", currentEmail);
 
-        subject.set(newSubject);
         body.set(newBody);
+        subject.set(newSubject);
 
         bodyTextArea.requestFocus();
     }
@@ -235,6 +163,24 @@ public class WriteController extends Controller {
 
     BooleanBinding isEmailWellFormed() {
         return recipients.sizeProperty().greaterThan(0);
+    }
+
+    private boolean canAddRecipient() {
+        String newRecipient = recipientField.textProperty().get();
+        return Emails.isWellFormed(newRecipient) && !recipients.contains(newRecipient);
+    }
+
+    private boolean cannotAddRecipient() {
+        return !canAddRecipient();
+    }
+
+    private String computeNewSubject(String prefix, Email email) {
+        String newSubject = "";
+        String prevSubject = email.getSubject();
+        if (prevSubject != null && !prevSubject.isBlank()) {
+            newSubject = prefix + ": " + prevSubject;
+        }
+        return newSubject;
     }
 
 }

@@ -1,5 +1,6 @@
 package di.unito.it.prog3.client.model;
 
+import di.unito.it.prog3.libs.email.Queue;
 import di.unito.it.prog3.libs.net.JsonMapper;
 import di.unito.it.prog3.libs.net.Request;
 import di.unito.it.prog3.libs.net.Response;
@@ -22,6 +23,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static di.unito.it.prog3.client.model.ClientStatus.*;
+import static di.unito.it.prog3.libs.net.Request.Type.READ;
 
 public class Client {
 
@@ -79,6 +81,22 @@ public class Client {
         }
 
         poller = Executors.newSingleThreadScheduledExecutor();
+    }
+
+    void populateQueues() {
+        newRequest(READ)
+                .setQueue(Queue.RECEIVED)
+                .onSuccess(response -> {
+                    model.allQueue().addAll(response.getEmails());
+                    startPoller();
+                })
+                .send();
+
+        newRequest(READ)
+                .setQueue(Queue.SENT)
+                .onSuccess(response ->
+                        model.allQueue().addAll(response.getEmails()))
+                .send();
     }
 
     void startPoller() {

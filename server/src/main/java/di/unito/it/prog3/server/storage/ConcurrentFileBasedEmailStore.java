@@ -7,6 +7,7 @@ import di.unito.it.prog3.libs.net.Chrono;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -65,33 +66,27 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
 
     @Override // Lock exclusive queue
     public void store(Email email) throws Exception {
-        Path emailPath = getPath(email);
+        Path queuePath = getQueuePath(email.getId());
+        boolean update = email.getRelativeId() != null;
 
-        Path queueDir = emailPath.getParent();
-        if (!Files.exists(queueDir)) {
-            try {
-                Files.createDirectories(queueDir);
-            } catch (IOException e) {
-                throw new EmailStoreException("Could not create queue directory " + queueDir, e);
-            }
-        }
-
-        if (email.getRelativeId() == null) {
+        if (!update) {
             email.setRelativeId(UUID.randomUUID());
         }
 
-        emailPath = Paths.get(queueDir.toString(), email.getRelativeId() + ".json");
+        Path emailPath = Paths.get(queuePath.toString(), email.getRelativeId() + ".json");
 
-        FileTime creationTime;
+        FileTime creationTime = null;
         WriteLock lock = getQueueLock(email).writeLock();
         try {
             lock.lock();
 
-            Path file = Files.createFile(emailPath);
+            if (!update) {
+                Files.createFile(emailPath);
+            }
+            
+            serialize(email, emailPath);
 
-            serialize(email, file);
-
-            creationTime = Files.getLastModifiedTime(file);
+            creationTime = Files.getLastModifiedTime(emailPath);
             /*BasicFileAttributes attrs = Files.readAttributes(file, BasicFileAttributes.class);
             FileTime creationTime = attrs.creationTime();
             LocalDateTime timestamp = LocalDateTime.ofInstant(creationTime.toInstant(), ZoneId.systemDefault());*/
@@ -138,11 +133,13 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
             if (!Files.exists(path)) {
                 throw new EmailStoreException(id + " is missing");
             }
+
+            Email email = deserialize(file);
+            email.setId(id);
+            return email;
         } finally {
             lock.unlock();
         }
-
-        return deserialize(file);
     }
 
     @Override // Lock shared queue

@@ -118,8 +118,9 @@ public class Request {
 
     public void gotResponse(Response response) {
         if (response.successful()) {
-            Objects.requireNonNull(successHandler, "Success handler unset");
-            successHandler.handle(response);
+            if (successHandler != null) {
+                successHandler.handle(response);
+            }
         } else {
             (failureHandler != null ? failureHandler : defaultFailureHandler).handle(response);
         }
@@ -194,9 +195,6 @@ public class Request {
         }
 
         public void send() {
-            if (request.successHandler == null) {
-                throw new IllegalStateException("Need to se a success request handler");
-            }
             sendConsumer.accept(request);
         }
     }
@@ -206,6 +204,7 @@ public class Request {
         LOGIN,
         SEND,
         READ,
+        OPEN,
         DELETE;
 
         @JsonValue

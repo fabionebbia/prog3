@@ -45,6 +45,7 @@ public class Server extends Thread {
         handlers.put(Request.Type.LOGIN, new LoginRequestHandler());
         handlers.put(Request.Type.SEND, new SendRequestHandler());
         handlers.put(Request.Type.READ, new ReadRequestHandler());
+        handlers.put(Request.Type.OPEN, new OpenRequestHandler());
         handlers.put(Request.Type.DELETE, new DeletionRequestHandler());
     }
 
@@ -129,6 +130,8 @@ public class Server extends Thread {
                     RequestHandler handler = handlers.get(type);
 
                     logger.info("Retrieved handler (" + handler + ")");
+
+                    System.out.println(json.writeValueAsString(request.getId()));
 
                     if (handler != null) {
                         response = handler.execute(emailStore, logger, request);
