@@ -83,6 +83,10 @@ public class Email {
         return !isRead();
     }
 
+    public void setRead() {
+        setRead(true);
+    }
+
     public void setRead(boolean read) {
         this.read = read;
     }

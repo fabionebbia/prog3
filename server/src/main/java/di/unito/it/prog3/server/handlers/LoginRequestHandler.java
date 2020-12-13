@@ -1,24 +1,20 @@
 package di.unito.it.prog3.server.handlers;
 
 import di.unito.it.prog3.libs.net.Response;
-import di.unito.it.prog3.libs.net.Request;
+import di.unito.it.prog3.libs.net2.LoginRequest;
 import di.unito.it.prog3.server.gui.Logger;
 import di.unito.it.prog3.server.storage.EmailStore;
 
-import java.util.concurrent.CompletionService;
-import java.util.concurrent.ExecutorService;
+public class LoginRequestHandler extends RequestHandler<LoginRequest> {
 
-public class LoginRequestHandler implements RequestHandler {
-
-    @Override
-    public Response handle(EmailStore emailStore, Logger logger, Request request) {
-        // If execution got here, the user exists therefore the login is successful
-       return Response.success();
+    public LoginRequestHandler() {
+        super(LoginRequest.class);
     }
 
     @Override
-    public void validate(Request request) throws RequestException {
-
+    public Response handle(EmailStore emailStore, Logger logger, LoginRequest request) {
+        // If execution got here, the user exists therefore the login is successful
+       return Response.success();
     }
 
 }

@@ -32,7 +32,7 @@ public class ConcurrentJsonEmailStore extends ConcurrentFileBasedEmailStore {
         mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
 
         // do not serialize information that must be computed to file
-        String[] ignoreFields = { "id", "timestamp" };
+        String[] ignoreFields = { "id" /*, "timestamp" */};
         mapper.addMixIn(Object.class, PropertyFilterMixIn.class);
         FilterProvider writeFilter = new SimpleFilterProvider()
                 .addFilter("filter properties by name",

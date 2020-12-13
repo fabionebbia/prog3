@@ -15,7 +15,7 @@ public final class SendRequest extends Request {
         recipients = new HashSet<>();
     }
 
-    public Collection<String> getRecipients() {
+    public Set<String> getRecipients() {
         return recipients;
     }
 

@@ -1,19 +1,20 @@
 package di.unito.it.prog3.server.handlers;
 
 import di.unito.it.prog3.libs.email.Email;
-import di.unito.it.prog3.libs.email.Queue;
-import di.unito.it.prog3.libs.net.Request;
 import di.unito.it.prog3.libs.net.Response;
+import di.unito.it.prog3.libs.net2.DeletionRequest;
 import di.unito.it.prog3.server.gui.Logger;
 import di.unito.it.prog3.server.storage.EmailStore;
 
-import java.util.Set;
+public class DeletionRequestHandler extends RequestHandler<DeletionRequest> {
 
-public class DeletionRequestHandler implements RequestHandler {
+    public DeletionRequestHandler() {
+        super(DeletionRequest.class);
+    }
 
     @Override
-    public Response handle(EmailStore emailStore, Logger logger, Request request) throws Exception {
-        Email email = emailStore.read(request.getId());
+    public Response handle(EmailStore emailStore, Logger logger, DeletionRequest request) throws Exception {
+        /*Email email = emailStore.read(request.getId());
 
         String user = request.getUser();
 
@@ -27,14 +28,13 @@ public class DeletionRequestHandler implements RequestHandler {
         }
 
         emailStore.delete(request.getId(), false);
-        System.out.println("Deleted: " + request.getId());
+        System.out.println("Deleted: " + request.getId());*/
+
+        Email.ID id = request.getId();
+        emailStore.delete(id);
 
         return Response.success();
     }
 
-    @Override
-    public void validate(Request request) throws RequestException {
-
-    }
 
 }

@@ -51,7 +51,6 @@ public class MailClientApp extends Application {
                 OpenRequest.class,
                 DeletionRequest.class
         );
-
     }
 
     @Override

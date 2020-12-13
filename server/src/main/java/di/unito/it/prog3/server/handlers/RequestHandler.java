@@ -1,35 +1,36 @@
 package di.unito.it.prog3.server.handlers;
 
 import di.unito.it.prog3.libs.net.Response;
-import di.unito.it.prog3.libs.net.Request;
+import di.unito.it.prog3.libs.net2.Request;
 import di.unito.it.prog3.server.gui.Logger;
 import di.unito.it.prog3.server.storage.EmailStore;
 
-import java.util.concurrent.CompletionService;
-import java.util.concurrent.ExecutorService;
+public abstract class RequestHandler<R extends Request> {
 
-public interface RequestHandler {
+    private final Class<R> requestClass;
 
-    Response handle(EmailStore emailStore, Logger logger, Request request) throws Exception;
+    public RequestHandler(Class<R> requestClass) {
+        this.requestClass = requestClass;
+    }
 
-    void validate(Request request) throws RequestException;
+    public abstract Response handle(EmailStore emailStore, Logger logger, R request) throws Exception;
 
-    default Response execute(EmailStore emailStore, Logger logger, Request request) {
+    public Response execute(EmailStore emailStore, Logger logger, Request rawRequest) {
         try {
+            R request = requestClass.cast(rawRequest);
+
             String user = request.getUser();
             if (!emailStore.userExists(user)) {
                 return Response.failure("Unknown user " + user);
             }
-            validate(request);
+
+            request.validate();
+
             return handle(emailStore, logger, request);
         } catch (Exception e) {
             e.printStackTrace();
             return Response.failure(e);
         }
-    }
-
-    default void ensure(boolean condition, String exceptionMessage) throws RequestException {
-        if (!condition) throw new RequestException(exceptionMessage);
     }
 
 }

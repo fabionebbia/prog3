@@ -44,8 +44,9 @@ public class Client {
     private final String host;
     private final int port;
 
-    private boolean queuePopulated;
     private boolean pollerStarted;
+
+    private LocalDateTime lastCheck;
 
 
     Client(Model model, Application.Parameters parameters) {
@@ -103,19 +104,33 @@ public class Client {
         try {
             ReadRequestBuilder request = newRequest(READ);
 
+            LocalDateTime pivot;
+
             if (model.allQueue().getValue().isEmpty()) {
-                request.setPivot(LocalDateTime.now());
                 request.setDirection(Chrono.OLDER);
-                request.setQueue(Queue.RECEIVED);
+                pivot = LocalDateTime.now();
+                System.out.println("A");
             } else if (model.receivedQueue().getValue().isEmpty()) {
-                request.setPivot(LocalDateTime.now());
                 request.setDirection(Chrono.OLDER);
                 request.setQueue(Queue.RECEIVED);
+                pivot = LocalDateTime.now();
+                System.out.println("B");
             } else {
+                /*if (lastCheck == null) {
+                    Email lastReceived = model.receivedQueue().getValue().get(0);
+                    System.out.println("Last received: " + lastReceived.getSubject());
+                    pivot = lastReceived.getTimestamp();
+                } else {
+                    pivot = lastCheck;
+                    lastCheck = LocalDateTime.now();
+                }*/
                 Email lastReceived = model.receivedQueue().getValue().get(0);
-                request.setPivot(lastReceived.getTimestamp());
+                System.out.println("Last received: " + lastReceived.getSubject());
+                pivot = lastReceived.getTimestamp();
+
                 request.setDirection(Chrono.NEWER);
                 request.setQueue(Queue.RECEIVED);
+                System.out.println("C");
             }
 
             /*request.onSuccess(response -> {
@@ -123,8 +138,12 @@ public class Client {
                 model.allQueue().addAll(newEmails);
             });*/
 
+            request.setPivot(pivot);
+            System.out.println(request.build().getPivot());
+
             request.setOnSuccessCallback(response -> {
                 List<Email> newEmails = response.getEmails();
+                System.out.println(newEmails);
                 model.allQueue().addAll(newEmails);
             });
 

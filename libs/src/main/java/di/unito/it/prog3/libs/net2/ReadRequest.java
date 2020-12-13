@@ -1,5 +1,7 @@
 package di.unito.it.prog3.libs.net2;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import di.unito.it.prog3.libs.email.Queue;
 import di.unito.it.prog3.libs.net.Chrono;
 
@@ -10,7 +12,7 @@ import java.util.function.Consumer;
 
 public class ReadRequest extends Request {
     private Chrono direction;
-    private Instant pivot;
+    private LocalDateTime pivot;
     private Queue queue;
     private int many;
 
@@ -23,16 +25,13 @@ public class ReadRequest extends Request {
         this.direction = direction;
     }
 
-    public Instant getPivot() {
+    public LocalDateTime getPivot() {
         return pivot;
     }
 
-    public void setPivot(Instant pivot) {
-        this.pivot = pivot;
-    }
-
+    @JsonProperty
     public void setPivot(LocalDateTime pivot) {
-        setPivot(pivot.atZone(ZoneId.systemDefault()).toInstant());
+        this.pivot = pivot;
     }
 
     public Queue getQueue() {
@@ -62,13 +61,9 @@ public class ReadRequest extends Request {
             return this;
         }
 
-        public ReadRequestBuilder setPivot(Instant pivot) {
+        public ReadRequestBuilder setPivot(LocalDateTime pivot) {
             request.setPivot(pivot);
             return this;
-        }
-
-        public ReadRequestBuilder setPivot(LocalDateTime pivot) {
-            return setPivot(pivot.atZone(ZoneId.systemDefault()).toInstant());
         }
 
         public ReadRequestBuilder setQueue(Queue queue) {

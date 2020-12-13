@@ -4,6 +4,7 @@ import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.email.Email.ID;
 import di.unito.it.prog3.libs.email.Queue;
 import di.unito.it.prog3.libs.net.Chrono;
+import javafx.util.Pair;
 
 import java.io.File;
 import java.io.IOException;
@@ -85,6 +86,8 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
             lock.lock();
 
             Files.createFile(emailPath);
+
+            email.setTimestamp(LocalDateTime.now());
             serialize(email, emailPath);
 
             BasicFileAttributes attrs = Files.readAttributes(emailPath, BasicFileAttributes.class);
@@ -126,12 +129,11 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
     }
 
     @Override // Lock exclusive queue
-    public void delete(ID id, boolean failSilently) throws EmailStoreException {
+    public void delete(ID id) throws EmailStoreException {
         Path path = getPath(id);
 
         if (!Files.exists(path)) {
-            if (failSilently) return;
-            else throw new EmailStoreException("Could not delete missing " + id);
+            return;
         }
 
         WriteLock lock = getQueueLock(id).writeLock();
@@ -251,10 +253,12 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
     }
 
     @Override
-    public List<Email> read(Chrono direction, Instant pivot, String user, Queue queue, int many) throws EmailStoreException {
+    public List<Email> read(Chrono direction, LocalDateTime pivot, String user, Queue queue, int many) throws EmailStoreException {
         String baseId = user + "/" + queue.asShortPath() + "/";
         Path queuePath = getQueuePath(user, queue);
         List<Email> emails = new ArrayList<>();
+
+        System.out.println(direction + " " + pivot + " " + user + " " + queue + " " + many);
 
         /*Predicate<Instant> filter = switch (direction) {
             case NEWER -> (fileTimestamp) -> fileTimestamp.isAfter(pivot);
@@ -262,42 +266,41 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
         };*/
 
         Comparator<? super Path> sortingComparator;
-        Predicate<Instant> timestampFilter;
+        Predicate<Email> timestampFilter;
 
         switch (direction) {
             case NEWER -> {
                 sortingComparator = Comparator.naturalOrder();
-                timestampFilter = (fileTimestamp) -> fileTimestamp.isAfter(pivot);
+                timestampFilter = (email) -> email.getTimestamp().isAfter(pivot);
             }
             case OLDER -> {
                 sortingComparator = Comparator.reverseOrder();
-                timestampFilter = (fileTimestamp) -> fileTimestamp.isBefore(pivot);
+                timestampFilter = (email) -> email.getTimestamp().isBefore(pivot);
             }
             default -> throw new IllegalArgumentException("Invalid chronological order");
         }
 
         BiPredicate<Path, BasicFileAttributes> fileCriteria = (path, attrs) ->
-            attrs.isRegularFile() && timestampFilter.test(attrs.creationTime().toInstant());
+            attrs.isRegularFile() && path.getFileName().toString().split("\\.")[1].equals(extension.substring(1));
+        //timestampFilter.test(attrs.lastModifiedTime().toInstant());
 
         ReadLock lock = getQueueLock(user, queue).readLock();
         try {
             lock.lock();
 
             Files.find(queuePath, 1, fileCriteria)
-                    .sorted(sortingComparator)
-                    .limit(many)
-                    .map(emailPath -> {
-                        Email email = deserialize(emailPath);
-
-                        String relativeId = emailPath.getFileName().toString().split("\\.")[0];
+                    .map(Path::toFile)
+                    .sorted(Comparator.comparingLong(File::lastModified))
+                    .map(file -> {
+                        Email email = deserialize(file);
+                        String relativeId = file.getName().split("\\.")[0];
                         email.setId(ID.fromString(baseId + relativeId));
-
-                        long lastModified = emailPath.toFile().lastModified();
-                        Instant lastModifiedInstant = Instant.ofEpochMilli(lastModified);
-                        email.setTimestamp(LocalDateTime.ofInstant(lastModifiedInstant, ZoneId.systemDefault()));
-
                         return email;
                     })
+                    .peek(email -> System.out.println("Pivot: " + pivot + ", Timestamp: " + email.getTimestamp()))
+                    .filter(timestampFilter)
+                    .limit(many)
+                    .peek(email -> System.out.println("Pivot: " + pivot + ", Timestamp: " + email.getTimestamp()))
                     .forEach(emails::add);
 
         } catch (Exception e) {
@@ -369,11 +372,11 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
 
     @Override
     public List<Email> readAll(String user, Queue queue) throws EmailStoreException {
-        Instant pivot = LocalDateTime.now()
+        /*Instant pivot = LocalDateTime.now()
                 .atZone(ZoneId.systemDefault())
-                .toInstant();
+                .toInstant();*/
 
-        return read(Chrono.OLDER, pivot, user, queue, Integer.MAX_VALUE);
+        return read(Chrono.OLDER, LocalDateTime.now(), user, queue, Integer.MAX_VALUE);
     }
 
     @Override // Shared lock queue
@@ -382,7 +385,6 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
 
         for (Queue queue : Queue.values()) {
             if (queue == Queue.DRAFTS) continue;
-            System.out.println(queue);
             List<Email> queueEmails = readAll(mailbox, queue);
             emails.addAll(queueEmails);
         }
@@ -431,7 +433,7 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
 
     protected abstract Email deserialize(Path path);
 
-    protected abstract Email deserialize(File file) throws EmailStoreException;
+    protected abstract Email deserialize(File file);
 
 
     private ReentrantReadWriteLock getQueueLock(ID id) {

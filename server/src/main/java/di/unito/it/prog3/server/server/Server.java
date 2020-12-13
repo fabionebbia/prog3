@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class Server implements Runnable {
 
     // private final Map<Request.Type, RequestHandler> handlers;
-    private final Map<Class<? extends Request>, RequestHandler> handlers;
+    private final Map<Class<? extends Request>, RequestHandler<?>> handlers;
     private final EmailStore emailStore;
     private final JsonMapper json;
 
@@ -49,11 +49,11 @@ public class Server implements Runnable {
         handlers.put(Request.Type.DELETE, new DeletionRequestHandler());*/
 
         handlers = new ConcurrentHashMap<>();
-        handlers.put(LoginRequest.class, new LoginRequestHandler());
-        handlers.put(ReadRequest.class, new ReadRequestHandler());
-        handlers.put(SendRequest.class, new SendRequestHandler());
-        handlers.put(OpenRequest.class, new OpenRequestHandler());
-        handlers.put(DeletionRequest.class, new DeletionRequestHandler());
+        registerRequestHandler(DeletionRequest.class, new DeletionRequestHandler());
+        registerRequestHandler(LoginRequest.class, new LoginRequestHandler());
+        registerRequestHandler(ReadRequest.class, new ReadRequestHandler());
+        registerRequestHandler(SendRequest.class, new SendRequestHandler());
+        registerRequestHandler(OpenRequest.class, new OpenRequestHandler());
 
         int nWorkers;
 
@@ -71,6 +71,11 @@ public class Server implements Runnable {
         logger = new Logger(model);
         shouldContinue = new AtomicBoolean(true);
         executor = Executors.newFixedThreadPool(nWorkers);
+    }
+
+    private <R extends Request> void registerRequestHandler(Class<R> requestClass,
+                                                            RequestHandler<R> requestHandler) {
+        handlers.put(requestClass, requestHandler);
     }
 
     @Override
@@ -121,22 +126,20 @@ public class Server implements Runnable {
                 Request request = json.readValue(br, Request.class);
                 Response response = Response.failure("Server error");
 
-                logger.info("Received " + request.getType());
+                logger.info("Received " + request.getClass().getSimpleName() + " from " + request.getUser());
 
-                if (request != null) {
-                    Request.Type type = request.getType();
-                    RequestHandler handler = handlers.get(type);
+                //Request.Type type = request.getType();
+                Class<? extends Request> requestClass = request.getClass();
+                RequestHandler<?> handler = handlers.get(requestClass);
 
-                    logger.info("Retrieved handler (" + handler + ")");
+                logger.info("Retrieved handler (" + handler + ")");
 
-                    System.out.println(json.writeValueAsString(request.getId()));
-
-                    if (handler != null) {
-                        response = handler.execute(emailStore, logger, request);
-                    } else {
-                        response = Response.failure("Unknown request type");
-                    }
+                if (handler != null) {
+                    response = handler.execute(emailStore, logger, request);
+                } else {
+                    response = Response.failure("Unknown request type");
                 }
+
 
                 json.writeValue(socket.getOutputStream(), response);
             } catch (Exception e) {
