@@ -2,29 +2,48 @@ package di.unito.it.prog3.libs.net;
 
 import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.email.Queue;
-import di.unito.it.prog3.libs.utils.Emails;
-import di.unito.it.prog3.libs.utils.ValueCallback;
-import javafx.util.Callback;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
+@JsonInclude(Include.NON_EMPTY)
 @JsonAutoDetect(fieldVisibility = Visibility.ANY)
 public class Request {
 
+    static final class LoginRequest extends Request {
+        public LoginRequest(String user) {
+            super(Type.LOGIN, user);
+        }
+    }
+
+    static final class SendRequest extends Request {
+        public SendRequest(String user) {
+            super(Type.LOGIN, user);
+        }
+        public void addAllRecipients(Collection<String> recipients) {
+            super.addAllRecipients(recipients);
+        }
+        public void setSubject(String subject) {
+            super.setSubject(subject);
+        }
+        public void
+    }
+
+    private Type type;
     private String user;
     private Email.ID id;
-    private Type type;
     private Chrono direction;
     private int many;
     private Queue queue;
+    private Instant pivot;
 
     private Set<String> recipients;
     private String subject;
@@ -50,6 +69,10 @@ public class Request {
         this();
         this.type = type;
         this.user = user;
+    }
+
+    public Instant getPivot() {
+        return pivot;
     }
 
     public String getUser() {
@@ -100,6 +123,14 @@ public class Request {
         this.recipients = recipients;
     }
 
+    protected void addRecipient(String recipient) {
+        recipients.add(recipient);
+    }
+
+    protected void addAllRecipients(Collection<String> recipients) {
+        this.recipients.addAll(recipients);
+    }
+
     public String getSubject() {
         return subject;
     }
@@ -115,6 +146,20 @@ public class Request {
     public void setBody(String body) {
         this.body = body;
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     public void gotResponse(Response response) {
         if (response.successful()) {
@@ -166,6 +211,16 @@ public class Request {
 
         public RequestBuilder setMany(int many) {
             request.many = many;
+            return this;
+        }
+
+        public RequestBuilder setPivot(Instant pivot) {
+            request.pivot = pivot;
+            return this;
+        }
+
+        public RequestBuilder setPivot(LocalDateTime pivot) {
+            setPivot(pivot.atZone(ZoneId.systemDefault()).toInstant());
             return this;
         }
 

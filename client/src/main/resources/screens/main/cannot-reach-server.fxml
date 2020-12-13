@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.DialogPane?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<DialogPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
+   <graphic>
+      <ProgressIndicator style="-fx-progress-color: #db392c#db392c;" />
+   </graphic>
+   <content>
+      <VBox>
+         <children>
+            <Label maxHeight="125.0" text="Cannot reach server">
+               <font>
+                  <Font name="Tahoma" size="14.0" />
+               </font>
+            </Label>
+            <Label fx:id="retryingLabel1" text="Retrying...">
+               <font>
+                  <Font name="Tahoma" size="14.0" />
+               </font>
+            </Label>
+         </children>
+      </VBox>
+   </content>
+</DialogPane>

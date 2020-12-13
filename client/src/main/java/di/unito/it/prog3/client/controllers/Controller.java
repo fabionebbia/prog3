@@ -10,4 +10,8 @@ public abstract class Controller extends ControllerBase<Model> {
 
     void onHidden() {}
 
+    void handleException(Throwable e) {
+        System.out.println(getClass().getSimpleName() + " received " + e);
+    }
+
 }

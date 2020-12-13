@@ -1,1 +1,1 @@
-{"sender":"user3@email.tld","subject":"C message","recipients":["user1@email.tld","user2@email.tld"],"body":"C message","read":false,"draft":false}
+{"sender":"user3@email.tld","subject":"C message","recipients":["user1@email.tld","user2@email.tld"],"body":"C message","read":true,"draft":false}

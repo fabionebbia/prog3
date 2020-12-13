@@ -11,6 +11,8 @@ import javafx.beans.property.SetProperty;
 import javafx.beans.property.SimpleSetProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.SetChangeListener;
 import javafx.fxml.FXML;
@@ -54,11 +56,21 @@ public class WriteController extends Controller {
                     Recipient node = new Recipient();
                     node.setEmail(recipient);
                     node.onRemoveButtonPressed(e -> recipients.remove(recipient));
-                    node.onClick(e -> recipientField.textProperty().set(recipient));
+                    node.onClick(e -> {
+                        recipients.remove(recipient);
+                        recipientField.textProperty().set(recipient);
+                    });
                     flowPane.getChildren().add(node);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+            }
+        });
+
+        recipientField.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                System.out.println(newValue);
             }
         });
 

@@ -1,6 +1,7 @@
 package di.unito.it.prog3.server.handlers;
 
 import di.unito.it.prog3.libs.email.Email;
+import di.unito.it.prog3.libs.net.Chrono;
 import di.unito.it.prog3.libs.net.Request;
 import di.unito.it.prog3.libs.net.Response;
 import di.unito.it.prog3.server.gui.Logger;
@@ -12,22 +13,45 @@ public class ReadRequestHandler implements RequestHandler {
 
     @Override
     public Response handle(EmailStore emailStore, Logger logger, Request request) throws Exception {
-        Email.ID offset = request.getId();
+        // Email.ID offset = request.getId();
 
         List<Email> emails;
 
+        // Scaricamento mailbox completa
+       /* if (request.getPivot() == null && request.getQueue() == null) {
+            emails = emailStore.readAll(request.getUser());
+        } else { // Aggiornamento di una singola queue (AKA polling)
+            emails = emailStore.readAll(request.getUser(), request.getQueue());
+        }*/
+
+        if (request.getQueue() == null) {
+            emails = emailStore.readAll(request.getUser());
+        } else {
+            emails = emailStore.read(
+                    request.getDirection(),
+                    request.getPivot(),
+                    request.getUser(),
+                    request.getQueue(),
+                    10
+            );
+        }
+/*
         if (request.getQueue() != null) {
             emails = emailStore.readAll(request.getUser(), request.getQueue());
             return Response.success(emails);
-        }
-
-        if (offset != null) {
-            emails = emailStore.readNewer(offset);
+        } else if (offset != null) {
+            emails = emailStore.read(
+                    Chrono.NEWER,
+                    request.getPivot(),
+                    request.getUser(),
+                    request.getQueue(),
+                    0);//.readNewer(offset);
             return Response.success(emails);
-        }
-
-        System.out.println("Non doveva arrivare qui");
-        return Response.failure("Non doveva arrivare qui");
+        } else {
+            emails = emailStore.readAll(request.getUser());
+            return Response.success(emails);
+        }*/
+        return Response.success(emails);
     }
 
     /**

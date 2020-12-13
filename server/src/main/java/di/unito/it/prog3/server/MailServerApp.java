@@ -13,7 +13,7 @@ import javafx.stage.Stage;
 
 public class MailServerApp extends Application {
 
-    private final Server server = new Server();
+    private Server server;
 
     @Override
     public void start(Stage stage) {
@@ -26,18 +26,18 @@ public class MailServerApp extends Application {
         stage.setScene(new Scene(gui.getContent()));
         stage.show();
 
-        server.start(model, getParameters());
+        //server.start(model, getParameters());
+        server = new Server(model, getParameters());
+        new Thread(server, "Server Thread").start();
     }
 
     @Override
     public void stop() {
-        synchronized (server) {
-            try {
-                server.shutdown();
-                server.wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        try {
+            server.shutdown();
+            server.wait();
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Could not shutdown server", e);
         }
     }
 

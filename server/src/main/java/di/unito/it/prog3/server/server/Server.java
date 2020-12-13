@@ -23,21 +23,20 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class Server extends Thread {
+public class Server implements Runnable {
 
     private final Map<Request.Type, RequestHandler> handlers;
     private final EmailStore emailStore;
     private final JsonMapper json;
 
-    private AtomicBoolean shouldContinue;
+    private final AtomicBoolean shouldContinue;
+    private final ExecutorService executor;
+    private final Logger logger;
+    private final int port;
+
     private ServerSocket serverSocket;
-    private ExecutorService executor;
-    private Logger logger;
-    private int port;
 
-    public Server() {
-        super("Server Thread");
-
+    public Server(Model model, Application.Parameters parameters) {
         json = new JsonMapper();
         emailStore = new ConcurrentJsonEmailStore("_store");
 
@@ -47,9 +46,7 @@ public class Server extends Thread {
         handlers.put(Request.Type.READ, new ReadRequestHandler());
         handlers.put(Request.Type.OPEN, new OpenRequestHandler());
         handlers.put(Request.Type.DELETE, new DeletionRequestHandler());
-    }
 
-    public synchronized void start(Model model, Application.Parameters parameters) {
         int nWorkers;
 
         Map<String, String> params = parameters.getNamed();
@@ -66,8 +63,6 @@ public class Server extends Thread {
         logger = new Logger(model);
         shouldContinue = new AtomicBoolean(true);
         executor = Executors.newFixedThreadPool(nWorkers);
-
-        super.start();
     }
 
     @Override
@@ -101,11 +96,6 @@ public class Server extends Thread {
             e.printStackTrace();
             System.out.println("Unable to shutdown executor service");
         }
-    }
-
-    @Override
-    public synchronized void start() {
-        throw new UnsupportedOperationException("Use start(Model, Parameters) instead");
     }
 
 

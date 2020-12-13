@@ -1,5 +1,6 @@
 package di.unito.it.prog3.client.controllers;
 
+import di.unito.it.prog3.client.controls.ErrorAlert;
 import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.model.Error;
 import di.unito.it.prog3.libs.utils.*;
@@ -9,9 +10,6 @@ import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
@@ -19,8 +17,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.shape.Circle;
 import javafx.util.Duration;
 
-import java.awt.desktop.SystemEventListener;
-import java.util.List;
+import java.net.ConnectException;
 
 import static di.unito.it.prog3.client.controllers.MainController.View.QUEUES;
 import static di.unito.it.prog3.client.controllers.MainController.View.WRITE;
@@ -28,6 +25,8 @@ import static di.unito.it.prog3.client.model.ClientStatus.CONNECTED;
 import static di.unito.it.prog3.client.model.ClientStatus.UNREACHABLE_SERVER;
 
 public class MainController extends Controller {
+
+    private final ErrorAlert errorAlert;
 
     // Root node
     @FXML private BorderPane borderPane;
@@ -48,7 +47,6 @@ public class MainController extends Controller {
 
     // Status bar circle blinker
     private final Timeline statusCircleBlinker;
-
 
     // Cached subviews
     private FXWrapper<QueueViewController> queueView;
@@ -71,11 +69,14 @@ public class MainController extends Controller {
         statusCircleBlinker.setOnFinished(
                 event -> CssUtils.ensureClassSetGroupExclusive(statusCircle, "status-circle--idle")
         );
+
+        errorAlert = new ErrorAlert();
     }
 
     @Override
     protected void setupControl() {
-        Thread.setDefaultUncaughtExceptionHandler((thread, exception) -> catchException(exception));
+        errorAlert.bindClientStatus(model.getClient().statusProperty());
+        Thread.setDefaultUncaughtExceptionHandler((thread, exception) -> handleException(exception));
 
         loadSubviews();
 
@@ -103,7 +104,10 @@ public class MainController extends Controller {
         queueView = loader.load("/screens/main/queues.fxml");
         queueView.getController().init(model);
         // Change to read view when the user double-clicks an e-mail preview
-        queueView.getController().onEmailDoubleClick(() -> currentView.set(View.READ));
+        queueView.getController().onEmailDoubleClick(() -> {
+            currentView.set(View.READ);
+            model.openCurrentEmail();
+        });
 
         writeView = loader.load("/screens/main/write.fxml");
         writeView.getController().init(model);
@@ -153,6 +157,8 @@ public class MainController extends Controller {
                 "Cannot reach server\nRetrying..",
                 cancelButton
         );
+
+
         unreachableAlert.setTitle("Server connection error");
         unreachableAlert.setOnHidden(event -> {
             if (model.getClient().statusProperty().get().equals(UNREACHABLE_SERVER)) {
@@ -162,10 +168,6 @@ public class MainController extends Controller {
 
         // Restarts blinking animation on client connected
         model.getClient().statusProperty().addListener((observable, oldStatus, newStatus) -> {
-            if (newStatus == CONNECTED) {
-                // statusCircleBlinker.playFromStart();
-            }
-
             if (unreachableAlert.isShowing()) {
                 unreachableAlert.hide();
             }
@@ -177,7 +179,7 @@ public class MainController extends Controller {
 
             switch (newStatus) {
                 case CONNECTED -> statusCircleBlinker.playFromStart();
-                case UNREACHABLE_SERVER -> unreachableAlert.showAndWait();
+                //case UNREACHABLE_SERVER -> handleException(new Exception());//unreachableAlert.showAndWait();
             }
         });
     }
@@ -226,9 +228,16 @@ public class MainController extends Controller {
         }
     }
 
-    private void catchException(Throwable e) {
-        e.printStackTrace();
-        new Error("", "", e.getMessage()).display();
+    @Override
+    void handleException(Throwable t) {
+        try {
+            if (t instanceof ConnectException) errorAlert.showError(t);
+            else new Error("", "", t.getMessage()).display();
+            //getWrapper(currentView.get()).getController().handleException(t);
+        } catch (Exception e) {
+            e.printStackTrace();
+            //new Error("", "", e.getMessage()).display();
+        }
     }
 
     private FXWrapper<? extends Controller> getWrapper(View view) {

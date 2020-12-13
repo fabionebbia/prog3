@@ -11,19 +11,21 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
+import java.time.ZoneOffset;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
+import java.util.function.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
 
@@ -65,54 +67,76 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
     }
 
     @Override // Lock exclusive queue
-    public void store(Email email) throws Exception {
+    public void store(Email email) throws EmailStoreException {
         Path queuePath = getQueuePath(email.getId());
-        boolean update = email.getRelativeId() != null;
 
-        if (!update) {
-            email.setRelativeId(UUID.randomUUID());
+        UUID relativeId = UUID.randomUUID();
+        email.setRelativeId(relativeId);
+
+        // Computing the path of the file that must be written/updated
+        Path emailPath = Paths.get(queuePath.toString(), relativeId + extension);
+
+        if (Files.exists(emailPath)) {
+            throw new EmailStoreException("Cannot store already existing e-mail");
         }
 
-        Path emailPath = Paths.get(queuePath.toString(), email.getRelativeId() + ".json");
-
-        FileTime creationTime = null;
         WriteLock lock = getQueueLock(email).writeLock();
         try {
             lock.lock();
 
-            if (!update) {
-                Files.createFile(emailPath);
-            }
-            
+            Files.createFile(emailPath);
             serialize(email, emailPath);
 
-            creationTime = Files.getLastModifiedTime(emailPath);
-            /*BasicFileAttributes attrs = Files.readAttributes(file, BasicFileAttributes.class);
-            FileTime creationTime = attrs.creationTime();
-            LocalDateTime timestamp = LocalDateTime.ofInstant(creationTime.toInstant(), ZoneId.systemDefault());*/
-
-            //email.setTimestamp(timestamp);
-        } catch (IOException e) {
-            throw new EmailStoreException("Could not create " + email.getId() + " file", e);
+            BasicFileAttributes attrs = Files.readAttributes(emailPath, BasicFileAttributes.class);
+            LocalDateTime timestamp = LocalDateTime.ofInstant(
+                    attrs.creationTime().toInstant(),
+                    ZoneId.systemDefault()
+            );
+            email.setTimestamp(timestamp);
+        } catch (Exception e) {
+            throw new EmailStoreException("Could not store e-mail", e);
         } finally {
             lock.unlock();
         }
+    }
 
-        LocalDateTime timestamp = LocalDateTime.ofInstant(creationTime.toInstant(), ZoneId.systemDefault());
-        email.setTimestamp(timestamp);
+    @Override
+    public void update(Email email) throws EmailStoreException {
+        Objects.requireNonNull(email);
+        Objects.requireNonNull(email.getId(), "Cannot update e-mail with missing id");
+        Objects.requireNonNull(email.getRelativeId(), "Cannot update e-mail with missing relative id");
+
+        ID id = email.getId();
+        UUID relativeId = id.getRelativeId();
+
+        Path queuePath = getQueuePath(id);
+        Path emailPath = Paths.get(queuePath.toString(), relativeId + extension);
+
+        if (!Files.exists(emailPath)) {
+            throw new EmailStoreException("Cannot update missing e-mail");
+        }
+
+        WriteLock lock = getQueueLock(email).writeLock();
+        try {
+            lock.lock();
+            serialize(email, emailPath);
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Override // Lock exclusive queue
-    public void delete(ID id) throws EmailStoreException {
+    public void delete(ID id, boolean failSilently) throws EmailStoreException {
         Path path = getPath(id);
 
         if (!Files.exists(path)) {
-            throw new EmailStoreException("Could not delete missing " + id);
+            if (failSilently) return;
+            else throw new EmailStoreException("Could not delete missing " + id);
         }
 
         WriteLock lock = getQueueLock(id).writeLock();
         try {
-            lock.lock();;
+            lock.lock();
             Files.delete(path);
         } catch (IOException e) {
             throw new EmailStoreException("Could not delete " + id, e);
@@ -217,7 +241,7 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
 
                 emails.add(deserializedEmail);
             }
-        } catch (IOException | EmailStoreException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         } finally {
             lock.unlock();
@@ -226,6 +250,78 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
         return emails;
     }
 
+    @Override
+    public List<Email> read(Chrono direction, Instant pivot, String user, Queue queue, int many) throws EmailStoreException {
+        String baseId = user + "/" + queue.asShortPath() + "/";
+        Path queuePath = getQueuePath(user, queue);
+        List<Email> emails = new ArrayList<>();
+
+        /*Predicate<Instant> filter = switch (direction) {
+            case NEWER -> (fileTimestamp) -> fileTimestamp.isAfter(pivot);
+            case OLDER -> (fileTimestamp) -> fileTimestamp.isBefore(pivot);
+        };*/
+
+        Comparator<? super Path> sortingComparator;
+        Predicate<Instant> timestampFilter;
+
+        switch (direction) {
+            case NEWER -> {
+                sortingComparator = Comparator.naturalOrder();
+                timestampFilter = (fileTimestamp) -> fileTimestamp.isAfter(pivot);
+            }
+            case OLDER -> {
+                sortingComparator = Comparator.reverseOrder();
+                timestampFilter = (fileTimestamp) -> fileTimestamp.isBefore(pivot);
+            }
+            default -> throw new IllegalArgumentException("Invalid chronological order");
+        }
+
+        BiPredicate<Path, BasicFileAttributes> fileCriteria = (path, attrs) ->
+            attrs.isRegularFile() && timestampFilter.test(attrs.creationTime().toInstant());
+
+        ReadLock lock = getQueueLock(user, queue).readLock();
+        try {
+            lock.lock();
+
+            Files.find(queuePath, 1, fileCriteria)
+                    .sorted(sortingComparator)
+                    .limit(many)
+                    .map(emailPath -> {
+                        Email email = deserialize(emailPath);
+
+                        String relativeId = emailPath.getFileName().toString().split("\\.")[0];
+                        email.setId(ID.fromString(baseId + relativeId));
+
+                        long lastModified = emailPath.toFile().lastModified();
+                        Instant lastModifiedInstant = Instant.ofEpochMilli(lastModified);
+                        email.setTimestamp(LocalDateTime.ofInstant(lastModifiedInstant, ZoneId.systemDefault()));
+
+                        return email;
+                    })
+                    .forEach(emails::add);
+
+        } catch (Exception e) {
+            throw new EmailStoreException("Could not read e-mails from " + queue.name().toLowerCase(), e);
+        } finally {
+            lock.unlock();
+        }
+
+        return emails;
+    }
+
+    @Override
+    public void readAndUpdate(ID id, Consumer<Email> change) throws EmailStoreException {
+        WriteLock lock = getQueueLock(id).writeLock();
+        try {
+            lock.lock();
+            Email email = read(id);
+            change.accept(email);
+            update(email);
+        } finally {
+            lock.unlock();
+        }
+    }
+/*
     @Override
     public List<Email> readNewer(ID offset) throws EmailStoreException {
         List<Email> emails = new ArrayList<>();
@@ -269,40 +365,26 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
         }
 
         return emails;
-    }
+    }*/
 
     @Override
-    public List<Email> readAll(String mailbox, Queue queue) throws IOException, EmailStoreException {
+    public List<Email> readAll(String user, Queue queue) throws EmailStoreException {
+        Instant pivot = LocalDateTime.now()
+                .atZone(ZoneId.systemDefault())
+                .toInstant();
+
+        return read(Chrono.OLDER, pivot, user, queue, Integer.MAX_VALUE);
+    }
+
+    @Override // Shared lock queue
+    public List<Email> readAll(String mailbox) throws EmailStoreException {
         List<Email> emails = new ArrayList<>();
-        Path queuePath = getQueuePath(mailbox, queue);
 
-        ReadLock lock = getQueueLock(mailbox, queue).readLock();
-        try {
-            lock.lock();
-
-            List<Path> emailPathsOrdered = Files.list(queuePath)
-                    .map(Path::toFile)
-                    .sorted(Comparator.comparingLong(File::lastModified).reversed())
-                    .map(File::toPath)
-                    .collect(Collectors.toList());
-
-            for (Path emailPath : emailPathsOrdered) {
-                Email deserializedEmail = deserialize(emailPath);
-
-                ID id = ID.fromString(
-                        mailbox
-                                + "/" + queue.asShortPath()
-                                + "/" + emailPath.getFileName().toString().split("\\.")[0]);
-                deserializedEmail.setId(id);
-
-                FileTime lastModifiedTime = Files.getLastModifiedTime(emailPath);
-                LocalDateTime timestamp = LocalDateTime.ofInstant(lastModifiedTime.toInstant(), ZoneId.systemDefault());
-                deserializedEmail.setTimestamp(timestamp);
-
-                emails.add(deserializedEmail);
-            }
-        } finally {
-            lock.unlock();
+        for (Queue queue : Queue.values()) {
+            if (queue == Queue.DRAFTS) continue;
+            System.out.println(queue);
+            List<Email> queueEmails = readAll(mailbox, queue);
+            emails.addAll(queueEmails);
         }
 
         return emails;
@@ -347,7 +429,7 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
 
     protected abstract void serialize(Email email, Path path) throws EmailStoreException;
 
-    protected abstract Email deserialize(Path path) throws EmailStoreException;
+    protected abstract Email deserialize(Path path);
 
     protected abstract Email deserialize(File file) throws EmailStoreException;
 

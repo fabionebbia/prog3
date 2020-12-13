@@ -10,10 +10,12 @@ public class OpenRequestHandler implements RequestHandler {
 
     @Override
     public Response handle(EmailStore emailStore, Logger logger, Request request) throws Exception {
-        Email.ID emailId = request.getId();
+        /*Email.ID emailId = request.getId();
         Email email = emailStore.read(emailId);
         email.setRead(true);
-        emailStore.store(email);
+        emailStore.update(email);*/
+
+        emailStore.readAndUpdate(request.getId(), email -> email.setRead(true));
 
         return Response.success();
     }

@@ -1,8 +1,11 @@
 package di.unito.it.prog3.client.model;
 
+import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.email.Queue;
+import di.unito.it.prog3.libs.net.Chrono;
 import di.unito.it.prog3.libs.net.JsonMapper;
 import di.unito.it.prog3.libs.net.Request;
+import di.unito.it.prog3.libs.net.Request.RequestBuilder;
 import di.unito.it.prog3.libs.net.Response;
 import di.unito.it.prog3.libs.utils.Emails;
 import javafx.application.Application;
@@ -15,12 +18,12 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static di.unito.it.prog3.client.model.ClientStatus.*;
 import static di.unito.it.prog3.libs.net.Request.Type.READ;
@@ -31,8 +34,7 @@ public class Client {
     private final ReadOnlyStringWrapper server;
     private final ReadOnlyStringWrapper user;
 
-    private final ScheduledExecutorService poller;
-    private final ExecutorService executor;
+    private final ScheduledExecutorService executor;
     private final JsonMapper json;
     private final Model model;
 
@@ -40,7 +42,9 @@ public class Client {
     private final String host;
     private final int port;
 
+    private boolean queuePopulated;
     private boolean pollerStarted;
+
 
     Client(Model model, Application.Parameters parameters) {
         Map<String, String> params = parameters.getNamed();
@@ -69,8 +73,6 @@ public class Client {
         status = new ReadOnlyObjectWrapper<>(IDLE);
         json = new JsonMapper();
 
-        executor = Executors.newSingleThreadExecutor();
-
         try {
             pollingInterval = Integer.parseInt(params.getOrDefault("polling-interval", "5"));
             if (pollingInterval <= 0) {
@@ -80,35 +82,69 @@ public class Client {
             throw new IllegalArgumentException("Invalid polling interval");
         }
 
-        poller = Executors.newSingleThreadScheduledExecutor();
-    }
-
-    void populateQueues() {
-        newRequest(READ)
-                .setQueue(Queue.RECEIVED)
-                .onSuccess(response -> {
-                    model.allQueue().addAll(response.getEmails());
-                    startPoller();
-                })
-                .send();
-
-        newRequest(READ)
-                .setQueue(Queue.SENT)
-                .onSuccess(response ->
-                        model.allQueue().addAll(response.getEmails()))
-                .send();
+        executor = Executors.newSingleThreadScheduledExecutor();
     }
 
     void startPoller() {
         if (!pollerStarted) {
-            poller.scheduleAtFixedRate(
-                    model::loadNewerReceived,
-                    pollingInterval,
+            executor.scheduleAtFixedRate(
+                    this::poll,
+                    0,
                     pollingInterval,
                     TimeUnit.SECONDS
             );
+            pollerStarted = true;
         }
-        pollerStarted = true;
+    }
+
+    private void poll() {
+        try {
+            RequestBuilder request = newRequest(READ);
+
+            if (model.allQueue().getValue().isEmpty()) {
+                request.setPivot(LocalDateTime.now())
+                        .setDirection(Chrono.OLDER);
+            } else if (model.receivedQueue().getValue().isEmpty()) {
+                request.setPivot(LocalDateTime.now())
+                        .setQueue(Queue.RECEIVED)
+                        .setDirection(Chrono.OLDER);
+            } else {
+                Email lastReceived = model.receivedQueue().getValue().get(0);
+                request.setPivot(lastReceived.getTimestamp())
+                        .setQueue(Queue.RECEIVED)
+                        .setDirection(Chrono.NEWER);
+            }
+
+            request.onSuccess(response -> {
+                List<Email> newEmails = response.getEmails();
+                model.allQueue().addAll(newEmails);
+            });
+
+            request.send();
+        } catch (Exception e) {
+            Platform.runLater(() -> { throw e; });
+        }
+
+        /*Email lastReceived = model.receivedQueue().getValue().get(0);
+        // Email.ID offset = lastReceived.getId();
+
+        LocalDateTime pivot;
+
+        if (lastReceived != null) {
+            pivot = lastReceived.getTimestamp();
+        } else {
+            pivot = LocalDateTime.now();
+        }
+
+        try {
+            if (queuePopulated) {
+                model.loadNewerReceived();
+            } else {
+                populateQueues();
+            }
+        } catch (Exception e) {
+            Platform.runLater(() -> { throw e; });
+        }*/
     }
 
     public Request.RequestBuilder newRequest(Request.Type type) {
@@ -118,7 +154,7 @@ public class Client {
     void sendRequest(Request request) {
         Objects.requireNonNull(request);
 
-        executor.submit(() -> {
+        executor.schedule(() -> {
             try (Socket socket = new Socket(host, port);
                  BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
                 // TODO dovel lo metto?
@@ -137,7 +173,7 @@ public class Client {
                 e.printStackTrace();
                 setStatus(UNREACHABLE_SERVER);
             }
-        });
+        }, 0, TimeUnit.SECONDS);
     }
 
     public ReadOnlyObjectProperty<ClientStatus> statusProperty() {
@@ -153,10 +189,8 @@ public class Client {
     }
 
     public void shutdown() throws InterruptedException {
-        poller.shutdown();
         executor.shutdown();
         executor.awaitTermination(3, TimeUnit.SECONDS);
-        poller.awaitTermination(3, TimeUnit.SECONDS);
     }
 
     private void setStatus(ClientStatus newStatus) {

@@ -6,6 +6,7 @@ import di.unito.it.prog3.server.gui.Logger;
 import di.unito.it.prog3.server.storage.EmailStore;
 
 import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutorService;
 
 public interface RequestHandler {
 

@@ -3,15 +3,14 @@ package di.unito.it.prog3.client.model;
 import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.email.Queue;
 import di.unito.it.prog3.libs.model.EmailProperty;
-import di.unito.it.prog3.libs.net.Chrono;
 import di.unito.it.prog3.libs.utils.Callback;
+import di.unito.it.prog3.libs.utils.Emails;
 import javafx.application.Application;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -19,56 +18,34 @@ import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
-import java.util.Optional;
-import java.util.UUID;
 import java.util.function.Predicate;
 
 import static di.unito.it.prog3.libs.net.Request.Type.*;
 
 public class Model {
 
+    // Net client
+    private final Client client;
+
     // E-mail queues
     private final ListProperty<Email> all;
     private final ObjectProperty<ObservableList<Email>> sent;
     private final ObjectProperty<ObservableList<Email>> received;
 
+    // Currently selected/opened e-mail
     private final EmailProperty currentEmail;
-    private final Client client;
+
 
     public Model(Application.Parameters parameters) {
-        client = new Client(this, parameters);
-
         currentEmail = new EmailProperty();
+
         all = new SimpleListProperty<>(FXCollections.observableArrayList());
         received = new SimpleObjectProperty<>(createQueue(Queue.RECEIVED));
         sent = new SimpleObjectProperty<>(createQueue(Queue.SENT));
-/*
-        Email.ID sentEmailId = Email.ID.fromString("me@email.tld/R/" + UUID.randomUUID().toString());
-        Email.ID receivedReplyId = Email.ID.fromString("me@email.tld/S/" + UUID.randomUUID().toString());
 
-        Email sentEmail = new Email();
-        sentEmail.setId(sentEmailId);
-        sentEmail.setSender("me@email.tld");
-        sentEmail.setSubject("This is my original message");
-        sentEmail.setBody("With its interesting body");
-        sentEmail.addRecipient("someone@email.tld");
-        sentEmail.setTimestamp(LocalDateTime.now());
-
-
-        Email receivedReply = new Email();
-        receivedReply.setId(receivedReplyId);
-        receivedReply.setSender("someone@email.tld");
-        receivedReply.setSubject("This is someone else's reply");
-        receivedReply.setBody("With its interesting body too");
-        receivedReply.addRecipient("me@email.tld");
-        receivedReply.addRecipient("whoknows@email.tld");
-        receivedReply.setTimestamp(LocalDateTime.now().minus(1, ChronoUnit.MINUTES));
-
-        all.addAll(sentEmail, receivedReply);*/
-
-        client.populateQueues();
+        client = new Client(this, parameters);
+        client.startPoller();
     }
 
     public void send(Email email) {
@@ -88,11 +65,13 @@ public class Model {
     }
 
     public void setOpened(Email email) {
-        email.setRead(true);
+        if (email.isUnread()) {
+            email.setRead(true);
 
-        client.newRequest(OPEN)
-                .setId(email.getId())
-                .send();
+            client.newRequest(OPEN)
+                    .setId(email.getId())
+                    .send();
+        }
     }
 
     public Email openCurrentEmail() {
@@ -117,11 +96,21 @@ public class Model {
 
     void loadNewerReceived() {
         Email lastReceived = received.getValue().get(0);
-        Email.ID offset = lastReceived.getId();
+        // Email.ID offset = lastReceived.getId();
+
+        LocalDateTime pivot;
+
+        if (lastReceived != null) {
+            pivot = lastReceived.getTimestamp();
+        } else {
+            pivot = LocalDateTime.now();
+        }
 
         client.newRequest(READ)
-                .setOffset(offset)
-                .onSuccess(response -> all.addAll(response.getEmails()))
+                .setPivot(pivot)
+                .setQueue(Queue.RECEIVED)
+                .onSuccess(response ->
+                        all.addAll(response.getEmails()))
                 .send();
     }
 

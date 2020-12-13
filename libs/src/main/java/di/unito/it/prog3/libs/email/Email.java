@@ -152,10 +152,6 @@ public class Email {
         return getId().toString();
     }
 
-    public static Email writeNew() {
-        return new Email();
-    }
-
 
     public static class ID {
 

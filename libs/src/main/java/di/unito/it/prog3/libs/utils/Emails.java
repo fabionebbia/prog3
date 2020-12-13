@@ -1,5 +1,8 @@
 package di.unito.it.prog3.libs.utils;
 
+import di.unito.it.prog3.libs.email.Email;
+import di.unito.it.prog3.libs.email.Queue;
+
 import java.time.format.DateTimeFormatter;
 import java.util.regex.Pattern;
 
@@ -26,6 +29,11 @@ public class Emails {
 
     public static boolean isMalformed(String email) {
         return !isWellFormed(email);
+    }
+
+    public static Email.ID getSendReceivedCounterpart(String user, Email.ID id) {
+        String twinQueue = id.getQueue() ==  Queue.SENT ? "/R/" : "/S/";
+        return Email.ID.fromString(user + twinQueue + id.getRelativeId());
     }
 
     public static String ensureWellFormed(String email) {

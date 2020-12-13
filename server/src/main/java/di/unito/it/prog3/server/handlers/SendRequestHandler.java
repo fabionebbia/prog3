@@ -6,14 +6,16 @@ import di.unito.it.prog3.libs.net.Request;
 import di.unito.it.prog3.libs.net.Response;
 import di.unito.it.prog3.server.gui.Logger;
 import di.unito.it.prog3.server.storage.EmailStore;
+import di.unito.it.prog3.server.storage.EmailStoreException;
 
 import java.util.Set;
+import java.util.concurrent.*;
 
 public class SendRequestHandler implements RequestHandler {
 
     @Override
     public Response handle(EmailStore emailStore, Logger logger, Request request) throws Exception {
-        Set<String> recipients = request.getRecipients();
+       Set<String> recipients = request.getRecipients();
 
         // Check all recipients exist
         for (String recipient : recipients) {

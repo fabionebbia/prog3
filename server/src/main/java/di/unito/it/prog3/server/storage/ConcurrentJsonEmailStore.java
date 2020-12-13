@@ -44,28 +44,28 @@ public class ConcurrentJsonEmailStore extends ConcurrentFileBasedEmailStore {
     }
 
     @JsonFilter("filter properties by name")
-    class PropertyFilterMixIn {}
+    static class PropertyFilterMixIn {}
 
     @Override
-    protected void serialize(Email email, Path path) throws EmailStoreException {
+    protected void serialize(Email email, Path path) {
         try {
             writer.writeValue(path.toFile(), email);
         } catch (IOException e) {
-            throw new EmailStoreException("Could not serialize e-mail " + email + " to path " + path, e);
+            throw new RuntimeException("Could not serialize e-mail " + email + " to path " + path, e);
         }
     }
 
     @Override
-    protected Email deserialize(Path path) throws EmailStoreException {
+    protected Email deserialize(Path path) {
         return deserialize(path.toFile());
     }
 
     @Override
-    protected Email deserialize(File file) throws EmailStoreException {
+    protected Email deserialize(File file) {
         try {
             return reader.readValue(file, Email.class);
         } catch (IOException e) {
-            throw new EmailStoreException("Could not deserialize e-mail from path " + file.getPath(), e);
+            throw new RuntimeException("Could not deserialize e-mail from path " + file.getPath(), e);
         }
     }
 
