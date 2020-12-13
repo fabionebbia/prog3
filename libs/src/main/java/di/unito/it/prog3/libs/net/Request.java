@@ -18,25 +18,6 @@ import java.util.function.Consumer;
 @JsonAutoDetect(fieldVisibility = Visibility.ANY)
 public class Request {
 
-    static final class LoginRequest extends Request {
-        public LoginRequest(String user) {
-            super(Type.LOGIN, user);
-        }
-    }
-
-    static final class SendRequest extends Request {
-        public SendRequest(String user) {
-            super(Type.LOGIN, user);
-        }
-        public void addAllRecipients(Collection<String> recipients) {
-            super.addAllRecipients(recipients);
-        }
-        public void setSubject(String subject) {
-            super.setSubject(subject);
-        }
-        public void
-    }
-
     private Type type;
     private String user;
     private Email.ID id;

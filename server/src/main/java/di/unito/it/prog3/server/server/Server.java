@@ -1,8 +1,8 @@
 package di.unito.it.prog3.server.server;
 
 import di.unito.it.prog3.libs.net.JsonMapper;
-import di.unito.it.prog3.libs.net.Request;
 import di.unito.it.prog3.libs.net.Response;
+import di.unito.it.prog3.libs.net2.*;
 import di.unito.it.prog3.server.gui.Logger;
 import di.unito.it.prog3.server.gui.Model;
 import di.unito.it.prog3.server.handlers.*;
@@ -25,7 +25,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Server implements Runnable {
 
-    private final Map<Request.Type, RequestHandler> handlers;
+    // private final Map<Request.Type, RequestHandler> handlers;
+    private final Map<Class<? extends Request>, RequestHandler> handlers;
     private final EmailStore emailStore;
     private final JsonMapper json;
 
@@ -40,12 +41,19 @@ public class Server implements Runnable {
         json = new JsonMapper();
         emailStore = new ConcurrentJsonEmailStore("_store");
 
-        handlers = new ConcurrentHashMap<>();
+        /*handlers = new ConcurrentHashMap<>();
         handlers.put(Request.Type.LOGIN, new LoginRequestHandler());
         handlers.put(Request.Type.SEND, new SendRequestHandler());
         handlers.put(Request.Type.READ, new ReadRequestHandler());
         handlers.put(Request.Type.OPEN, new OpenRequestHandler());
-        handlers.put(Request.Type.DELETE, new DeletionRequestHandler());
+        handlers.put(Request.Type.DELETE, new DeletionRequestHandler());*/
+
+        handlers = new ConcurrentHashMap<>();
+        handlers.put(LoginRequest.class, new LoginRequestHandler());
+        handlers.put(ReadRequest.class, new ReadRequestHandler());
+        handlers.put(SendRequest.class, new SendRequestHandler());
+        handlers.put(OpenRequest.class, new OpenRequestHandler());
+        handlers.put(DeletionRequest.class, new DeletionRequestHandler());
 
         int nWorkers;
 

@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import di.unito.it.prog3.libs.net2.*;
 
 public class JsonMapper extends ObjectMapper {
 
@@ -24,6 +25,15 @@ public class JsonMapper extends ObjectMapper {
 
         // Excludes null fields
         setSerializationInclusion(Include.NON_NULL);
+
+        // Register request types
+        registerSubtypes(
+                LoginRequest.class,
+                ReadRequest.class,
+                SendRequest.class,
+                OpenRequest.class,
+                DeletionRequest.class
+        );
     }
 
 }

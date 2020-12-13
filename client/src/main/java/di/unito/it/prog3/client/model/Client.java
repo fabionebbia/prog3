@@ -4,10 +4,13 @@ import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.email.Queue;
 import di.unito.it.prog3.libs.net.Chrono;
 import di.unito.it.prog3.libs.net.JsonMapper;
-import di.unito.it.prog3.libs.net.Request;
-import di.unito.it.prog3.libs.net.Request.RequestBuilder;
 import di.unito.it.prog3.libs.net.Response;
+
+import di.unito.it.prog3.libs.net2.*;
+import di.unito.it.prog3.libs.net2.ReadRequest.ReadRequestBuilder;
+import di.unito.it.prog3.libs.utils.Callback;
 import di.unito.it.prog3.libs.utils.Emails;
+import di.unito.it.prog3.libs.utils.ValueCallback;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -23,10 +26,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static di.unito.it.prog3.client.model.ClientStatus.*;
-import static di.unito.it.prog3.libs.net.Request.Type.READ;
+import static di.unito.it.prog3.libs.net2.RequestType.READ;
 
 public class Client {
 
@@ -99,28 +101,35 @@ public class Client {
 
     private void poll() {
         try {
-            RequestBuilder request = newRequest(READ);
+            ReadRequestBuilder request = newRequest(READ);
 
             if (model.allQueue().getValue().isEmpty()) {
-                request.setPivot(LocalDateTime.now())
-                        .setDirection(Chrono.OLDER);
+                request.setPivot(LocalDateTime.now());
+                request.setDirection(Chrono.OLDER);
+                request.setQueue(Queue.RECEIVED);
             } else if (model.receivedQueue().getValue().isEmpty()) {
-                request.setPivot(LocalDateTime.now())
-                        .setQueue(Queue.RECEIVED)
-                        .setDirection(Chrono.OLDER);
+                request.setPivot(LocalDateTime.now());
+                request.setDirection(Chrono.OLDER);
+                request.setQueue(Queue.RECEIVED);
             } else {
                 Email lastReceived = model.receivedQueue().getValue().get(0);
-                request.setPivot(lastReceived.getTimestamp())
-                        .setQueue(Queue.RECEIVED)
-                        .setDirection(Chrono.NEWER);
+                request.setPivot(lastReceived.getTimestamp());
+                request.setDirection(Chrono.NEWER);
+                request.setQueue(Queue.RECEIVED);
             }
 
-            request.onSuccess(response -> {
+            /*request.onSuccess(response -> {
+                List<Email> newEmails = response.getEmails();
+                model.allQueue().addAll(newEmails);
+            });*/
+
+            request.setOnSuccessCallback(response -> {
                 List<Email> newEmails = response.getEmails();
                 model.allQueue().addAll(newEmails);
             });
 
-            request.send();
+            // request.send();
+            request.commit();
         } catch (Exception e) {
             Platform.runLater(() -> { throw e; });
         }
@@ -147,11 +156,61 @@ public class Client {
         }*/
     }
 
-    public Request.RequestBuilder newRequest(Request.Type type) {
-        return new Request.RequestBuilder(type, user.get(), this::sendRequest);
+    public <R extends Request, B extends RequestBuilder<R>> B newRequest(RequestBuilderSupplier<R, B> type) {
+        B builder = type.supply(this::commitRequest);
+        builder.setUser(user.get());
+        return builder;
     }
 
-    void sendRequest(Request request) {
+    <R extends Request> void commitRequest(RequestBuilder<R> requestBuilder) {
+        R request = requestBuilder.build();
+        request.validate();
+        sendRequest(
+                request,
+                requestBuilder.getOnSuccessCallback(),
+                requestBuilder.getOnFailureCallback()
+        );
+    }
+
+    void sendRequest(Request request, ValueCallback<Response> onSuccess) {
+        sendRequest(request, onSuccess, response -> {
+            throw new RuntimeException(response.getMessage());
+        });
+    }
+
+    void sendRequest(Request request, ValueCallback<Response> onSuccess, ValueCallback<Response> onFailure) {
+        Objects.requireNonNull(request);
+
+        executor.schedule(() -> {
+            try (Socket socket = new Socket(host, port);
+                 BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+                // TODO dovel lo metto?
+                socket.setSoTimeout(5000);
+
+                setStatus(CONNECTED);
+
+                System.out.println(json.writeValueAsString(request));
+                json.writeValue(socket.getOutputStream(), request);
+                Response response = json.readValue(br, Response.class);
+                System.out.println(json.writeValueAsString(response));
+
+                Platform.runLater(() -> {
+                    if (response.successful()) {
+                        if (onSuccess != null) onSuccess.call(response);
+                    } else {
+                        if (onFailure != null) onFailure.call(response);
+                    }
+                });
+
+                setStatus(IDLE);
+            } catch (Exception e) {
+                e.printStackTrace();
+                setStatus(UNREACHABLE_SERVER);
+            }
+        }, 0, TimeUnit.SECONDS);
+    }
+
+    /*void sendRequest(Request request) {
         Objects.requireNonNull(request);
 
         executor.schedule(() -> {
@@ -174,7 +233,7 @@ public class Client {
                 setStatus(UNREACHABLE_SERVER);
             }
         }, 0, TimeUnit.SECONDS);
-    }
+    }*/
 
     public ReadOnlyObjectProperty<ClientStatus> statusProperty() {
         return status.getReadOnlyProperty();

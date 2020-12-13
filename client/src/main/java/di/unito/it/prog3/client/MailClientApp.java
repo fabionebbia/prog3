@@ -2,18 +2,13 @@ package di.unito.it.prog3.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import di.unito.it.prog3.client.controllers.MainController;
-import di.unito.it.prog3.client.model.ClientStatus;
 import di.unito.it.prog3.client.model.Model;
-import di.unito.it.prog3.libs.email.Email;
-import di.unito.it.prog3.libs.model.Error;
 import di.unito.it.prog3.libs.net.JsonMapper;
-import di.unito.it.prog3.libs.net.Request;
+import di.unito.it.prog3.libs.net2.*;
 import di.unito.it.prog3.libs.utils.FXWrapper;
 import di.unito.it.prog3.libs.utils.WrappedFXMLLoader;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.stage.Screen;
@@ -25,7 +20,8 @@ public class MailClientApp extends Application {
     private Model model;
 
     @Override
-    public void start(Stage stage) {
+    public void start(Stage stage) throws JsonProcessingException {
+
         model = new Model(getParameters());
 
         WrappedFXMLLoader loader = new WrappedFXMLLoader();
@@ -40,6 +36,22 @@ public class MailClientApp extends Application {
         stage.setOnCloseRequest(e -> Platform.exit());
         stage.setScene(mainScene);
         stage.show();
+
+        Request request = model.getClient().newRequest(RequestType.SEND)
+                .addRecipient("ciao@come.va")
+                .setSubject("Subject")
+                .setBody("Body")
+                .build();
+
+        JsonMapper json = new JsonMapper();
+        json.registerSubtypes(
+                LoginRequest.class,
+                ReadRequest.class,
+                SendRequest.class,
+                OpenRequest.class,
+                DeletionRequest.class
+        );
+
     }
 
     @Override

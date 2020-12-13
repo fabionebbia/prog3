@@ -3,6 +3,12 @@ package di.unito.it.prog3.client.model;
 import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.email.Queue;
 import di.unito.it.prog3.libs.model.EmailProperty;
+import di.unito.it.prog3.libs.net2.DeletionRequest;
+import di.unito.it.prog3.libs.net2.OpenRequest;
+import di.unito.it.prog3.libs.net2.ReadRequest;
+import di.unito.it.prog3.libs.net2.RequestType;
+import di.unito.it.prog3.libs.net2.SendRequest.SendRequestBuilder;
+import di.unito.it.prog3.libs.net2.DeletionRequest.DeletionRequestBuilder;
 import di.unito.it.prog3.libs.utils.Callback;
 import di.unito.it.prog3.libs.utils.Emails;
 import javafx.application.Application;
@@ -21,7 +27,7 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.function.Predicate;
 
-import static di.unito.it.prog3.libs.net.Request.Type.*;
+import static di.unito.it.prog3.libs.net2.RequestType.*;
 
 public class Model {
 
@@ -53,24 +59,39 @@ public class Model {
     }
 
     public void send(Email email, Callback callback) {
-        client.newRequest(SEND)
-                .addAllRecipients(email.getRecipients())
+        SendRequestBuilder request = client.newRequest(SEND);
+
+        request.addAllRecipients(email.getRecipients());
+        request.setSubject(email.getSubject());
+        request.setBody(email.getBody());
+
+        request.setOnSuccessCallback(response -> {
+            if (callback != null) callback.call();
+            all.addAll(response.getEmails());
+        });
+
+        request.commit();
+
+/*
+        SendRequestBuilder request = client.newRequest(SEND);
+
+        request.addAllRecipients(email.getRecipients())
                 .setSubject(email.getSubject())
                 .setBody(email.getBody())
-                .onSuccess(response -> {
+                .setOnSuccessCallback(response -> {
                     if (callback != null) callback.call();
                     all.addAll(response.getEmails());
                 })
-                .send();
+                .commit();*/
     }
 
     public void setOpened(Email email) {
         if (email.isUnread()) {
             email.setRead(true);
 
-            client.newRequest(OPEN)
-                    .setId(email.getId())
-                    .send();
+            OpenRequest.OpenRequestBuilder request = client.newRequest(OPEN);
+            request.setId(email.getId());
+            request.commit();
         }
     }
 
@@ -85,33 +106,23 @@ public class Model {
     }
 
     public void delete(Email.ID id, Callback callback) {
-        client.newRequest(DELETE)
+        /*client.newRequest(DELETE)
                 .setId(id)
                 .onSuccess(response -> {
                     if (callback != null) callback.call();
                     all.removeIf(email -> email.getId().equals(id));
                 })
-                .send();
-    }
+                .send();*/
 
-    void loadNewerReceived() {
-        Email lastReceived = received.getValue().get(0);
-        // Email.ID offset = lastReceived.getId();
+        DeletionRequestBuilder request = client.newRequest(DELETE);
 
-        LocalDateTime pivot;
+        request.setId(id);
+        request.setOnSuccessCallback(response -> {
+            if (callback != null) callback.call();
+            all.removeIf(email -> email.getId().equals(id));
+        });
 
-        if (lastReceived != null) {
-            pivot = lastReceived.getTimestamp();
-        } else {
-            pivot = LocalDateTime.now();
-        }
-
-        client.newRequest(READ)
-                .setPivot(pivot)
-                .setQueue(Queue.RECEIVED)
-                .onSuccess(response ->
-                        all.addAll(response.getEmails()))
-                .send();
+        request.commit();
     }
 
     public Client getClient() {
