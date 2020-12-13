@@ -21,6 +21,8 @@ import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
@@ -250,6 +252,29 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
         }
 
         return emails;
+    }
+
+    @Override
+    public void concurrencyTest() {
+        ExecutorService exec = Executors.newFixedThreadPool(100);
+
+        for (int i = 0; i < 100000; i++) {
+            exec.submit(() -> {
+                try {
+                    readAndUpdate(
+                            ID.fromString("user2@email.tld/S/3f9b2b47-319c-42a6-a26f-7f433ef3062f"),
+                            email -> {
+                                int n = Integer.parseInt(email.getSubject());
+                                email.setSubject((n + 1) + "");
+                            }
+                    );
+                } catch (EmailStoreException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+
+        exec.shutdown();
     }
 
     @Override

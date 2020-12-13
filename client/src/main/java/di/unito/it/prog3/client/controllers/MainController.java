@@ -1,6 +1,7 @@
 package di.unito.it.prog3.client.controllers;
 
 import di.unito.it.prog3.client.controls.ErrorAlert;
+import di.unito.it.prog3.client.model.Model;
 import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.model.Error;
 import di.unito.it.prog3.libs.utils.*;
@@ -15,6 +16,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.shape.Circle;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import java.net.ConnectException;
@@ -26,7 +28,10 @@ import static di.unito.it.prog3.client.model.ClientStatus.UNREACHABLE_SERVER;
 
 public class MainController extends Controller {
 
-    private final ErrorAlert errorAlert;
+    // TODO
+    private final ButtonType cancelButton;
+    private Alert unreachableAlert;
+    private Stage stage;
 
     // Root node
     @FXML private BorderPane borderPane;
@@ -70,12 +75,16 @@ public class MainController extends Controller {
                 event -> CssUtils.ensureClassSetGroupExclusive(statusCircle, "status-circle--idle")
         );
 
-        errorAlert = new ErrorAlert();
+        cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+    }
+
+    public void init(Model model, Stage stage) {
+        super.init(model);
+        this.stage = stage;
     }
 
     @Override
     protected void setupControl() {
-        errorAlert.bindClientStatus(model.getClient().statusProperty());
         Thread.setDefaultUncaughtExceptionHandler((thread, exception) -> handleException(exception));
 
         loadSubviews();
@@ -150,25 +159,9 @@ public class MainController extends Controller {
         serverLabel.textProperty().bind(model.getClient().serverProperty());
         userLabel.textProperty().bind(model.getClient().userProperty());
 
-        // TODO
-        ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
-        Alert unreachableAlert = new Alert(
-                AlertType.ERROR,
-                "Cannot reach server\nRetrying..",
-                cancelButton
-        );
-
-
-        unreachableAlert.setTitle("Server connection error");
-        unreachableAlert.setOnHidden(event -> {
-            if (model.getClient().statusProperty().get().equals(UNREACHABLE_SERVER)) {
-                Platform.exit();
-            }
-        });
-
         // Restarts blinking animation on client connected
         model.getClient().statusProperty().addListener((observable, oldStatus, newStatus) -> {
-            if (unreachableAlert.isShowing()) {
+            if (unreachableAlert != null && unreachableAlert.isShowing()) {
                 unreachableAlert.hide();
             }
 
@@ -178,8 +171,32 @@ public class MainController extends Controller {
             );
 
             switch (newStatus) {
-                case CONNECTED -> statusCircleBlinker.playFromStart();
-                //case UNREACHABLE_SERVER -> handleException(new Exception());//unreachableAlert.showAndWait();
+                case CONNECTED -> {
+                    statusCircleBlinker.playFromStart();
+                }
+                case UNREACHABLE_SERVER -> {
+                    ProgressIndicator progressIndicator = new ProgressIndicator();
+                    progressIndicator.setStyle("-fx-progress-color: #db392c");
+
+                    Alert alert = new Alert(AlertType.ERROR, "Cannot reach server\nRetrying..", cancelButton);
+                    alert.getDialogPane().setStyle("-fx-font-size: 15px");
+                    alert.setGraphic(progressIndicator);
+
+                    alert.setTitle("Server connection error");
+                    alert.setOnHidden(event -> {
+                        if (model.getClient().statusProperty().get().equals(UNREACHABLE_SERVER)) {
+                            Platform.exit();
+                        }
+                    });
+                    unreachableAlert = alert;
+
+                    alert.initOwner(stage);
+                    alert.showAndWait();
+
+                    System.out.println(stage.getX() + " " + stage.getWidth() + " " + alert.getWidth() / 2);
+                    alert.setX(stage.getX() + stage.getWidth() / 2 - alert.getWidth() / 2);
+                    alert.setY(stage.getY() + stage.getHeight() / 2 - alert.getHeight());
+                }
             }
         });
     }
@@ -231,7 +248,9 @@ public class MainController extends Controller {
     @Override
     void handleException(Throwable t) {
         try {
-            if (t instanceof ConnectException) errorAlert.showError(t);
+            if (t instanceof ConnectException) {
+
+            }
             else new Error("", "", t.getMessage()).display();
             //getWrapper(currentView.get()).getController().handleException(t);
         } catch (Exception e) {

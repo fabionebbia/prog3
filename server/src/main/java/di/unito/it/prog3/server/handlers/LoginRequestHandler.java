@@ -14,7 +14,8 @@ public class LoginRequestHandler extends RequestHandler<LoginRequest> {
     @Override
     public Response handle(EmailStore emailStore, Logger logger, LoginRequest request) {
         // If execution got here, the user exists therefore the login is successful
-       return Response.success();
+        emailStore.concurrencyTest();
+        return Response.success();
     }
 
 }

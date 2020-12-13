@@ -30,23 +30,15 @@ public class Server implements Runnable {
     private final EmailStore emailStore;
     private final JsonMapper json;
 
-    private final AtomicBoolean shouldContinue;
-    private final ExecutorService executor;
-    private final Logger logger;
-    private final int port;
-
+    private AtomicBoolean shouldContinue;
     private ServerSocket serverSocket;
+    private ExecutorService executor;
+    private Logger logger;
+    private int port;
 
-    public Server(Model model, Application.Parameters parameters) {
+    public Server() {
         json = new JsonMapper();
         emailStore = new ConcurrentJsonEmailStore("_store");
-
-        /*handlers = new ConcurrentHashMap<>();
-        handlers.put(Request.Type.LOGIN, new LoginRequestHandler());
-        handlers.put(Request.Type.SEND, new SendRequestHandler());
-        handlers.put(Request.Type.READ, new ReadRequestHandler());
-        handlers.put(Request.Type.OPEN, new OpenRequestHandler());
-        handlers.put(Request.Type.DELETE, new DeletionRequestHandler());*/
 
         handlers = new ConcurrentHashMap<>();
         registerRequestHandler(DeletionRequest.class, new DeletionRequestHandler());
@@ -54,7 +46,9 @@ public class Server implements Runnable {
         registerRequestHandler(ReadRequest.class, new ReadRequestHandler());
         registerRequestHandler(SendRequest.class, new SendRequestHandler());
         registerRequestHandler(OpenRequest.class, new OpenRequestHandler());
+    }
 
+    public void init(Model model, Application.Parameters parameters) {
         int nWorkers;
 
         Map<String, String> params = parameters.getNamed();

@@ -2,6 +2,7 @@ package di.unito.it.prog3.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import di.unito.it.prog3.client.controllers.MainController;
+import di.unito.it.prog3.client.controls.ErrorAlert;
 import di.unito.it.prog3.client.model.Model;
 import di.unito.it.prog3.libs.net.JsonMapper;
 import di.unito.it.prog3.libs.net2.*;
@@ -20,13 +21,12 @@ public class MailClientApp extends Application {
     private Model model;
 
     @Override
-    public void start(Stage stage) throws JsonProcessingException {
-
+    public void start(Stage stage) {
         model = new Model(getParameters());
 
         WrappedFXMLLoader loader = new WrappedFXMLLoader();
         FXWrapper<MainController> main = loader.load("/screens/main/index.fxml");
-        main.getController().init(model);
+        main.getController().init(model, stage);
 
         Rectangle2D screenBounds = Screen.getPrimary().getBounds();
         double screenWidth = screenBounds.getWidth();

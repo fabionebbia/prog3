@@ -28,6 +28,7 @@ import java.util.Objects;
 import java.util.concurrent.*;
 
 import static di.unito.it.prog3.client.model.ClientStatus.*;
+import static di.unito.it.prog3.libs.net2.RequestType.LOGIN;
 import static di.unito.it.prog3.libs.net2.RequestType.READ;
 
 public class Client {
@@ -98,6 +99,8 @@ public class Client {
             );
             pollerStarted = true;
         }
+        newRequest(LOGIN)
+                .commit();
     }
 
     private void poll() {
