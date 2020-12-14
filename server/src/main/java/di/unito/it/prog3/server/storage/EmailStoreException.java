@@ -10,8 +10,4 @@ public class EmailStoreException extends Exception {
         super(message);
     }
 
-    public EmailStoreException(Throwable t) {
-        super(t);
-    }
-
 }
