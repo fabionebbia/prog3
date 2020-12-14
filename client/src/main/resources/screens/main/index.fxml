@@ -84,7 +84,7 @@
         </HBox>
     </top>
     <bottom>
-        <HBox id="status-bar" spacing="7.0" stylesheets="@../../status-bar.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
+        <HBox id="status-bar" spacing="7.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
             <children>
                 <Circle fx:id="statusCircle" radius="5.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" styleClass="status-circle--idle">
                     <HBox.margin>

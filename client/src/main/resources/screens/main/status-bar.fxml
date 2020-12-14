@@ -8,7 +8,7 @@
 <?import javafx.scene.shape.Circle?>
 
 
-<HBox spacing="7.0" stylesheets="@../../status-bar.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="di.unito.it.prog3.client.controllers.StatusBarController">
+<HBox spacing="7.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="di.unito.it.prog3.client.controllers.StatusBarController">
    <children>
       <Circle fx:id="statusCircle" radius="5.0" strokeType="INSIDE" strokeWidth="0.0">
          <HBox.margin>

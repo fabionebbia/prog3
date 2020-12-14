@@ -37,7 +37,6 @@ public class MailClientApp extends Application {
 
     @Override
     public void stop() throws Exception {
-        super.stop();
         model.shutdown();
     }
 
