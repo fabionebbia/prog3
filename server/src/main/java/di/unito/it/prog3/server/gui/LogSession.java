@@ -1,7 +1,7 @@
 package di.unito.it.prog3.server.gui;
 
 import di.unito.it.prog3.libs.net.Response;
-import di.unito.it.prog3.libs.net2.Request;
+import di.unito.it.prog3.libs.net.Request;
 
 public class LogSession {
 

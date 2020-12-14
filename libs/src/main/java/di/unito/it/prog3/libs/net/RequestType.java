@@ -1,12 +1,10 @@
-package di.unito.it.prog3.libs.net2;
+package di.unito.it.prog3.libs.net;
 
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-import di.unito.it.prog3.libs.net2.LoginRequest.LoginRequestBuilder;
-import di.unito.it.prog3.libs.net2.SendRequest.SendRequestBuilder;
-import di.unito.it.prog3.libs.net2.OpenRequest.OpenRequestBuilder;
-import di.unito.it.prog3.libs.net2.ReadRequest.ReadRequestBuilder;
-import di.unito.it.prog3.libs.net2.DeletionRequest.DeletionRequestBuilder;
+import di.unito.it.prog3.libs.net.LoginRequest.LoginRequestBuilder;
+import di.unito.it.prog3.libs.net.SendRequest.SendRequestBuilder;
+import di.unito.it.prog3.libs.net.OpenRequest.OpenRequestBuilder;
+import di.unito.it.prog3.libs.net.ReadRequest.ReadRequestBuilder;
+import di.unito.it.prog3.libs.net.DeletionRequest.DeletionRequestBuilder;
 
 public interface RequestType<R extends Request, B extends RequestBuilder<R>>
         extends RequestBuilderSupplier<R, B> {

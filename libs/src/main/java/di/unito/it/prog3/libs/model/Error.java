@@ -45,8 +45,4 @@ public class Error {
         });
     }
 
-    public static void display(String title, String header, Response response) {
-        new Error(title, header, response.getMessage()).display();
-    }
-
 }

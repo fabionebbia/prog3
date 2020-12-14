@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
-import di.unito.it.prog3.libs.exceptions.MalformedEmailIDException;
+import di.unito.it.prog3.libs.utils.Emails;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -22,12 +22,13 @@ public class Email {
     @JsonIgnore
     private UUID relativeId;
 
-    private String sender;
-    private String subject;
     private final Set<String> recipients;
     private LocalDateTime timestamp;
-    private String body;
+    private String subject;
+    private String sender;
     private boolean read;
+    private String body;
+
 
     public Email() {
         recipients = new HashSet<>();
@@ -175,13 +176,19 @@ public class Email {
         public static ID fromString(String str) {
             String[] parts = str.split("/");
 
-            if (parts.length == 3) {
+            try {
+                if (parts.length != 3) throw new IllegalArgumentException();
+
                 String mailbox = parts[0];
+                if (Emails.isMalformed(mailbox)) throw new IllegalArgumentException();
+
                 Queue queue = Queue.fromShortPath(parts[1]);
                 UUID uuid = UUID.fromString(parts[2]);
 
                 return new ID(mailbox, queue, uuid);
-            } else throw new MalformedEmailIDException(str);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Malformed e-mail id");
+            }
         }
 
         @Override
@@ -199,7 +206,7 @@ public class Email {
             return mailbox + "/" + queue.asShortPath() + "/" + relativeId;
         }
 
-        public static boolean isWellformed(ID id) {
+        public static boolean isWellFormed(ID id) {
             try {
                 ID.fromString(id.toString());
                 return true;

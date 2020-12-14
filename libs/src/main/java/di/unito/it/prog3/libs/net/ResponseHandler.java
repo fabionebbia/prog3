@@ -1,7 +1,7 @@
 package di.unito.it.prog3.libs.net;
 
-public interface ResponseHandler {
+import di.unito.it.prog3.libs.utils.ObjectCallback;
 
-    void handle(Response response);
+public interface ResponseHandler extends ObjectCallback<Response> {
 
 }

@@ -1,4 +1,4 @@
-package di.unito.it.prog3.libs.net2;
+package di.unito.it.prog3.libs.net;
 
 import java.util.function.Consumer;
 

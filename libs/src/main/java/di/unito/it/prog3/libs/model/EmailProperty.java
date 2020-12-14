@@ -10,30 +10,31 @@ import java.util.ArrayList;
 
 public class EmailProperty extends SimpleObjectProperty<Email> {
 
-    private final ReadOnlyObjectWrapper<ID> id;
-    private final ReadOnlyStringWrapper sender;
+    private final ReadOnlyObjectWrapper<LocalDateTime> timestamp;
     private final ListProperty<String> recipients;
     private final ReadOnlyStringWrapper subject;
-    private final ReadOnlyObjectWrapper<LocalDateTime> timestamp;
+    private final ReadOnlyObjectWrapper<ID> id;
+    private final ReadOnlyStringWrapper sender;
     private final ReadOnlyStringWrapper body;
 
     public EmailProperty() {
-        id = new ReadOnlyObjectWrapper<>();
-        sender = new ReadOnlyStringWrapper();
         recipients = new SimpleListProperty<>(FXCollections.observableArrayList(new ArrayList<>()));
-        subject = new ReadOnlyStringWrapper();
         timestamp = new ReadOnlyObjectWrapper<>();
+        subject = new ReadOnlyStringWrapper();
+        sender = new ReadOnlyStringWrapper();
+        id = new ReadOnlyObjectWrapper<>();
         body = new ReadOnlyStringWrapper();
 
-        addListener(((observable, oldMail, newEmail) -> {
-            if (newEmail == null) return;
 
-            id.set(newEmail.getId());
-            sender.set(newEmail.getSender());
-            recipients.setAll(newEmail.getRecipients());
-            subject.set(newEmail.getSubject());
-            timestamp.set(newEmail.getTimestamp());
-            body.set(newEmail.getBody());
+        addListener(((observable, oldMail, newEmail) -> {
+            if (newEmail != null) {
+                recipients.setAll(newEmail.getRecipients());
+                timestamp.set(newEmail.getTimestamp());
+                subject.set(newEmail.getSubject());
+                sender.set(newEmail.getSender());
+                body.set(newEmail.getBody());
+                id.set(newEmail.getId());
+            }
         }));
     }
 

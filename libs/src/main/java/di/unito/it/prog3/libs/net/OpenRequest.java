@@ -1,4 +1,4 @@
-package di.unito.it.prog3.libs.net2;
+package di.unito.it.prog3.libs.net;
 
 import di.unito.it.prog3.libs.email.Email;
 
@@ -13,15 +13,12 @@ public class OpenRequest extends Request {
         return id;
     }
 
-    public void setId(Email.ID id) {
-        this.id = id;
-    }
-
     @Override
     public void validate() {
         super.validate();
-        ensure(Email.ID.isWellformed(id), "Malformed e-mail id");
+        ensure(Email.ID.isWellFormed(id), "Malformed e-mail id");
     }
+
 
     public static final class OpenRequestBuilder extends RequestBuilder<OpenRequest> {
         OpenRequestBuilder(Consumer<RequestBuilder<OpenRequest>> commitConsumer) {
@@ -29,7 +26,7 @@ public class OpenRequest extends Request {
         }
 
         public OpenRequestBuilder setId(Email.ID id) {
-            request.setId(id);
+            request.id = id;
             return this;
         }
     }

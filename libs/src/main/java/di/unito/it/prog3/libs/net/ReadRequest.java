@@ -1,16 +1,12 @@
-package di.unito.it.prog3.libs.net2;
+package di.unito.it.prog3.libs.net;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import di.unito.it.prog3.libs.email.Queue;
-import di.unito.it.prog3.libs.net.Chrono;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.function.Consumer;
 
 public class ReadRequest extends Request {
+
     private Chrono direction;
     private LocalDateTime pivot;
     private Queue queue;
@@ -21,33 +17,16 @@ public class ReadRequest extends Request {
         return direction;
     }
 
-    public void setDirection(Chrono direction) {
-        this.direction = direction;
-    }
-
     public LocalDateTime getPivot() {
         return pivot;
-    }
-
-    @JsonProperty
-    public void setPivot(LocalDateTime pivot) {
-        this.pivot = pivot;
     }
 
     public Queue getQueue() {
         return queue;
     }
 
-    public void setQueue(Queue queue) {
-        this.queue = queue;
-    }
-
     public int getMany() {
         return many;
-    }
-
-    public void setMany(int many) {
-        this.many = many;
     }
 
     @Override
@@ -60,32 +39,29 @@ public class ReadRequest extends Request {
         ensure(direction != null, "Must specify a chronological reading direction");
     }
 
+
     public static final class ReadRequestBuilder extends RequestBuilder<ReadRequest> {
         ReadRequestBuilder(Consumer<RequestBuilder<ReadRequest>> commitConsumer) {
             super(ReadRequest::new, commitConsumer);
         }
 
         public ReadRequestBuilder setDirection(Chrono direction) {
-            request.setDirection(direction);
+            request.direction = direction;
             return this;
         }
 
-        public LocalDateTime getPivot() {
-            return request.getPivot();
-        }
-
         public ReadRequestBuilder setPivot(LocalDateTime pivot) {
-            request.setPivot(pivot);
+            request.pivot = pivot;
             return this;
         }
 
         public ReadRequestBuilder setQueue(Queue queue) {
-            request.setQueue(queue);
+            request.queue = queue;
             return this;
         }
 
         public ReadRequestBuilder setMany(int many) {
-            request.setMany(many);
+            request.many = many;
             return this;
         }
     }

@@ -15,9 +15,9 @@ import java.util.List;
 @JsonAutoDetect(fieldVisibility = Visibility.ANY)
 public class Response {
 
+    private final List<Email> emails;
     private boolean success;
     private String message;
-    private List<Email> emails;
 
     @JsonCreator
     private Response() {
@@ -43,10 +43,8 @@ public class Response {
     }
 
 
-    private static final Response SUCCESS = new Response(true, "", null);
-
     public static Response success() {
-        return SUCCESS;
+        return new Response(true, "", null);
     }
 
     public static Response success(Email email) {

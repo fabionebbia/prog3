@@ -1,8 +1,6 @@
 package di.unito.it.prog3.server.server;
 
-import di.unito.it.prog3.libs.net.JsonMapper;
-import di.unito.it.prog3.libs.net.Response;
-import di.unito.it.prog3.libs.net2.*;
+import di.unito.it.prog3.libs.net.*;
 import di.unito.it.prog3.server.gui.LogSession;
 import di.unito.it.prog3.server.gui.Logger;
 import di.unito.it.prog3.server.gui.Model;
@@ -23,8 +21,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import static di.unito.it.prog3.libs.utils.Utils.DEBUG;
 
 public class Server implements Runnable {
 

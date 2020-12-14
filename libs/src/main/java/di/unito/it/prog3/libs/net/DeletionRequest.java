@@ -1,9 +1,8 @@
-package di.unito.it.prog3.libs.net2;
+package di.unito.it.prog3.libs.net;
 
 import di.unito.it.prog3.libs.email.Email;
 
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public class DeletionRequest extends Request {
 
@@ -23,6 +22,7 @@ public class DeletionRequest extends Request {
         super.validate();
         ensure(id != null, "Missing e-mail id");
     }
+
 
     public static final class DeletionRequestBuilder extends RequestBuilder<DeletionRequest> {
         DeletionRequestBuilder(Consumer<RequestBuilder<DeletionRequest>> commitConsumer) {

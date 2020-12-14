@@ -2,13 +2,8 @@ package di.unito.it.prog3.client.model;
 
 import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.email.Queue;
-import di.unito.it.prog3.libs.net.Chrono;
-import di.unito.it.prog3.libs.net.JsonMapper;
-import di.unito.it.prog3.libs.net.Response;
-import di.unito.it.prog3.libs.net2.ReadRequest.ReadRequestBuilder;
-import di.unito.it.prog3.libs.net2.Request;
-import di.unito.it.prog3.libs.net2.RequestBuilder;
-import di.unito.it.prog3.libs.net2.RequestBuilderSupplier;
+import di.unito.it.prog3.libs.net.*;
+import di.unito.it.prog3.libs.net.ReadRequest.ReadRequestBuilder;
 import di.unito.it.prog3.libs.utils.Emails;
 import di.unito.it.prog3.libs.utils.ObjectCallback;
 import javafx.application.Application;
@@ -30,7 +25,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static di.unito.it.prog3.client.model.ClientStatus.*;
-import static di.unito.it.prog3.libs.net2.RequestType.READ;
+import static di.unito.it.prog3.libs.net.RequestType.READ;
 import static di.unito.it.prog3.libs.utils.Utils.DEBUG;
 
 public class Client {
@@ -139,7 +134,7 @@ public class Client {
 
             request.setPivot(pivot);
 
-            request.setOnSuccessCallback(response -> {
+            request.setSuccessHandler(response -> {
                 List<Email> newEmails = response.getEmails();
                 model.allQueue().addAll(newEmails);
 
@@ -161,11 +156,11 @@ public class Client {
     }
 
     <R extends Request> void commitRequest(RequestBuilder<R> requestBuilder) {
-        R request = requestBuilder.build();
+        R request = requestBuilder.getRequest();
         request.validate();
 
-        ObjectCallback<Response> onSuccess = requestBuilder.getOnSuccessCallback();
-        ObjectCallback<Response> onFailure = requestBuilder.getOnFailureCallback();
+        ResponseHandler onSuccess = requestBuilder.getSuccessHandler();
+        ResponseHandler onFailure = requestBuilder.getFailureHandler();
 
         if (onFailure != null) {
             sendRequest(request, onSuccess, onFailure);
@@ -176,7 +171,7 @@ public class Client {
         }
     }
 
-    void sendRequest(Request request, ObjectCallback<Response> onSuccess, ObjectCallback<Response> onFailure) {
+    void sendRequest(Request request, ResponseHandler onSuccess, ResponseHandler onFailure) {
         Objects.requireNonNull(request);
 
         executor.schedule(() -> {

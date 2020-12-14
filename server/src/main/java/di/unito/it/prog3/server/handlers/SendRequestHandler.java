@@ -3,7 +3,7 @@ package di.unito.it.prog3.server.handlers;
 import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.email.Queue;
 import di.unito.it.prog3.libs.net.Response;
-import di.unito.it.prog3.libs.net2.SendRequest;
+import di.unito.it.prog3.libs.net.SendRequest;
 import di.unito.it.prog3.server.gui.LogSession;
 import di.unito.it.prog3.server.storage.EmailStore;
 

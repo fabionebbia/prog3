@@ -1,4 +1,4 @@
-package di.unito.it.prog3.libs.net2;
+package di.unito.it.prog3.libs.net;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -11,6 +11,7 @@ public final class SendRequest extends Request {
     private String subject;
     private String body;
 
+
     public SendRequest() {
         recipients = new HashSet<>();
     }
@@ -19,28 +20,12 @@ public final class SendRequest extends Request {
         return recipients;
     }
 
-    public void addRecipient(String recipient) {
-        recipients.add(recipient);
-    }
-
-    public void addAllRecipients(Collection<String> recipients) {
-        this.recipients.addAll(recipients);
-    }
-
     public String getSubject() {
         return subject;
     }
 
-    public void setSubject(String subject) {
-        this.subject = subject;
-    }
-
     public String getBody() {
         return body;
-    }
-
-    public void setBody(String body) {
-        this.body = body;
     }
 
     @Override
@@ -49,28 +34,29 @@ public final class SendRequest extends Request {
         ensure(recipients.size() > 0, "Missing recipients");
     }
 
+
     public static final class SendRequestBuilder extends RequestBuilder<SendRequest> {
         SendRequestBuilder(Consumer<RequestBuilder<SendRequest>> commitConsumer) {
             super(SendRequest::new, commitConsumer);
         }
 
         public SendRequestBuilder addRecipient(String recipient) {
-            request.addRecipient(recipient);
+            request.recipients.add(recipient);
             return this;
         }
 
         public SendRequestBuilder addAllRecipients(Collection<String> recipients) {
-            request.addAllRecipients(recipients);
+            request.recipients.addAll(recipients);
             return this;
         }
 
         public SendRequestBuilder setSubject(String subject) {
-            request.setSubject(subject);
+            request.subject = subject;
             return this;
         }
 
         public SendRequestBuilder setBody(String body) {
-            request.setBody(body);
+            request.body = body;
             return this;
         }
     }

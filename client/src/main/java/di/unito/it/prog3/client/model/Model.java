@@ -3,9 +3,9 @@ package di.unito.it.prog3.client.model;
 import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.email.Queue;
 import di.unito.it.prog3.libs.model.EmailProperty;
-import di.unito.it.prog3.libs.net2.DeletionRequest.DeletionRequestBuilder;
-import di.unito.it.prog3.libs.net2.OpenRequest;
-import di.unito.it.prog3.libs.net2.SendRequest.SendRequestBuilder;
+import di.unito.it.prog3.libs.net.DeletionRequest.DeletionRequestBuilder;
+import di.unito.it.prog3.libs.net.OpenRequest;
+import di.unito.it.prog3.libs.net.SendRequest.SendRequestBuilder;
 import di.unito.it.prog3.libs.utils.Callback;
 import javafx.application.Application;
 import javafx.beans.binding.BooleanBinding;
@@ -22,7 +22,7 @@ import javafx.collections.transformation.SortedList;
 import java.util.Comparator;
 import java.util.function.Predicate;
 
-import static di.unito.it.prog3.libs.net2.RequestType.*;
+import static di.unito.it.prog3.libs.net.RequestType.*;
 import static di.unito.it.prog3.libs.utils.Utils.DEBUG;
 
 public class Model {
@@ -61,7 +61,7 @@ public class Model {
         request.setSubject(email.getSubject());
         request.setBody(email.getBody());
 
-        request.setOnSuccessCallback(response -> {
+        request.setSuccessHandler(response -> {
             if (callback != null) callback.call();
             all.addAll(response.getEmails());
         });
@@ -114,7 +114,7 @@ public class Model {
         DeletionRequestBuilder request = client.newRequest(DELETE);
 
         request.setId(id);
-        request.setOnSuccessCallback(response -> {
+        request.setSuccessHandler(response -> {
             if (callback != null) callback.call();
             DEBUG("Deletion response received");
             DEBUG("\tRequested " + id + " deletion");

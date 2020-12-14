@@ -2,9 +2,8 @@ package di.unito.it.prog3.server.handlers;
 
 import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.net.Response;
-import di.unito.it.prog3.libs.net2.DeletionRequest;
+import di.unito.it.prog3.libs.net.DeletionRequest;
 import di.unito.it.prog3.server.gui.LogSession;
-import di.unito.it.prog3.server.gui.Logger;
 import di.unito.it.prog3.server.storage.EmailStore;
 
 public class DeletionRequestHandler extends RequestHandler<DeletionRequest> {
