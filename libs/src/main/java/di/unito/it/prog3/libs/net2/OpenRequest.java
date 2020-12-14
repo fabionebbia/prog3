@@ -17,6 +17,12 @@ public class OpenRequest extends Request {
         this.id = id;
     }
 
+    @Override
+    public void validate() {
+        super.validate();
+        ensure(Email.ID.isWellformed(id), "Malformed e-mail id");
+    }
+
     public static final class OpenRequestBuilder extends RequestBuilder<OpenRequest> {
         OpenRequestBuilder(Consumer<RequestBuilder<OpenRequest>> commitConsumer) {
             super(OpenRequest::new, commitConsumer);

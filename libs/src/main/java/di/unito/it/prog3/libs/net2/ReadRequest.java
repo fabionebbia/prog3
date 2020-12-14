@@ -50,6 +50,15 @@ public class ReadRequest extends Request {
         this.many = many;
     }
 
+    @Override
+    public void validate() {
+        super.validate();
+
+        ensure(pivot != null, "Missing pivot");
+        ensure(LocalDateTime.now().isAfter(pivot), "Time travel not allowed");
+
+        ensure(direction != null, "Must specify a chronological reading direction");
+    }
 
     public static final class ReadRequestBuilder extends RequestBuilder<ReadRequest> {
         ReadRequestBuilder(Consumer<RequestBuilder<ReadRequest>> commitConsumer) {

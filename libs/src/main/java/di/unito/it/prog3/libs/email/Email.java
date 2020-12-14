@@ -196,9 +196,16 @@ public class Email {
         @Override
         @JsonValue
         public String toString() {
-            return (mailbox != null ? mailbox : "NO_MAILBOX")
-                    + "/" + (queue != null ? queue.asShortPath() : "NO_QUEUE")
-                    + "/" + (relativeId != null ? relativeId : "NO_RELATIVE_ID");
+            return mailbox + "/" + queue.asShortPath() + "/" + relativeId;
+        }
+
+        public static boolean isWellformed(ID id) {
+            try {
+                ID.fromString(id.toString());
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
         }
     }
 

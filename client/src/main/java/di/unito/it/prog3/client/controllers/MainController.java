@@ -1,6 +1,7 @@
 package di.unito.it.prog3.client.controllers;
 
 import di.unito.it.prog3.client.controls.ErrorAlert;
+import di.unito.it.prog3.client.controls.IncomingMessagesAlert;
 import di.unito.it.prog3.client.model.Model;
 import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.model.Error;
@@ -35,6 +36,7 @@ import static di.unito.it.prog3.libs.utils.Utils.DEBUG;
 public class MainController extends Controller {
 
     // TODO
+    private IncomingMessagesAlert incomingAlert;
     private ErrorAlert unreachableAlert;
     private Stage stage;
 
@@ -98,7 +100,7 @@ public class MainController extends Controller {
 
         model.receivedQueue().getValue().addListener((ListChangeListener<Email>) change -> {
             if (model.getClient().firstRequestSent().get() && change.next() && change.getAddedSize() > 0) {
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                /*Alert alert = new Alert(Alert.AlertType.INFORMATION);
 
                 Image image = new Image(getClass().getResource("/893229-email/png/033-inbox.png").toExternalForm());
                 ImageView icon = new ImageView(image);
@@ -113,7 +115,13 @@ public class MainController extends Controller {
                 alert.getDialogPane().setStyle("-fx-font-size: 15px");
                 alert.setContentText("Incoming messages!");
 
-                alert.show();
+                alert.show();*/
+
+                if (incomingAlert == null || !incomingAlert.isShowing()) {
+                    incomingAlert = new IncomingMessagesAlert();
+                    incomingAlert.initOwner(stage);
+                    incomingAlert.show();
+                }
             }
         });
 

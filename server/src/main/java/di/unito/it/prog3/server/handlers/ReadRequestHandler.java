@@ -51,7 +51,7 @@ public class ReadRequestHandler extends RequestHandler<ReadRequest> {
 
             emails = emailStore.read(
                     request.getDirection(),
-                    request.getPivot() != null ? request.getPivot() : LocalDateTime.now(),
+                    request.getPivot(), // != null ? request.getPivot() : LocalDateTime.now(),
                     request.getUser(),
                     request.getQueue(),
                     request.getMany() > 0 ? request.getMany() : Integer.MAX_VALUE

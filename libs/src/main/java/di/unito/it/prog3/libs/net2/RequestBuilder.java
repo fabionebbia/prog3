@@ -1,8 +1,7 @@
 package di.unito.it.prog3.libs.net2;
 
 import di.unito.it.prog3.libs.net.Response;
-import di.unito.it.prog3.libs.utils.Callback;
-import di.unito.it.prog3.libs.utils.ValueCallback;
+import di.unito.it.prog3.libs.utils.ObjectCallback;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -10,8 +9,8 @@ import java.util.function.Supplier;
 public abstract class RequestBuilder<R extends Request> {
 
     private final Consumer<RequestBuilder<R>> commitConsumer;
-    private ValueCallback<Response> onSuccessCallback;
-    private ValueCallback<Response> onFailureCallback;
+    private ObjectCallback<Response> onSuccessCallback;
+    private ObjectCallback<Response> onFailureCallback;
 
     protected R request;
 
@@ -36,20 +35,20 @@ public abstract class RequestBuilder<R extends Request> {
         return request;
     }
 
-    public ValueCallback<Response> getOnSuccessCallback() {
+    public ObjectCallback<Response> getOnSuccessCallback() {
         return onSuccessCallback;
     }
 
-    public RequestBuilder<R> setOnSuccessCallback(ValueCallback<Response> onSuccessCallback) {
+    public RequestBuilder<R> setOnSuccessCallback(ObjectCallback<Response> onSuccessCallback) {
         this.onSuccessCallback = onSuccessCallback;
         return this;
     }
 
-    public ValueCallback<Response> getOnFailureCallback() {
+    public ObjectCallback<Response> getOnFailureCallback() {
         return onFailureCallback;
     }
 
-    public RequestBuilder<R> setOnFailureCallback(ValueCallback<Response> onFailureCallback) {
+    public RequestBuilder<R> setOnFailureCallback(ObjectCallback<Response> onFailureCallback) {
         this.onFailureCallback = onFailureCallback;
         return this;
     }

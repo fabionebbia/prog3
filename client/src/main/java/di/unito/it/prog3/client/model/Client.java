@@ -10,7 +10,7 @@ import di.unito.it.prog3.libs.net2.Request;
 import di.unito.it.prog3.libs.net2.RequestBuilder;
 import di.unito.it.prog3.libs.net2.RequestBuilderSupplier;
 import di.unito.it.prog3.libs.utils.Emails;
-import di.unito.it.prog3.libs.utils.ValueCallback;
+import di.unito.it.prog3.libs.utils.ObjectCallback;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.*;
@@ -28,7 +28,6 @@ import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static di.unito.it.prog3.client.model.ClientStatus.*;
 import static di.unito.it.prog3.libs.net2.RequestType.READ;
@@ -165,8 +164,8 @@ public class Client {
         R request = requestBuilder.build();
         request.validate();
 
-        ValueCallback<Response> onSuccess = requestBuilder.getOnSuccessCallback();
-        ValueCallback<Response> onFailure = requestBuilder.getOnFailureCallback();
+        ObjectCallback<Response> onSuccess = requestBuilder.getOnSuccessCallback();
+        ObjectCallback<Response> onFailure = requestBuilder.getOnFailureCallback();
 
         if (onFailure != null) {
             sendRequest(request, onSuccess, onFailure);
@@ -177,7 +176,7 @@ public class Client {
         }
     }
 
-    void sendRequest(Request request, ValueCallback<Response> onSuccess, ValueCallback<Response> onFailure) {
+    void sendRequest(Request request, ObjectCallback<Response> onSuccess, ObjectCallback<Response> onFailure) {
         Objects.requireNonNull(request);
 
         executor.schedule(() -> {

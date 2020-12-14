@@ -20,12 +20,12 @@ public abstract class RequestHandler<R extends Request> {
         try {
             R request = requestClass.cast(rawRequest);
 
+            request.validate();
+
             String user = request.getUser();
             if (!emailStore.userExists(user)) {
                 return Response.failure("Unknown user " + user);
             }
-
-            request.validate();
 
             return handle(emailStore, log, request);
         } catch (Exception e) {

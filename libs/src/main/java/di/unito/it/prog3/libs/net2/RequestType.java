@@ -13,7 +13,6 @@ public interface RequestType<R extends Request, B extends RequestBuilder<R>>
 
     RequestBuilderSupplier<LoginRequest, LoginRequest.LoginRequestBuilder> LOGIN = LoginRequestBuilder::new;
 
-
     RequestBuilderSupplier<ReadRequest, ReadRequestBuilder> READ = ReadRequestBuilder::new;
 
     RequestBuilderSupplier<SendRequest, SendRequestBuilder> SEND = SendRequestBuilder::new;

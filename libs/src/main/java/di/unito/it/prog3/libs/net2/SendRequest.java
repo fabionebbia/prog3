@@ -43,6 +43,11 @@ public final class SendRequest extends Request {
         this.body = body;
     }
 
+    @Override
+    public void validate() {
+        super.validate();
+        ensure(recipients.size() > 0, "Missing recipients");
+    }
 
     public static final class SendRequestBuilder extends RequestBuilder<SendRequest> {
         SendRequestBuilder(Consumer<RequestBuilder<SendRequest>> commitConsumer) {

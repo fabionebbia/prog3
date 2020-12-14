@@ -18,6 +18,11 @@ public class DeletionRequest extends Request {
         this.id = id;
     }
 
+    @Override
+    public void validate() {
+        super.validate();
+        ensure(id != null, "Missing e-mail id");
+    }
 
     public static final class DeletionRequestBuilder extends RequestBuilder<DeletionRequest> {
         DeletionRequestBuilder(Consumer<RequestBuilder<DeletionRequest>> commitConsumer) {
