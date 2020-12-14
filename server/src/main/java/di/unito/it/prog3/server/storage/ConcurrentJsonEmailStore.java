@@ -55,10 +55,6 @@ public class ConcurrentJsonEmailStore extends ConcurrentFileBasedEmailStore {
         }
     }
 
-    @Override
-    protected Email deserialize(Path path) {
-        return deserialize(path.toFile());
-    }
 
     @Override
     protected Email deserialize(File file) {

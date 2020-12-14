@@ -23,18 +23,14 @@ public interface EmailStore {
 
     void delete(ID email) throws EmailStoreException;
 
-    Email read(ID email) throws EmailStoreException, FileNotFoundException;
+    Email read(ID email) throws EmailStoreException;
 
     void readAndUpdate(ID email, Consumer<Email> change) throws EmailStoreException;
-
-    List<Email> read(String mailbox, Queue queue, int many) throws EmailStoreException;
-
-    List<Email> read(Chrono direction, ID offset, int many)  throws EmailStoreException;
 
     List<Email> read(Chrono direction, LocalDateTime pivot, String user, Queue queue, int many) throws EmailStoreException;
 
     List<Email> readAll(String user, Queue queue) throws EmailStoreException;
 
-    List<Email> readAll(String mailbox) throws EmailStoreException;
+    List<Email> readAll(String user) throws EmailStoreException;
 
 }
