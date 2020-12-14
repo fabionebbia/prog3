@@ -4,7 +4,6 @@ import di.unito.it.prog3.client.controls.ErrorAlert;
 import di.unito.it.prog3.client.controls.IncomingMessagesAlert;
 import di.unito.it.prog3.client.model.Model;
 import di.unito.it.prog3.libs.email.Email;
-import di.unito.it.prog3.libs.model.Error;
 import di.unito.it.prog3.libs.utils.CssUtils;
 import di.unito.it.prog3.libs.utils.FXWrapper;
 import di.unito.it.prog3.libs.utils.Utils;
@@ -20,8 +19,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
@@ -31,7 +28,6 @@ import javafx.util.Duration;
 import static di.unito.it.prog3.client.controllers.MainController.View.QUEUES;
 import static di.unito.it.prog3.client.controllers.MainController.View.WRITE;
 import static di.unito.it.prog3.client.model.ClientStatus.UNREACHABLE_SERVER;
-import static di.unito.it.prog3.libs.utils.Utils.DEBUG;
 
 public class MainController extends Controller {
 
@@ -148,7 +144,7 @@ public class MainController extends Controller {
         queueView.getController().onEmailDoubleClick(() -> {
             currentView.set(View.READ);
             Email email = model.openCurrentEmail();
-            readView.getController().setEmail(email);
+            readView.getController().showEmail(email);
         });
 
         writeView = loader.load("/screens/main/write.fxml");

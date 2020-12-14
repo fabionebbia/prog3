@@ -11,8 +11,6 @@ import javafx.beans.property.SetProperty;
 import javafx.beans.property.SimpleSetProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.SetChangeListener;
 import javafx.fxml.FXML;
@@ -35,17 +33,22 @@ public class WriteController extends Controller {
     @FXML private TextField recipientField;
     @FXML private TextArea bodyTextArea;
 
-    private SetProperty<String> recipients;
-    private StringProperty subject;
-    private StringProperty body;
+    private final SetProperty<String> recipients;
+    private final StringProperty subject;
+    private final StringProperty body;
+
+    private BooleanBinding canAddRecipient;
+
+
+    public WriteController() {
+        recipients = new SimpleSetProperty<>(FXCollections.observableSet());
+        subject = new SimpleStringProperty();
+        body = new SimpleStringProperty();
+    }
 
 
     @Override
     protected void setupControl() {
-        recipients = new SimpleSetProperty<>(FXCollections.observableSet());
-        subject = new SimpleStringProperty();
-        body = new SimpleStringProperty();
-
         subjectField.textProperty().bindBidirectional(subject);
         bodyTextArea.textProperty().bindBidirectional(body);
 
@@ -62,34 +65,29 @@ public class WriteController extends Controller {
                     });
                     flowPane.getChildren().add(node);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    throw new RuntimeException("Could not load graphic components", e);
                 }
             }
         });
 
         Utils.bindVisibility(recipients.sizeProperty().greaterThan(0), flowPane);
 
-        addButton.disableProperty().bind(
-                Bindings.createBooleanBinding(this::cannotAddRecipient, recipientField.textProperty())
-        );
+        canAddRecipient = Bindings.createBooleanBinding(() -> {
+            String newRecipient = recipientField.textProperty().get();
+            return Emails.isWellFormed(newRecipient) && !recipients.contains(newRecipient);
+        }, recipientField.textProperty());
 
-        // TODO usare CSS instead?
+        addButton.disableProperty().bind(canAddRecipient.not());
+
         recipientsFlowPaneContainer.vgapProperty().bind(
                 Bindings.createDoubleBinding(() -> recipients.size() > 0 ? 10d : 0d, recipients)
         );
     }
 
-    @FXML
-    private void addRecipient() {
-        String newRecipient = recipientField.getText();
-        recipients.add(newRecipient);
-        recipientField.setText("");
-    }
-
     @Override
     void onDisplayed() {
         gridPane.getScene().setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.ENTER && canAddRecipient()) {
+            if (event.getCode() == KeyCode.ENTER && canAddRecipient.get()) {
                 addRecipient();
             }
         });
@@ -98,6 +96,13 @@ public class WriteController extends Controller {
     @Override
     void onHidden() {
         gridPane.getScene().setOnKeyPressed(null);
+    }
+
+    @FXML
+    private void addRecipient() {
+        String newRecipient = recipientField.getText();
+        recipients.add(newRecipient);
+        recipientField.setText("");
     }
 
     void open(WriteMode mode) {
@@ -122,7 +127,7 @@ public class WriteController extends Controller {
         String newBody = "----------- Forwarded e-mail -----------"
                        + "\nSubject: " + currentEmail.getSubject()
                        + "\nFrom:    " + currentEmail.getSender()
-                       + "\nTo:      " + Utils.join(currentEmail.getRecipients())
+                       + "\nTo:      " + Utils.join(currentEmail.getRecipients(), ", ")
                        + "\nDate:    " + Emails.VISUAL_TIMESTAMP_DATE_FORMAT.format(currentEmail.getTimestamp())
                        + "\n\n--------------- Message ----------------"
                        + "\n" + currentEmail.getBody();
@@ -168,15 +173,6 @@ public class WriteController extends Controller {
 
     BooleanBinding isEmailWellFormed() {
         return recipients.sizeProperty().greaterThan(0);
-    }
-
-    private boolean canAddRecipient() {
-        String newRecipient = recipientField.textProperty().get();
-        return Emails.isWellFormed(newRecipient) && !recipients.contains(newRecipient);
-    }
-
-    private boolean cannotAddRecipient() {
-        return !canAddRecipient();
     }
 
     private String computeNewSubject(String prefix, Email email) {

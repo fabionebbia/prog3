@@ -1,10 +1,10 @@
 package di.unito.it.prog3.libs.utils;
 
-public abstract class ControllerBase<Model> {
+public abstract class ControllerBase<M> {
 
-    protected Model model;
+    protected M model;
 
-    public void init(Model model) {
+    public void init(M model) {
         if (this.model != null) {
             throw new IllegalStateException("Controller already initialized");
         }

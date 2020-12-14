@@ -1,6 +1,7 @@
 package di.unito.it.prog3.libs.net;
 
 import di.unito.it.prog3.libs.email.Email;
+import di.unito.it.prog3.libs.utils.Emails;
 
 import java.util.function.Consumer;
 
@@ -16,7 +17,7 @@ public class OpenRequest extends Request {
     @Override
     public void validate() {
         super.validate();
-        ensure(Email.ID.isWellFormed(id), "Malformed e-mail id");
+        ensure(Emails.isIdWellFormed(id), "Malformed e-mail id");
     }
 
 

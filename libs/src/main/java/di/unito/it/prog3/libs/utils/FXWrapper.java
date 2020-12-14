@@ -2,14 +2,12 @@ package di.unito.it.prog3.libs.utils;
 
 import javafx.scene.Parent;
 
-import java.util.List;
+public final class FXWrapper<C extends ControllerBase<?>> {
 
-public final class FXWrapper<Controller extends ControllerBase<?>> {
-
-    private final Controller controller;
+    private final C controller;
     private final Parent content;
 
-    FXWrapper(Parent content, Controller controller) {
+    FXWrapper(Parent content, C controller) {
         this.controller = controller;
         this.content = content;
     }
@@ -18,7 +16,7 @@ public final class FXWrapper<Controller extends ControllerBase<?>> {
         return content;
     }
 
-    public Controller getController() {
+    public C getController() {
         return controller;
     }
 

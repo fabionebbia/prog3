@@ -14,10 +14,11 @@ public class WrappedFXMLLoader {
         loader = new FXMLLoader(getClass().getResource(location));
     }
 
-    public <Controller extends ControllerBase<?>> FXWrapper<Controller> load() {
+    public <C extends ControllerBase<?>> FXWrapper<C> load() {
         if (loader == null || loader.getLocation() == null) {
             throw new IllegalStateException("To use load() use constructor WrappedFXMLLoader(String location)");
         }
+
         try {
             return new FXWrapper<>(loader.load(), loader.getController());
         } catch (IOException e) {
@@ -27,14 +28,15 @@ public class WrappedFXMLLoader {
     }
 
 
-    public <Controller extends ControllerBase<?>> FXWrapper<Controller> load(String location) {
+    public <C extends ControllerBase<?>> FXWrapper<C> load(String location) {
         if (loader != null && loader.getLocation() != null) {
             throw new IllegalStateException("To use load(String location) use constructor WrappedFXMLLoader()");
         }
+
         loader = new FXMLLoader(getClass().getResource(location));
-        FXWrapper<Controller> wrapper = null;
+
         try {
-            wrapper = new FXWrapper<>(loader.load(), loader.getController());
+            FXWrapper<C> wrapper = new FXWrapper<>(loader.load(), loader.getController());
             loader = null;
             return wrapper;
         } catch (IOException e) {

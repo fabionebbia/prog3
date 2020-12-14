@@ -32,7 +32,7 @@ public class ReadRequestHandler extends RequestHandler<ReadRequest> {
             List<String> queues = Arrays.stream(Queue.values())
                     .map(Queue::toString)
                     .collect(Collectors.toList());
-            log.append(Utils.join(queues));
+            log.append(Utils.join(queues, ", "));
 
             log.appendln("]");
 

@@ -205,15 +205,6 @@ public class Email {
         public String toString() {
             return mailbox + "/" + queue.asShortPath() + "/" + relativeId;
         }
-
-        public static boolean isWellFormed(ID id) {
-            try {
-                ID.fromString(id.toString());
-                return true;
-            } catch (Exception e) {
-                return false;
-            }
-        }
     }
 
 }
