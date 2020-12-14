@@ -3,14 +3,10 @@ package di.unito.it.prog3.client.model;
 import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.email.Queue;
 import di.unito.it.prog3.libs.model.EmailProperty;
-import di.unito.it.prog3.libs.net2.DeletionRequest;
-import di.unito.it.prog3.libs.net2.OpenRequest;
-import di.unito.it.prog3.libs.net2.ReadRequest;
-import di.unito.it.prog3.libs.net2.RequestType;
-import di.unito.it.prog3.libs.net2.SendRequest.SendRequestBuilder;
 import di.unito.it.prog3.libs.net2.DeletionRequest.DeletionRequestBuilder;
+import di.unito.it.prog3.libs.net2.OpenRequest;
+import di.unito.it.prog3.libs.net2.SendRequest.SendRequestBuilder;
 import di.unito.it.prog3.libs.utils.Callback;
-import di.unito.it.prog3.libs.utils.Emails;
 import javafx.application.Application;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ListProperty;
@@ -23,11 +19,11 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
-import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.function.Predicate;
 
 import static di.unito.it.prog3.libs.net2.RequestType.*;
+import static di.unito.it.prog3.libs.utils.Utils.DEBUG;
 
 public class Model {
 
@@ -86,6 +82,7 @@ public class Model {
     }
 
     public void setOpened(Email email) {
+        DEBUG("IS EMAIL UNREAD" + email.isUnread());
         if (email.isUnread()) {
             email.setRead(true);
 
@@ -119,7 +116,11 @@ public class Model {
         request.setId(id);
         request.setOnSuccessCallback(response -> {
             if (callback != null) callback.call();
+            DEBUG("Deletion response received");
+            DEBUG("\tRequested " + id + " deletion");
+            DEBUG("\tAll queue size " + all.size());
             all.removeIf(email -> email.getId().equals(id));
+            DEBUG("\tAll queue size " + all.size());
         });
 
         request.commit();

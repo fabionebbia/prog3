@@ -8,14 +8,10 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import di.unito.it.prog3.libs.exceptions.MalformedEmailIDException;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @JsonAutoDetect(fieldVisibility = Visibility.ANY)
 public class Email {
-
-    public static final Email EMPTY = new Email();
-
 
     @JsonIgnore
     private String mailbox;
@@ -32,7 +28,6 @@ public class Email {
     private LocalDateTime timestamp;
     private String body;
     private boolean read;
-    private boolean draft;
 
     public Email() {
         recipients = new HashSet<>();
@@ -49,7 +44,6 @@ public class Email {
         this.timestamp = other.timestamp;
         this.body = other.body;
         this.read = other.read;
-        this.draft = other.draft;
     }
 
     public ID getId() {
@@ -89,10 +83,6 @@ public class Email {
 
     public void setRead(boolean read) {
         this.read = read;
-    }
-
-    public boolean isDraft() {
-        return draft;
     }
 
     public String getSender() {

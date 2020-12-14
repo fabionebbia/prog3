@@ -3,6 +3,7 @@ package di.unito.it.prog3.server.server;
 import di.unito.it.prog3.libs.net.JsonMapper;
 import di.unito.it.prog3.libs.net.Response;
 import di.unito.it.prog3.libs.net2.*;
+import di.unito.it.prog3.server.gui.LogSession;
 import di.unito.it.prog3.server.gui.Logger;
 import di.unito.it.prog3.server.gui.Model;
 import di.unito.it.prog3.server.handlers.*;
@@ -22,6 +23,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static di.unito.it.prog3.libs.utils.Utils.DEBUG;
 
 public class Server implements Runnable {
 
@@ -52,7 +55,7 @@ public class Server implements Runnable {
         int nWorkers;
 
         Map<String, String> params = parameters.getNamed();
-        String nWorkersParam = params.getOrDefault("accepting-workers", "3");
+        String nWorkersParam = params.getOrDefault("n-workers", "3");
         String portParam = params.getOrDefault("port", "9999");
 
         try {
@@ -74,6 +77,7 @@ public class Server implements Runnable {
 
     @Override
     public void run() {
+        logger.info("Server started");
         logger.info("Listening for client requests on port " + port);
 
         try {
@@ -118,31 +122,30 @@ public class Server implements Runnable {
         public void run() {
             try (BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
                 Request request = json.readValue(br, Request.class);
-                Response response = Response.failure("Server error");
 
-                logger.info("Received " + request.getClass().getSimpleName() + " from " + request.getUser());
+                LogSession log = new LogSession(request);
 
-                //Request.Type type = request.getType();
                 Class<? extends Request> requestClass = request.getClass();
                 RequestHandler<?> handler = handlers.get(requestClass);
 
-                logger.info("Retrieved handler (" + handler + ")");
+                log.appendln("Retrieved handler (" + handler.getClass().getSimpleName() + "), processing request..");
 
-                if (handler != null) {
-                    response = handler.execute(emailStore, logger, request);
-                } else {
-                    response = Response.failure("Unknown request type");
-                }
+                Response response = handler.execute(emailStore, log, request);
 
+                log.appendln(response);
 
                 json.writeValue(socket.getOutputStream(), response);
+
+                logger.info(log);
             } catch (Exception e) {
                 e.printStackTrace();
+                logger.exception(e);
             } finally {
                 try {
                     socket.close();
                 } catch (IOException e) {
                     e.printStackTrace();
+                    logger.exception(e);
                 }
             }
         }

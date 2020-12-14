@@ -16,6 +16,8 @@ import java.time.LocalDateTime;
 import java.time.Year;
 import java.time.format.DateTimeFormatter;
 
+import static di.unito.it.prog3.libs.utils.Utils.DEBUG;
+
 public class EmailPreview extends ListCell<Email> implements EventHandler<MouseEvent> {
 
     private final DateTimeFormatter TODAY = DateTimeFormatter.ofPattern("H:mm");
@@ -66,8 +68,6 @@ public class EmailPreview extends ListCell<Email> implements EventHandler<MouseE
         }
     }
 
-
-
     private void update(Email email) {
         this.email = email;
 
@@ -80,10 +80,13 @@ public class EmailPreview extends ListCell<Email> implements EventHandler<MouseE
         // replaces new lines with double space
         // (\\R pattern is platform independent and matches new lines)
         String compactBody = email.getBody().replaceAll("\\R", "  ");
-        String formattedSentDate = formatTimestap(email);
+        String formattedSentDate = formatTimestamp(email);
+
+        String subject = email.getSubject();
+        subject = (subject != null && !subject.isBlank() ? subject : "-No Subject-");
 
         datetimeLabel.setText(formattedSentDate);
-        subjectLabel.setText(email.getSubject());
+        subjectLabel.setText(subject);
         fromLabel.setText(email.getSender());
         bodyLabel.setText(compactBody);
     }
@@ -94,7 +97,7 @@ public class EmailPreview extends ListCell<Email> implements EventHandler<MouseE
     }
 
 
-    private String formatTimestap(Email email) {
+    private String formatTimestamp(Email email) {
         LocalDateTime timestamp = email.getTimestamp();
         DateTimeFormatter formatter = PREVIOUS_YEAR;
 

@@ -1,5 +1,6 @@
 package di.unito.it.prog3.client.controls;
 
+import di.unito.it.prog3.libs.utils.Utils;
 import javafx.beans.property.StringProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -38,6 +39,20 @@ public class Recipient extends HBox {
 
     public void onClick(EventHandler<ActionEvent> eventHandler) {
         emailDisplay.setOnAction(eventHandler);
+    }
+
+    public void setReadOnly(boolean readOnly) {
+        // removeButton.visibleProperty().set(!readOnly);
+        // removeButton.managedProperty().set(!readOnly);
+        // removeButton.disableProperty().set(readOnly);
+
+        removeButton.setVisible(!readOnly);
+        removeButton.setManaged(!readOnly);
+        removeButton.setDisable(readOnly);
+
+        // emailDisplay.disableProperty().set(!readOnly);
+
+        emailDisplay.setDisable(!readOnly);
     }
 
 }

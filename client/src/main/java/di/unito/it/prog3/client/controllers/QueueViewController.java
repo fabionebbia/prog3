@@ -2,15 +2,22 @@ package di.unito.it.prog3.client.controllers;
 
 import di.unito.it.prog3.client.controls.EmailPreview;
 import di.unito.it.prog3.libs.email.Email;
+import di.unito.it.prog3.libs.email.Queue;
 import di.unito.it.prog3.libs.utils.Callback;
+import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionModel;
 import javafx.scene.control.TabPane;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
+
+import java.util.concurrent.Callable;
 
 public class QueueViewController extends Controller implements EventHandler<MouseEvent> {
 
@@ -57,6 +64,20 @@ public class QueueViewController extends Controller implements EventHandler<Mous
             selectedObservable.getValue().setContent(null);
             newSelected.setContent(listView);
         });*/
+
+        /*DoubleBinding tabWidthBinding = Bindings.createDoubleBinding(
+                () -> tabPane.widthProperty().get() / Queue.values().length, tabPane.widthProperty()
+        );
+
+        tabPane.tabMaxWidthProperty().bind(tabWidthBinding);
+        tabPane.tabMinWidthProperty().bind(tabWidthBinding);*/
+
+        /*Platform.runLater(() -> {
+            Scene scene = tabPane.getScene();
+            double width = scene.getWidth() / Queue.values().length;
+            tabPane.setTabMinWidth(width);
+            tabPane.setTabMaxWidth(width);
+        });*/
     }
 
     @Override
@@ -102,7 +123,7 @@ public class QueueViewController extends Controller implements EventHandler<Mous
 
     void selectTab(int index) {
         if (index < 0 || index > tabPane.getTabs().size()) {
-            throw new IllegalArgumentException("Tab index out of boundes");
+            throw new IllegalArgumentException("Tab index out of bounds");
         }
         tabPane.getSelectionModel().select(index);
     }

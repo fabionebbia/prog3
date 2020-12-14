@@ -14,7 +14,7 @@
     <top>
         <HBox id="toolbar" spacing="15.0">
             <children>
-            <Button fx:id="backButton" contentDisplay="TOP" mnemonicParsing="false" onAction="#back" text="Back">
+            <Button fx:id="backButton" contentDisplay="TOP" maxWidth="55.0" minWidth="55.0" mnemonicParsing="false" onAction="#back" prefWidth="55.0" text="Back">
                <graphic>
                   <ImageView fitHeight="30.0" pickOnBounds="true" preserveRatio="true">
                      <image>
@@ -23,7 +23,7 @@
                   </ImageView>
                </graphic>
             </Button>
-                <Button fx:id="writeButton" contentDisplay="TOP" mnemonicParsing="false" onAction="#write" text="Write">
+                <Button fx:id="writeButton" contentDisplay="TOP" maxWidth="55.0" minWidth="55.0" mnemonicParsing="false" onAction="#write" prefWidth="55.0" text="Write">
                     <graphic>
                         <ImageView fitHeight="30.0" pickOnBounds="true" preserveRatio="true">
                             <image>

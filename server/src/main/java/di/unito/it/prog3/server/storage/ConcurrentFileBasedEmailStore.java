@@ -254,7 +254,7 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
         return emails;
     }
 
-    @Override
+    /*@Override
     public void concurrencyTest() {
         ExecutorService exec = Executors.newFixedThreadPool(100);
 
@@ -275,7 +275,7 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
         }
 
         exec.shutdown();
-    }
+    }*/
 
     @Override
     public List<Email> read(Chrono direction, LocalDateTime pivot, String user, Queue queue, int many) throws EmailStoreException {
@@ -409,7 +409,6 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
         List<Email> emails = new ArrayList<>();
 
         for (Queue queue : Queue.values()) {
-            if (queue == Queue.DRAFTS) continue;
             List<Email> queueEmails = readAll(mailbox, queue);
             emails.addAll(queueEmails);
         }

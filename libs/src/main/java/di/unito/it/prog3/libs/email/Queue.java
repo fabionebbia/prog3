@@ -2,7 +2,7 @@ package di.unito.it.prog3.libs.email;
 
 public enum Queue {
 
-    RECEIVED, SENT, DRAFTS;
+    RECEIVED, SENT;
 
     public String asShortPath() {
         return name().substring(0, 1);
@@ -12,8 +12,7 @@ public enum Queue {
         return switch (shortPath.toUpperCase()) {
             case "R" -> RECEIVED;
             case "S" -> SENT;
-            case "D" -> DRAFTS;
-            default -> throw new IllegalArgumentException("Non-existing e-mail queue " + shortPath);
+            default -> throw new IllegalArgumentException("Unknown e-mail queue " + shortPath);
         };
     }
 }

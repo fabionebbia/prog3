@@ -61,6 +61,10 @@ public class ReadRequest extends Request {
             return this;
         }
 
+        public LocalDateTime getPivot() {
+            return request.getPivot();
+        }
+
         public ReadRequestBuilder setPivot(LocalDateTime pivot) {
             request.setPivot(pivot);
             return this;

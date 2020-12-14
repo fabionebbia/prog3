@@ -17,21 +17,38 @@
     -fx-background-color: #f5f5f5;
 }
 
-.tab-pane {
-    -fx-tab-min-width: 80px;
-}
-
-#toolbar,
-.tab-pane *.tab-header-background {
-    -fx-background-color: #ededed;
-}
-
 .error-label {
     -fx-text-fill: transparent;
 }
 
 .error-label.error-occurred {
     -fx-text-fill: #d32e2e;
+}
+
+
+/*************************************
+                Tabs
+ *************************************/
+
+.tab-pane {
+    -fx-padding: 0;
+    -fx-tab-min-width: 150px;
+    -fx-tab-min-height: 30px;
+}
+
+.tab-label {
+    -fx-text-fill: #707070;
+    -fx-font-weight: bold;
+}
+
+.tab:focused .tab-label,
+.tab:selected .tab-label {
+    -fx-text-fill: #4f4f4f;
+}
+
+#toolbar,
+.tab-pane *.tab-header-background {
+    -fx-background-color: #ededed;
 }
 
 
@@ -82,12 +99,10 @@
 .email-preview {
     -fx-padding: 12px 15px 12px 15px;
     -fx-background-color: #f5f5f5;
-    //-fx-opacity: 0.7;
 }
 
 .email-preview .sender-label {
     -fx-text-fill: #626262;
-    //-fx-font-size: 13px;
 }
 
 .email-preview .subject-label {
@@ -148,4 +163,22 @@
     -fx-padding: 4px 7px 4px 7px;
     -fx-border-width: 8px;
     -fx-border-color: transparent transparent transparent #0093ff;
+}
+
+
+/*************************************
+              Recipients
+ *************************************/
+
+.recipient,
+.read-only-recipient {
+    -fx-background-color: #fafafa;
+    -fx-background-radius: 10px;
+    -fx-border-color: #cccccc;
+    -fx-border-width: 1px;
+    -fx-border-radius: 10px;
+}
+
+.read-only-recipient {
+    -fx-padding: 5px;
 }

@@ -10,10 +10,17 @@ import javafx.beans.value.ObservableValue;
 import javafx.scene.Node;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class Utils {
+
+    private static final boolean debugEnabled = Boolean.parseBoolean(System.getProperty("debug"));
+
+    public static void DEBUG(String message) {
+        if (debugEnabled) System.out.println(message);
+    }
 
     public static String toUpperFirst(String s) {
         return s.substring(0, 1).toUpperCase().concat(s.substring(1));

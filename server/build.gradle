@@ -28,3 +28,11 @@ application {
     // Define the main class for the application.
     mainClass = 'di.unito.it.prog3.server.MailServerApp'
 }
+
+task passArgs {
+    run {
+        systemProperties project.getProperties()
+    }
+}
+
+run.mustRunAfter passArgs

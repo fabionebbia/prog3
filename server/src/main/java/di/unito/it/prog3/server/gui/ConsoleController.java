@@ -24,10 +24,10 @@ public class ConsoleController extends ControllerBase<Model> {
                     setText(null);
                     setStyle("");
                 } else {
-                    setWrapText(true);
+                    setWrapText(false);
                     setText(log.getMessage());
                     if (log.isError()) {
-                        setStyle("-fx-text-fill: red");
+                        setStyle("-fx-text-fill: #db392c");
                     }
                 }
             }

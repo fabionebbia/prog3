@@ -67,13 +67,6 @@ public class WriteController extends Controller {
             }
         });
 
-        recipientField.textProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-                System.out.println(newValue);
-            }
-        });
-
         Utils.bindVisibility(recipients.sizeProperty().greaterThan(0), flowPane);
 
         addButton.disableProperty().bind(

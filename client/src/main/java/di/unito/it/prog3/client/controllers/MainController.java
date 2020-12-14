@@ -4,33 +4,38 @@ import di.unito.it.prog3.client.controls.ErrorAlert;
 import di.unito.it.prog3.client.model.Model;
 import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.model.Error;
-import di.unito.it.prog3.libs.utils.*;
+import di.unito.it.prog3.libs.utils.CssUtils;
+import di.unito.it.prog3.libs.utils.FXWrapper;
+import di.unito.it.prog3.libs.utils.Utils;
+import di.unito.it.prog3.libs.utils.WrappedFXMLLoader;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.util.Duration;
-
-import java.net.ConnectException;
 
 import static di.unito.it.prog3.client.controllers.MainController.View.QUEUES;
 import static di.unito.it.prog3.client.controllers.MainController.View.WRITE;
-import static di.unito.it.prog3.client.model.ClientStatus.CONNECTED;
 import static di.unito.it.prog3.client.model.ClientStatus.UNREACHABLE_SERVER;
+import static di.unito.it.prog3.libs.utils.Utils.DEBUG;
 
 public class MainController extends Controller {
 
     // TODO
-    private final ButtonType cancelButton;
-    private Alert unreachableAlert;
+    private ErrorAlert unreachableAlert;
     private Stage stage;
 
     // Root node
@@ -74,8 +79,6 @@ public class MainController extends Controller {
         statusCircleBlinker.setOnFinished(
                 event -> CssUtils.ensureClassSetGroupExclusive(statusCircle, "status-circle--idle")
         );
-
-        cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
     }
 
     public void init(Model model, Stage stage) {
@@ -92,6 +95,27 @@ public class MainController extends Controller {
         setupToolbar();
 
         setupStatusBar();
+
+        model.receivedQueue().getValue().addListener((ListChangeListener<Email>) change -> {
+            if (model.getClient().firstRequestSent().get() && change.next() && change.getAddedSize() > 0) {
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+
+                Image image = new Image(getClass().getResource("/893229-email/png/033-inbox.png").toExternalForm());
+                ImageView icon = new ImageView(image);
+                icon.setFitHeight(50);
+                icon.setFitWidth(50);
+                alert.setGraphic(icon);
+
+                alert.initOwner(stage);
+                alert.initStyle(StageStyle.UTILITY);
+                alert.setTitle(null);
+                alert.setHeaderText("Inbox");
+                alert.getDialogPane().setStyle("-fx-font-size: 15px");
+                alert.setContentText("Incoming messages!");
+
+                alert.show();
+            }
+        });
 
         // Setup view change listener to manipulate the GUI
         currentView.addListener((observable, oldView, newView) -> {
@@ -115,7 +139,8 @@ public class MainController extends Controller {
         // Change to read view when the user double-clicks an e-mail preview
         queueView.getController().onEmailDoubleClick(() -> {
             currentView.set(View.READ);
-            model.openCurrentEmail();
+            Email email = model.openCurrentEmail();
+            readView.getController().setEmail(email);
         });
 
         writeView = loader.load("/screens/main/write.fxml");
@@ -160,42 +185,26 @@ public class MainController extends Controller {
         userLabel.textProperty().bind(model.getClient().userProperty());
 
         // Restarts blinking animation on client connected
-        model.getClient().statusProperty().addListener((observable, oldStatus, newStatus) -> {
+        model.getClient().statusProperty().addListener((observableStatus, oldStatus, newStatus) -> {
+            CssUtils.ensureClassSetGroupExclusive(
+                    statusCircle, "status-circle--" + newStatus.name().toLowerCase().replace('_', '-')
+            );
+
             if (unreachableAlert != null && unreachableAlert.isShowing()) {
                 unreachableAlert.hide();
             }
 
-            CssUtils.ensureClassSetGroupExclusive(
-                    statusCircle,
-                    "status-circle--" + newStatus.name().toLowerCase().replace('_', '-')
-            );
-
             switch (newStatus) {
-                case CONNECTED -> {
-                    statusCircleBlinker.playFromStart();
-                }
+                case CONNECTED -> statusCircleBlinker.playFromStart();
                 case UNREACHABLE_SERVER -> {
-                    ProgressIndicator progressIndicator = new ProgressIndicator();
-                    progressIndicator.setStyle("-fx-progress-color: #db392c");
-
-                    Alert alert = new Alert(AlertType.ERROR, "Cannot reach server\nRetrying..", cancelButton);
-                    alert.getDialogPane().setStyle("-fx-font-size: 15px");
-                    alert.setGraphic(progressIndicator);
-
-                    alert.setTitle("Server connection error");
-                    alert.setOnHidden(event -> {
-                        if (model.getClient().statusProperty().get().equals(UNREACHABLE_SERVER)) {
+                    unreachableAlert = new ErrorAlert();
+                    unreachableAlert.setOnHidden(event -> {
+                        if (observableStatus.getValue() == UNREACHABLE_SERVER) {
                             Platform.exit();
                         }
                     });
-                    unreachableAlert = alert;
-
-                    alert.initOwner(stage);
-                    alert.showAndWait();
-
-                    System.out.println(stage.getX() + " " + stage.getWidth() + " " + alert.getWidth() / 2);
-                    alert.setX(stage.getX() + stage.getWidth() / 2 - alert.getWidth() / 2);
-                    alert.setY(stage.getY() + stage.getHeight() / 2 - alert.getHeight());
+                    unreachableAlert.initOwner(stage);
+                    unreachableAlert.showAndWait();
                 }
             }
         });
@@ -234,29 +243,36 @@ public class MainController extends Controller {
     @FXML
     private void send() {
         writeView.getController().sendRequested(() -> currentView.set(QUEUES));
-        queueView.getController().selectTab(QueueViewController.SENT_TAB);
+        //queueView.getController().selectTab(QueueViewController.SENT_TAB);
     }
 
     @FXML
     private void delete() {
-        if (currentView.get().equals(QUEUES)) {
+        /*if (currentView.get().equals(QUEUES)) {
             Email.ID id = model.getCurrentEmail().getId();
             model.delete(id);
+        }*/
+        switch (currentView.get()) {
+            case QUEUES, READ -> {
+                Email.ID id = model.getCurrentEmail().getId();
+                model.delete(id);
+                currentView.set(QUEUES);
+            }
+            case WRITE -> currentView.set(QUEUES);
         }
+
     }
 
     @Override
     void handleException(Throwable t) {
-        try {
-            if (t instanceof ConnectException) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.initStyle(StageStyle.UTILITY);
+        alert.initOwner(stage);
+        alert.setTitle(null);
+        alert.setHeaderText(t.getMessage());
+        alert.showAndWait();
 
-            }
-            else new Error("", "", t.getMessage()).display();
-            //getWrapper(currentView.get()).getController().handleException(t);
-        } catch (Exception e) {
-            e.printStackTrace();
-            //new Error("", "", e.getMessage()).display();
-        }
+        t.printStackTrace();
     }
 
     private FXWrapper<? extends Controller> getWrapper(View view) {

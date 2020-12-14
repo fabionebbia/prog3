@@ -4,7 +4,7 @@ import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.email.Queue;
 import di.unito.it.prog3.libs.net.Response;
 import di.unito.it.prog3.libs.net2.SendRequest;
-import di.unito.it.prog3.server.gui.Logger;
+import di.unito.it.prog3.server.gui.LogSession;
 import di.unito.it.prog3.server.storage.EmailStore;
 
 import java.util.Set;
@@ -16,8 +16,10 @@ public class SendRequestHandler extends RequestHandler<SendRequest> {
     }
 
     @Override
-    public Response handle(EmailStore emailStore, Logger logger, SendRequest request) throws Exception {
+    public Response handle(EmailStore emailStore, LogSession log, SendRequest request) throws Exception {
        Set<String> recipients = request.getRecipients();
+
+        log.appendln("Checking all users exist");
 
         // Check all recipients exist
         for (String recipient : recipients) {
@@ -41,6 +43,8 @@ public class SendRequestHandler extends RequestHandler<SendRequest> {
         Email committedSenderCopy = new Email(email);
         emailStore.store(committedSenderCopy);
 
+        log.appendln("Storing sender's copy in their mailbox");
+
         // Prepare recipients copies
         email.setRelativeId(committedSenderCopy.getRelativeId());
         email.setQueue(Queue.RECEIVED);
@@ -51,6 +55,8 @@ public class SendRequestHandler extends RequestHandler<SendRequest> {
             email.setMailbox(recipient);
             emailStore.store(email);
         }
+
+        log.append("Storing recipients' copies in their mailboxes");
 
         // Return sender's copy back to the sender
         return Response.success(committedSenderCopy);

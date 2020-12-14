@@ -1,11 +1,16 @@
 .recipient {
-    /*-fx-border-radius: 6px;
-    -fx-border-color: red;
-    -fx-border-width: 1px;*/
     -fx-background-color: #fafafa;
     -fx-background-radius: 10px;
 }
 
 .recipient-remove-button {
     -fx-background-color: transparent;
+}
+
+.recipient-email {
+    -fx-border-color: transparent;
+}
+
+.recipient-email:disabled {
+    -fx-underline: none;
 }

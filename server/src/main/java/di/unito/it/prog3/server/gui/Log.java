@@ -17,5 +17,4 @@ public final class Log {
     public String getMessage() {
         return message;
     }
-
 }

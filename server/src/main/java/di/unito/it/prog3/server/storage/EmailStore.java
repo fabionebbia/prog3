@@ -15,8 +15,6 @@ import java.util.function.Function;
 
 public interface EmailStore {
 
-    void concurrencyTest();
-
     boolean userExists(String user) throws EmailStoreException;
 
     void store(Email email) throws EmailStoreException;

@@ -2,6 +2,7 @@ package di.unito.it.prog3.server.handlers;
 
 import di.unito.it.prog3.libs.net.Response;
 import di.unito.it.prog3.libs.net2.Request;
+import di.unito.it.prog3.server.gui.LogSession;
 import di.unito.it.prog3.server.gui.Logger;
 import di.unito.it.prog3.server.storage.EmailStore;
 
@@ -13,9 +14,9 @@ public abstract class RequestHandler<R extends Request> {
         this.requestClass = requestClass;
     }
 
-    public abstract Response handle(EmailStore emailStore, Logger logger, R request) throws Exception;
+    public abstract Response handle(EmailStore emailStore, LogSession log, R request) throws Exception;
 
-    public Response execute(EmailStore emailStore, Logger logger, Request rawRequest) {
+    public Response execute(EmailStore emailStore, LogSession log, Request rawRequest) {
         try {
             R request = requestClass.cast(rawRequest);
 
@@ -26,7 +27,7 @@ public abstract class RequestHandler<R extends Request> {
 
             request.validate();
 
-            return handle(emailStore, logger, request);
+            return handle(emailStore, log, request);
         } catch (Exception e) {
             e.printStackTrace();
             return Response.failure(e);

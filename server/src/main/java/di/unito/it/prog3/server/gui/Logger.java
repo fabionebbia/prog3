@@ -15,8 +15,16 @@ public class Logger {
         doLog(false, message);
     }
 
+    public void info(LogSession log) {
+        doLog(false, log.commit());
+    }
+
     public void error(String message) {
         doLog(true, message);
+    }
+
+    public void exception(Throwable t) {
+        doLog(true, t.getClass().getSimpleName() + ": " + t.getMessage());
     }
 
     public void log(Response response) {
