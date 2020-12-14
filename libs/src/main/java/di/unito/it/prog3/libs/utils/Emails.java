@@ -16,7 +16,7 @@ public final class Emails {
 
     public static boolean isWellFormed(String email) {
         if (email == null) return false;
-        return emailRegex.matcher(email).matches();
+        return emailRegex.matcher(email.toLowerCase()).matches();
     }
 
     public static boolean isMalformed(String email) {

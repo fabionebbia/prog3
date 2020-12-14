@@ -79,7 +79,7 @@ public class WriteController extends Controller {
                     Recipient node = new Recipient();
 
                     // Set Recipient's displayed e-mail to current recipient
-                    node.setEmail(recipient);
+                    node.setEmail(recipient.toLowerCase());
 
                     // Whenever the user presses the Recipient's remove button,
                     // reflect the recipient removal in the recipients set
@@ -198,7 +198,7 @@ public class WriteController extends Controller {
         recipients.clear();
 
         // Compute the new e-mail body
-        String newBody = "----------- Forwarded e-mail -----------"
+        String newBody = "\n\n----------- Forwarded e-mail -----------"
                        + "\nSubject: " + currentEmail.getSubject()
                        + "\nFrom:    " + currentEmail.getSender()
                        + "\nTo:      " + Utils.join(currentEmail.getRecipients(), ", ")
@@ -212,6 +212,10 @@ public class WriteController extends Controller {
         // Set the fields
         subject.set(newSubject);
         body.set(newBody);
+
+        // Focus recipients field so that the user
+        // can immediately start typing the forward recipients
+        recipientField.requestFocus();
     }
 
 

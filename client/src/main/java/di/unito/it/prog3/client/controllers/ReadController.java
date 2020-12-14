@@ -33,7 +33,7 @@ public class ReadController extends Controller {
 
         recipientsFlowPane.getChildren().clear();
         for (String recipient : email.getRecipients()) {
-            Label recipientLabel = new Label(recipient);
+            Label recipientLabel = new Label(recipient.toLowerCase());
             recipientLabel.getStyleClass().add("read-only-recipient");
             recipientsFlowPane.getChildren().add(recipientLabel);
         }

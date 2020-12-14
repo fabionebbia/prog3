@@ -1,4 +1,4 @@
-package di.unito.it.prog3.libs.model;
+package di.unito.it.prog3.libs.email;
 
 import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.email.Email.ID;
