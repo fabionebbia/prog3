@@ -6,12 +6,17 @@ import di.unito.it.prog3.libs.utils.ControllerBase;
 
 public abstract class Controller extends ControllerBase<Model> {
 
+    /**
+     * Called the the view associated with this controller
+     * is displayed on parent screen.
+     */
     void onDisplayed() {}
 
-    void onHidden() {}
 
-    void handleException(Throwable e) {
-        System.out.println(getClass().getSimpleName() + " received " + e);
-    }
+    /**
+     * Called the the view associated with this controller
+     * is removed from parent screen.
+     */
+    void onHidden() {}
 
 }

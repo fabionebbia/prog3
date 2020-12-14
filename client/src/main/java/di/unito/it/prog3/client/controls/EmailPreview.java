@@ -18,11 +18,15 @@ import java.time.format.DateTimeFormatter;
 
 import static di.unito.it.prog3.libs.utils.Utils.DEBUG;
 
-public class EmailPreview extends ListCell<Email> implements EventHandler<MouseEvent> {
+// Oracle - Creating a Custom Control with FXML
+// url: https://docs.oracle.com/javafx/2/fxml_get_started/custom_control.htm
+public class EmailPreview extends ListCell<Email> {
 
     private final DateTimeFormatter TODAY = DateTimeFormatter.ofPattern("H:mm");
     private final DateTimeFormatter THIS_YEAR = DateTimeFormatter.ofPattern("d MMM");
     private final DateTimeFormatter PREVIOUS_YEAR = DateTimeFormatter.ofPattern("d MMM y");
+
+    private final GridPane graphic;
 
     @FXML @SuppressWarnings("unused")
     private Label fromLabel;
@@ -36,26 +40,20 @@ public class EmailPreview extends ListCell<Email> implements EventHandler<MouseE
     @FXML @SuppressWarnings("unused")
     private Label bodyLabel;
 
-    private final GridPane graphic;
-
-    private Email email;
-
 
     public EmailPreview() {
         try {
-            /*
-                TODO which folder should this fxml file be located in?
-                TODO And what about this class?
-             */
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/controls/email-preview.fxml"));
             loader.setController(this);
             graphic = loader.load();
 
-            setOnMouseClicked(this);
+            // Prevents horizontal overflow
+            graphic.maxWidthProperty().bind(widthProperty());
         } catch (IOException e) {
             throw new RuntimeException("Could not load email preview", e);
         }
     }
+
 
     @Override
     protected void updateItem(Email email, boolean empty) {
@@ -68,14 +66,10 @@ public class EmailPreview extends ListCell<Email> implements EventHandler<MouseE
         }
     }
 
-    private void update(Email email) {
-        this.email = email;
 
+    private void update(Email email) {
         CssUtils.ensureClassSet(graphic, "email-preview");
         CssUtils.ensureClassSetOnlyIf(graphic, "email-preview--unread", email.isUnread());
-
-        // Prevents horizontal overflow
-        graphic.maxWidthProperty().bind(widthProperty());
 
         // replaces new lines with double space
         // (\\R pattern is platform independent and matches new lines)
@@ -86,16 +80,10 @@ public class EmailPreview extends ListCell<Email> implements EventHandler<MouseE
         subject = (subject != null && !subject.isBlank() ? subject : "-No Subject-");
 
         datetimeLabel.setText(formattedSentDate);
-        subjectLabel.setText(subject);
         fromLabel.setText(email.getSender());
         bodyLabel.setText(compactBody);
+        subjectLabel.setText(subject);
     }
-
-    @Override
-    public void handle(MouseEvent event) {
-
-    }
-
 
     private String formatTimestamp(Email email) {
         LocalDateTime timestamp = email.getTimestamp();

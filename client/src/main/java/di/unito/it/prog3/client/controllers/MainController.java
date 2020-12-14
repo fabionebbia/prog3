@@ -1,6 +1,6 @@
 package di.unito.it.prog3.client.controllers;
 
-import di.unito.it.prog3.client.controls.ErrorAlert;
+import di.unito.it.prog3.client.controls.UnreachableServerAlert;
 import di.unito.it.prog3.client.controls.IncomingMessagesAlert;
 import di.unito.it.prog3.client.model.Model;
 import di.unito.it.prog3.libs.email.Email;
@@ -31,12 +31,7 @@ import static di.unito.it.prog3.client.model.ClientStatus.UNREACHABLE_SERVER;
 
 public class MainController extends Controller {
 
-    // TODO
-    private IncomingMessagesAlert incomingAlert;
-    private ErrorAlert unreachableAlert;
-    private Stage stage;
-
-    // Root node
+    // Root container node
     @FXML private BorderPane borderPane;
 
     // Toolbar buttons
@@ -53,9 +48,6 @@ public class MainController extends Controller {
     @FXML private Label serverLabel;
     @FXML private Label userLabel;
 
-    // Status bar circle blinker
-    private final Timeline statusCircleBlinker;
-
     // Cached subviews
     private FXWrapper<QueueViewController> queueView;
     private FXWrapper<WriteController> writeView;
@@ -64,28 +56,56 @@ public class MainController extends Controller {
     // Active subview
     private final ObjectProperty<View> currentView;
 
+    // Status bar circle blinker
+    private final Timeline statusCircleBlinker;
 
+    // Alerts
+    private IncomingMessagesAlert incomingAlert;
+    private UnreachableServerAlert unreachableAlert;
+
+    // Stage to initialize alerts' owner
+    private Stage stage;
+
+
+    /**
+     * Creates the circle status blinking timeline.
+     */
     public MainController() {
-        currentView = new SimpleObjectProperty<>();
-
         statusCircleBlinker = new Timeline(
                 new KeyFrame(Duration.seconds(0.1),
                         e -> CssUtils.toggleModifier(statusCircle, "status-circle", "connected")
                 )
         );
         statusCircleBlinker.setCycleCount(8);
+
+        // Resets status circle to idle class after animation completes
         statusCircleBlinker.setOnFinished(
                 event -> CssUtils.ensureClassSetGroupExclusive(statusCircle, "status-circle--idle")
         );
+
+        currentView = new SimpleObjectProperty<>();
     }
 
+
+    /**
+     * Initializes the model and passes reference to the stage.
+     *
+     * @param model The model.
+     * @param stage The stage.
+     */
     public void init(Model model, Stage stage) {
         super.init(model);
         this.stage = stage;
     }
 
+
+    /**
+     * Called on main screen first load.
+     * Starts all control setup procedures, sets up some listeners and sets root view.
+     */
     @Override
     protected void setupControl() {
+        // Passes runtime exception to handleException method
         Thread.setDefaultUncaughtExceptionHandler((thread, exception) -> handleException(exception));
 
         loadSubviews();
@@ -94,26 +114,18 @@ public class MainController extends Controller {
 
         setupStatusBar();
 
+        // Listen for receivedQueue changes to show an alert to the user when new e-mails are received
         model.receivedQueue().getValue().addListener((ListChangeListener<Email>) change -> {
-            if (model.getClient().firstRequestSent().get() && change.next() && change.getAddedSize() > 0) {
-                /*Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            // change.next()                              - Trigger change inspection, required by JavaFX
+            // change.getAddedSize() > 0                  - If e-mails were added
+            // model.getClient().firstRequestSent().get() - If contact with server was already established
+            if (change.next() && change.getAddedSize() > 0 && model.getClient().firstRequestSent().get()) {
 
-                Image image = new Image(getClass().getResource("/893229-email/png/033-inbox.png").toExternalForm());
-                ImageView icon = new ImageView(image);
-                icon.setFitHeight(50);
-                icon.setFitWidth(50);
-                alert.setGraphic(icon);
-
-                alert.initOwner(stage);
-                alert.initStyle(StageStyle.UTILITY);
-                alert.setTitle(null);
-                alert.setHeaderText("Inbox");
-                alert.getDialogPane().setStyle("-fx-font-size: 15px");
-                alert.setContentText("Incoming messages!");
-
-                alert.show();*/
-
+                // If incomingAlert was newer displayed or isn't already showing
                 if (incomingAlert == null || !incomingAlert.isShowing()) {
+
+                    // Create a new IncomingMessagesAlert, init its owner
+                    // so that it stays centered in the stage and show it
                     incomingAlert = new IncomingMessagesAlert();
                     incomingAlert.initOwner(stage);
                     incomingAlert.show();
@@ -124,36 +136,48 @@ public class MainController extends Controller {
         // Setup view change listener to manipulate the GUI
         currentView.addListener((observable, oldView, newView) -> {
             if (oldView != null) {
-                FXWrapper<? extends Controller> previous = getWrapper(oldView);
-                previous.getController().onHidden();
+                getWrapper(oldView).getController().onHidden();
             }
+
             FXWrapper<? extends Controller> next = getWrapper(newView);
             borderPane.setCenter(next.getContent());
             next.getController().onDisplayed();
         });
 
+        // Sets current view after view change listener was added
+        // so that onDisplayed and other view change events
+        // can be properly triggered/handled
         currentView.set(QUEUES);
     }
 
+
+    /**
+     * Loads and caches subviews.
+     */
     private void loadSubviews() {
         WrappedFXMLLoader loader = new WrappedFXMLLoader();
 
         queueView = loader.load("/screens/main/queues.fxml");
         queueView.getController().init(model);
-        // Change to read view when the user double-clicks an e-mail preview
-        queueView.getController().onEmailDoubleClick(() -> {
-            currentView.set(View.READ);
-            Email email = model.openCurrentEmail();
-            readView.getController().showEmail(email);
-        });
 
         writeView = loader.load("/screens/main/write.fxml");
         writeView.getController().init(model);
 
         readView = loader.load("/screens/main/read.fxml");
         readView.getController().init(model);
+
+        // Change to read view when the user double-clicks an e-mail preview
+        queueView.getController().onEmailDoubleClick(() -> {
+            currentView.set(View.READ);
+            Email email = model.openCurrentEmail();
+            readView.getController().showEmail(email);
+        });
     }
 
+
+    /**
+     * Sets up toolbar controls.
+     */
     private void setupToolbar() {
         // Hide Back button on root view
         Utils.bindVisibility(currentView.isNotEqualTo(QUEUES), backButton);
@@ -162,7 +186,7 @@ public class MainController extends Controller {
         Utils.bindVisibility(currentView.isEqualTo(QUEUES), writeButton);
 
         // Hide Forward/Reply/ReplyAll buttons when writing a new e-mail
-        // Otherwise, disable them if no e-mail is selected
+        // and disable them if no e-mail is selected
         Utils.bindVisibility(
                 currentView.isNotEqualTo(WRITE),
                 model.isCurrentEmailSet(),
@@ -170,6 +194,7 @@ public class MainController extends Controller {
         );
 
         // Show Send button only when writing a new e-mail
+        // and disable it if e-mail is not ready to be sent
         Utils.bindVisibility(
                 currentView.isEqualTo(WRITE),
                 writeView.getController().isEmailWellFormed(),
@@ -177,36 +202,56 @@ public class MainController extends Controller {
         );
 
         // Disable Delete/Discard button on root view if no e-mail is selected
+        deleteButton.disableProperty().bind(
+                currentView.isEqualTo(QUEUES).and(model.isCurrentEmailSet().not())
+        );
+
         // Change button text based on the current view
-        deleteButton.disableProperty().bind(currentView.isEqualTo(QUEUES).and(model.isCurrentEmailSet().not()));
         deleteButton.textProperty().bind(Bindings.createStringBinding(
                 () -> currentView.isEqualTo(WRITE).get() ? "Discard" : "Delete", currentView
         ));
     }
 
+
+    /**
+     * Sets up status bar controls.
+     */
     private void setupStatusBar() {
         serverLabel.textProperty().bind(model.getClient().serverProperty());
         userLabel.textProperty().bind(model.getClient().userProperty());
 
         // Restarts blinking animation on client connected
         model.getClient().statusProperty().addListener((observableStatus, oldStatus, newStatus) -> {
+
+            // Ensure status circle assumes the right color
             CssUtils.ensureClassSetGroupExclusive(
                     statusCircle, "status-circle--" + newStatus.name().toLowerCase().replace('_', '-')
             );
 
+            // If unreachable alert is showing (iff oldStatus == UNREACHABLE_SERVER), hide it
             if (unreachableAlert != null && unreachableAlert.isShowing()) {
                 unreachableAlert.hide();
             }
 
             switch (newStatus) {
-                case CONNECTED -> statusCircleBlinker.playFromStart();
+                case CONNECTED ->
+                    // Restart status circle blinking animation
+                    statusCircleBlinker.playFromStart();
+
                 case UNREACHABLE_SERVER -> {
-                    unreachableAlert = new ErrorAlert();
+                    // Create a new UnreachableServerAlert
+                    unreachableAlert = new UnreachableServerAlert();
+
+                    // If the user chooses not to wait for reconnection
+                    // start an orderly shutdown process of the whole application
                     unreachableAlert.setOnHidden(event -> {
                         if (observableStatus.getValue() == UNREACHABLE_SERVER) {
                             Platform.exit();
                         }
                     });
+
+                    // Init alert owner so that it stays centered
+                    // in the stage and show it and show it
                     unreachableAlert.initOwner(stage);
                     unreachableAlert.showAndWait();
                 }
@@ -214,60 +259,124 @@ public class MainController extends Controller {
         });
     }
 
+
+    /**
+     * Called on Back button press.
+     */
     @FXML
     private void back() {
+        // Go back to queue view
         currentView.set(QUEUES);
     }
 
+
+    /**
+     * Called on Write button press.
+     */
     @FXML
     private void write() {
+        // Unset current e-mail in the model
+        // so that the user can start fresh
         model.clearCurrentEmail();
+
+        // Open write view
         currentView.set(WRITE);
+
+        // Request child write view controller to setup
+        // itself for writing a new e-mail
         writeView.getController().open(WriteMode.NEW);
     }
 
+
+    /**
+     * Called on Forward button press.
+     */
     @FXML
     private void forward() {
+        // Open write view
         currentView.set(WRITE);
+
+        // Request child write view controller to setup
+        // itself for executing an e-mail forward
         writeView.getController().open(WriteMode.FORWARD);
     }
 
+
+    /**
+     * Called on Reply button press.
+     */
     @FXML
     private void reply() {
+        // Open write view
         currentView.set(WRITE);
+
+        // Request child write view controller to setup
+        // itself for executing an e-mail reply
         writeView.getController().open(WriteMode.REPLY);
     }
 
+
+    /**
+     * Called on Reply All Button press.
+     */
     @FXML
     private void replyAll() {
+        // Open write view
         currentView.set(WRITE);
+
+        // Request child write view controller to setup
+        // itself for executing an e-mail reply all
         writeView.getController().open(WriteMode.REPLY_ALL);
     }
 
+
+    /**
+     * Called on Send button press.
+     */
     @FXML
     private void send() {
+        // Notify write view controller that the user requested
+        // to send the e-mail and to go back to queues view
+        // when the request execution completes
         writeView.getController().sendRequested(() -> currentView.set(QUEUES));
-        //queueView.getController().selectTab(QueueViewController.SENT_TAB);
     }
 
+
+    /**
+     * Called when Delete button is pressed.
+     */
     @FXML
     private void delete() {
-        /*if (currentView.get().equals(QUEUES)) {
+        // If current view is not write view, i.e. the user is either
+        //      - reading an e-mail in the read view
+        //      - or selecting an e-mail in the queues view
+        // ask the model to delete that e-mail
+        if (currentView.get() != WRITE) {
             Email.ID id = model.getCurrentEmail().getId();
             model.delete(id);
-        }*/
-        switch (currentView.get()) {
+        }
+
+        // If the current view is writing view,
+        // simply discard any changes by resetting to queue view
+        currentView.set(QUEUES);
+
+        /* switch (currentView.get()) {
             case QUEUES, READ -> {
                 Email.ID id = model.getCurrentEmail().getId();
                 model.delete(id);
                 currentView.set(QUEUES);
             }
             case WRITE -> currentView.set(QUEUES);
-        }
-
+        }*/
     }
 
-    @Override
+
+    /**
+     * Called then an exception occurs.
+     * Displays its message in an error alert.
+     *
+     * @param t The exception.
+     */
     void handleException(Throwable t) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.initStyle(StageStyle.UTILITY);
@@ -276,9 +385,18 @@ public class MainController extends Controller {
         alert.setHeaderText(t.getMessage());
         alert.showAndWait();
 
-        t.printStackTrace();
+        if (Utils.debugEnabled) {
+            t.printStackTrace();
+        }
     }
 
+
+    /**
+     * Utility used for easier retrieval of a cached view wrapper.
+     *
+     * @param view The view whose wrapper must be retrieved.
+     * @return The view wrapper;
+     */
     private FXWrapper<? extends Controller> getWrapper(View view) {
         return switch (view) {
             case QUEUES -> queueView;
@@ -287,7 +405,8 @@ public class MainController extends Controller {
         };
     }
 
-    // Subviews
+
+    // The subviews
     enum View {
         QUEUES, READ, WRITE
     }

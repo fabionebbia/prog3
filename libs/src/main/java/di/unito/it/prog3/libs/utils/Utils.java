@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 
 public class Utils {
 
-    private static final boolean debugEnabled = Boolean.parseBoolean(System.getProperty("debug"));
+    public static final boolean debugEnabled = Boolean.parseBoolean(System.getProperty("debug"));
 
 
     public static void DEBUG(String message) {

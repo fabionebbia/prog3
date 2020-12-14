@@ -1,21 +1,17 @@
 package di.unito.it.prog3.client.controls;
 
-import di.unito.it.prog3.libs.utils.CssUtils;
-import javafx.animation.Animation;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
-import javafx.application.Platform;
-import javafx.event.EventHandler;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ProgressIndicator;
 import javafx.stage.StageStyle;
-import javafx.util.Duration;
 
-public class ErrorAlert extends Alert {
+public class UnreachableServerAlert extends Alert {
 
     private static final ButtonType cancelButton = new ButtonType("Close client", ButtonBar.ButtonData.CANCEL_CLOSE);
-    private String dots;
 
-    public ErrorAlert() {
+
+    public UnreachableServerAlert() {
         super(AlertType.ERROR, null, cancelButton);
 
         setTitle("Server connection error");

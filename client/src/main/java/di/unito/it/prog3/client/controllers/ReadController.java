@@ -16,10 +16,15 @@ public class ReadController extends Controller {
     @FXML private TextArea bodyTextArea;
 
 
-    @Override
+    @Override // Nothing to do here
     public void setupControl() {}
 
 
+    /**
+     * Called by controllers in the same package to set displayed e-mail.
+     *
+     * @param email
+     */
     void showEmail(Email email) {
         fromLabel.setText(email.getSender());
         subjectLabel.setText(email.getSubject());

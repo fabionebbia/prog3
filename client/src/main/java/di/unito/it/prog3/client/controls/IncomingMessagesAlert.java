@@ -16,8 +16,8 @@ public class IncomingMessagesAlert extends Alert {
         icon.setFitWidth(50);
         setGraphic(icon);
 
-        setTitle("Inbox update");
         setHeaderText("Inbox");
+        setTitle("Inbox update");
         setContentText("Incoming messages!");
 
         getDialogPane().setStyle("-fx-font-size: 15px");

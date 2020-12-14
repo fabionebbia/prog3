@@ -1,7 +1,5 @@
 package di.unito.it.prog3.client.controls;
 
-import di.unito.it.prog3.libs.utils.Utils;
-import javafx.beans.property.StringProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -16,10 +14,10 @@ import java.io.IOException;
 // url: https://docs.oracle.com/javafx/2/fxml_get_started/custom_control.htm
 public class Recipient extends HBox {
 
-    @FXML
+    @FXML @SuppressWarnings("unused")
     private Hyperlink emailDisplay;
 
-    @FXML
+    @FXML @SuppressWarnings("unused")
     private Button removeButton;
 
     public Recipient() throws IOException {
@@ -42,15 +40,9 @@ public class Recipient extends HBox {
     }
 
     public void setReadOnly(boolean readOnly) {
-        // removeButton.visibleProperty().set(!readOnly);
-        // removeButton.managedProperty().set(!readOnly);
-        // removeButton.disableProperty().set(readOnly);
-
         removeButton.setVisible(!readOnly);
         removeButton.setManaged(!readOnly);
         removeButton.setDisable(readOnly);
-
-        // emailDisplay.disableProperty().set(!readOnly);
 
         emailDisplay.setDisable(!readOnly);
     }

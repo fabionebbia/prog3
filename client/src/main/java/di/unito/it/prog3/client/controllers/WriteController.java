@@ -25,21 +25,28 @@ import java.io.IOException;
 
 public class WriteController extends Controller {
 
-    @FXML private GridPane gridPane;
-    @FXML private TextField subjectField;
+    // JavaFX controls
     @FXML private GridPane recipientsFlowPaneContainer;
+    @FXML private TextField recipientField;
+    @FXML private TextField subjectField;
+    @FXML private TextArea bodyTextArea;
+    @FXML private GridPane gridPane;
     @FXML private FlowPane flowPane;
     @FXML private Button addButton;
-    @FXML private TextField recipientField;
-    @FXML private TextArea bodyTextArea;
 
+    // Local "sandbox" properties used as a proxy to avoid
+    // contaminating the model with potentially invalid user inputs
     private final SetProperty<String> recipients;
     private final StringProperty subject;
     private final StringProperty body;
 
+    // Binding that specify whether the recipient the user is
+    // typing in the recipient Text Field can or cannot be added
+    // to the committed e-mail recipients
     private BooleanBinding canAddRecipient;
 
 
+    // Just initializes local properties
     public WriteController() {
         recipients = new SimpleSetProperty<>(FXCollections.observableSet());
         subject = new SimpleStringProperty();
@@ -47,22 +54,46 @@ public class WriteController extends Controller {
     }
 
 
+    /**
+     * Called on write view first load.
+     * Sets up all write view controls and sets some listeners.
+     */
     @Override
     protected void setupControl() {
+        // Bind controls text properties to local properties
         subjectField.textProperty().bindBidirectional(subject);
         bodyTextArea.textProperty().bindBidirectional(body);
 
+        // Updates flow pane recipients whenever the recipients set changes
+        // i.e. when the user adds a new recipient or removes a previous one
         recipients.addListener((SetChangeListener<String>) change -> {
+
+            // Clear previously added recipients
             flowPane.getChildren().clear();
+
+            // Iterate over current recipients set
+            // and update the view to reflect the current status
             for (String recipient : recipients) {
                 try {
+                    // Create a new Recipient custom control
                     Recipient node = new Recipient();
+
+                    // Set Recipient's displayed e-mail to current recipient
                     node.setEmail(recipient);
+
+                    // Whenever the user presses the Recipient's remove button,
+                    // reflect the recipient removal in the recipients set
                     node.onRemoveButtonPressed(e -> recipients.remove(recipient));
+
+                    // Whenever the user clicks on the Recipient's displayed e-mail,
+                    // remove the associated recipient from the recipients set
+                    // and show it in the recipient TextField to allow modification
                     node.onClick(e -> {
                         recipients.remove(recipient);
                         recipientField.textProperty().set(recipient);
                     });
+
+                    // Add the newly crated Recipient in the recipients FlowPane
                     flowPane.getChildren().add(node);
                 } catch (IOException e) {
                     throw new RuntimeException("Could not load graphic components", e);
@@ -70,6 +101,7 @@ public class WriteController extends Controller {
             }
         });
 
+        // Show recipients FlowPane
         Utils.bindVisibility(recipients.sizeProperty().greaterThan(0), flowPane);
 
         canAddRecipient = Bindings.createBooleanBinding(() -> {
