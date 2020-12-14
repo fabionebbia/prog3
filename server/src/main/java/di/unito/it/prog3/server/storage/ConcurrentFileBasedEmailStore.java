@@ -43,6 +43,12 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
     private final Path storeDir;
 
 
+    /**
+     * Sets the store base directory and the file extension.
+     *
+     * @param storeDir The store base directory.
+     * @param extension The file extension.
+     */
     public ConcurrentFileBasedEmailStore(String storeDir, String extension) {
         this.storeDir = Paths.get(storeDir);
         this.extension = extension;
@@ -233,29 +239,6 @@ public abstract class ConcurrentFileBasedEmailStore implements EmailStore {
             lock.unlock();
         }
     }
-
-    /*@Override
-    public void concurrencyTest() {
-        ExecutorService exec = Executors.newFixedThreadPool(100);
-
-        for (int i = 0; i < 100000; i++) {
-            exec.submit(() -> {
-                try {
-                    readAndUpdate(
-                            ID.fromString("user2@email.tld/S/3f9b2b47-319c-42a6-a26f-7f433ef3062f"),
-                            email -> {
-                                int n = Integer.parseInt(email.getSubject());
-                                email.setSubject((n + 1) + "");
-                            }
-                    );
-                } catch (EmailStoreException e) {
-                    e.printStackTrace();
-                }
-            });
-        }
-
-        exec.shutdown();
-    }*/
 
 
     /**

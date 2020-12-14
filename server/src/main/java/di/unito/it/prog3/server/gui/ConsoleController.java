@@ -2,19 +2,22 @@ package di.unito.it.prog3.server.gui;
 
 
 import di.unito.it.prog3.libs.utils.ControllerBase;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
-import javafx.util.Callback;
 
 public class ConsoleController extends ControllerBase<Model> {
 
-    @FXML
-    private ListView<Log> console;
+    private ReadOnlyBooleanProperty isWindowFocused;
+
+    @FXML private ListView<Log> console;
+
 
     @Override
     protected void setupControl() {
+        // Setup console list view cell factory to display logs
         console.setCellFactory(logs -> new ListCell<>() {
             @Override
             protected void updateItem(Log log, boolean empty) {
@@ -32,15 +35,25 @@ public class ConsoleController extends ControllerBase<Model> {
                 }
             }
         });
+
+        // Bind list view items to the logs property
         console.itemsProperty().bind(model.logsProperty());
 
+        // Scroll to latest log if the server window is not selected
         model.logsProperty().addListener((ListChangeListener<Log>) c -> {
-            while (c.next()) ; // do nothing, just consume the changes
-            int nLogs = model.logsProperty().size();
-            if (nLogs > 0) {
-                console.scrollTo(nLogs - 1);
+            if (isWindowFocused != null && !isWindowFocused.get()) {
+                int nLogs = model.logsProperty().size();
+                if (nLogs > 0) {
+                    console.scrollTo(nLogs - 1);
+                }
             }
         });
+    }
+
+
+    // Received the reference to the stage focused property
+    public void bindFocus(ReadOnlyBooleanProperty isWindowFocused) {
+        this.isWindowFocused = isWindowFocused;
     }
 
 }

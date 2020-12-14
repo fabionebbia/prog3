@@ -14,11 +14,6 @@ public class OpenRequestHandler extends RequestHandler<OpenRequest> {
 
     @Override
     public Response handle(EmailStore emailStore, LogSession log, OpenRequest request) throws Exception {
-        /*Email.ID emailId = request.getId();
-        Email email = emailStore.read(emailId);
-        email.setRead(true);
-        emailStore.update(email);*/
-
         Email.ID id = request.getId();
 
         log.append("Marking " + id + " as read");

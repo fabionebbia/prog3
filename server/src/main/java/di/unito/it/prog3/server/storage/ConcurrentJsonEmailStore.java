@@ -23,6 +23,12 @@ public class ConcurrentJsonEmailStore extends ConcurrentFileBasedEmailStore {
     private final ObjectReader reader;
     private final ObjectWriter writer;
 
+
+    /**
+     * Sets up the e-mail store to use json a file type.
+     *
+     * @param storeDir The base store directory.
+     */
     public ConcurrentJsonEmailStore(String storeDir) {
         super(storeDir, ".json");
 
@@ -43,9 +49,18 @@ public class ConcurrentJsonEmailStore extends ConcurrentFileBasedEmailStore {
         writer = mapper.writer(writeFilter);
     }
 
+
+    // A filter for properties that should be volatile
     @JsonFilter("filter properties by name")
     static class PropertyFilterMixIn {}
 
+
+    /**
+     * Serializes the given e-mail to the given path.
+     *
+     * @param email The e-mail that must be serialized.
+     * @param path The destination path.
+     */
     @Override
     protected void serialize(Email email, Path path) {
         try {
@@ -56,6 +71,12 @@ public class ConcurrentJsonEmailStore extends ConcurrentFileBasedEmailStore {
     }
 
 
+    /**
+     * Deserializes an e-mail from the given file.
+     *
+     * @param file The file that must be deserialized.
+     * @return The deserialized e-mail.
+     */
     @Override
     protected Email deserialize(File file) {
         try {

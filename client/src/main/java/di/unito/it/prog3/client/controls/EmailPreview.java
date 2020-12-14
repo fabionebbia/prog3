@@ -2,12 +2,10 @@ package di.unito.it.prog3.client.controls;
 
 import di.unito.it.prog3.libs.email.Email;
 import di.unito.it.prog3.libs.utils.CssUtils;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 
 import java.io.IOException;
@@ -15,8 +13,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Year;
 import java.time.format.DateTimeFormatter;
-
-import static di.unito.it.prog3.libs.utils.Utils.DEBUG;
 
 // Oracle - Creating a Custom Control with FXML
 // url: https://docs.oracle.com/javafx/2/fxml_get_started/custom_control.htm
@@ -67,7 +63,13 @@ public class EmailPreview extends ListCell<Email> {
     }
 
 
+    /**
+     * Updates the preview.
+     *
+     * @param email The previewed e-mail.
+     */
     private void update(Email email) {
+        // Ensure preview reflect the read/unread status
         CssUtils.ensureClassSet(graphic, "email-preview");
         CssUtils.ensureClassSetOnlyIf(graphic, "email-preview--unread", email.isUnread());
 
@@ -76,33 +78,57 @@ public class EmailPreview extends ListCell<Email> {
         String compactBody = email.getBody().replaceAll("\\R", "  ");
         String formattedSentDate = formatTimestamp(email);
 
+        // Show default subject if subject is empty
         String subject = email.getSubject();
         subject = (subject != null && !subject.isBlank() ? subject : "-No Subject-");
 
+        // Set the properties
         datetimeLabel.setText(formattedSentDate);
         fromLabel.setText(email.getSender());
         bodyLabel.setText(compactBody);
         subjectLabel.setText(subject);
     }
 
+
+    /**
+     * Formats the e-mail timestamp for user-friendliness.
+     *
+     * @param email The e-mail whose timestamp must be formatted.
+     * @return The formatted timestamp.
+     */
     private String formatTimestamp(Email email) {
         LocalDateTime timestamp = email.getTimestamp();
         DateTimeFormatter formatter = PREVIOUS_YEAR;
 
-        if (sentToday(timestamp)) {
+        if (wasSentToday(timestamp)) {
             formatter = TODAY;
-        } else if (sentThisYear(timestamp)) {
+        } else if (wasSentThisYear(timestamp)) {
             formatter = THIS_YEAR;
         }
 
         return timestamp.format(formatter);
     }
 
-    private boolean sentToday(LocalDateTime timestamp) {
+
+    /**
+     * Checks whether the e-mail was sent today.
+     *
+     * @param timestamp The e-mail timestamp.
+     * @return True if the e-mail was sent today, false otherwise.
+     */
+    private boolean wasSentToday(LocalDateTime timestamp) {
         return LocalDate.now().equals(timestamp.toLocalDate());
     }
 
-    private boolean sentThisYear(LocalDateTime timestamp) {
+
+    /**
+     * Checks whether the e-mail was sent the current year.
+     *
+     * @param timestamp The e-mail timestamp.
+     * @return True if the e-mail was sent the current year, false otherwise.
+     */
+    private boolean wasSentThisYear(LocalDateTime timestamp) {
         return Year.now().getValue() == timestamp.getYear();
     }
+
 }

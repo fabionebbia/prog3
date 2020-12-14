@@ -39,12 +39,4 @@ public class Recipient extends HBox {
         emailDisplay.setOnAction(eventHandler);
     }
 
-    public void setReadOnly(boolean readOnly) {
-        removeButton.setVisible(!readOnly);
-        removeButton.setManaged(!readOnly);
-        removeButton.setDisable(readOnly);
-
-        emailDisplay.setDisable(!readOnly);
-    }
-
 }

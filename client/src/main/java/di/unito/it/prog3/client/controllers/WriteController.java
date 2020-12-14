@@ -101,23 +101,33 @@ public class WriteController extends Controller {
             }
         });
 
-        // Show recipients FlowPane
+        // Hide recipients FlowPane when the opened e-mail no recipients
         Utils.bindVisibility(recipients.sizeProperty().greaterThan(0), flowPane);
 
+        // Allow adding a new recipient only when its e-mail address
+        // is well formed and is not already present in the recipients set
         canAddRecipient = Bindings.createBooleanBinding(() -> {
             String newRecipient = recipientField.textProperty().get();
             return Emails.isWellFormed(newRecipient) && !recipients.contains(newRecipient);
         }, recipientField.textProperty());
 
+        // Disable add button until the recipient can be added
         addButton.disableProperty().bind(canAddRecipient.not());
 
+        // Adjust vgap based on recipients size
         recipientsFlowPaneContainer.vgapProperty().bind(
                 Bindings.createDoubleBinding(() -> recipients.size() > 0 ? 10d : 0d, recipients)
         );
     }
 
+
+    /**
+     * Called when this view is displayed on parent screen.
+     */
     @Override
     void onDisplayed() {
+        // Add ENTER key press handler to add the newly inserted recipient
+        // in the recipient set if it can be inserted
         gridPane.getScene().setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER && canAddRecipient.get()) {
                 addRecipient();
@@ -125,11 +135,21 @@ public class WriteController extends Controller {
         });
     }
 
+
+    /**
+     * Called when this view is removed from the parent screen.
+     */
     @Override
     void onHidden() {
+        // Remove key press event handler
         gridPane.getScene().setOnKeyPressed(null);
     }
 
+
+    /**
+     * Adds the recipient to the recipients set
+     * and resets the recipient TextField.
+     */
     @FXML
     private void addRecipient() {
         String newRecipient = recipientField.getText();
@@ -137,25 +157,47 @@ public class WriteController extends Controller {
         recipientField.setText("");
     }
 
+
+    /**
+     * Called by controllers in the same package to request
+     * write view to set up itself in the specified write mode.
+     *
+     * @param mode The write mode the write view should open in.
+     */
     void open(WriteMode mode) {
         switch (mode) {
             case NEW -> {
+                // Simply clear anything,
+                // allowing the user to write a new e-mail
                 recipientField.requestFocus();
                 recipients.clear();
                 subject.set("");
                 body.set("");
             }
-            case FORWARD -> openForward();
-            case REPLY -> openReply(false);
-            case REPLY_ALL -> openReply(true);
+            case FORWARD ->
+                // Open in forward mode
+                openForward();
+            case REPLY ->
+                // Open in reply mode with the `all` flag set to false
+                openReply(false);
+            case REPLY_ALL ->
+                // Open in reply mode with the `all` flag set to false
+                openReply(true);
         }
     }
 
+
+    /**
+     * Open write view in forward mode.
+     */
     private void openForward() {
+        // Request the model to open the current e-mail
         Email currentEmail = model.openCurrentEmail();
 
+        // Clear recipients set
         recipients.clear();
 
+        // Compute the new e-mail body
         String newBody = "----------- Forwarded e-mail -----------"
                        + "\nSubject: " + currentEmail.getSubject()
                        + "\nFrom:    " + currentEmail.getSender()
@@ -164,15 +206,25 @@ public class WriteController extends Controller {
                        + "\n\n--------------- Message ----------------"
                        + "\n" + currentEmail.getBody();
 
+        // Prepend "Fwd" to the original the subject as the new default subject
         String newSubject = computeNewSubject("Fwd", currentEmail);
 
+        // Set the fields
         subject.set(newSubject);
         body.set(newBody);
     }
 
+
+    /**
+     * Open read view in reply (or reply all) mode.
+     *
+     * @param all Flag indicating whether this is a reply or replay all operation.
+     */
     private void openReply(boolean all) {
+        // request the model to open the current e-mail
         Email currentEmail = model.openCurrentEmail();
 
+        // Reinitialize the recipients set with the correct recipients
         recipients.clear();
         recipients.add(currentEmail.getSender());
         if (all) {
@@ -182,31 +234,62 @@ public class WriteController extends Controller {
             }
         }
 
+        // Compute the new e-mail body
         String newBody = "\n\n------------ Previous e-mail -----------\n"
                        + currentEmail.getSender() + " wrote \"" + currentEmail.getSubject()
                        + "\"\non " + Emails.VISUAL_TIMESTAMP_DATE_FORMAT.format(currentEmail.getTimestamp())
                        + "\n\n\n" + currentEmail.getBody();
 
+        // Prepend "Re" to the original the subject as the new default subject
         String newSubject = computeNewSubject("Re", currentEmail);
 
+        // Set fields
         body.set(newBody);
         subject.set(newSubject);
 
+        // Focus body TextArea so that the user can immediately start typing
         bodyTextArea.requestFocus();
     }
 
+
+    /**
+     * Used by controllers in the same package to notify write view
+     * that the user requested to sent the e-mail.
+     *
+     * @param callback The operation to perform when the e-mail is sent.
+     */
     void sendRequested(Callback callback) {
+        // Prepare the new e-mail bean by copying sandboxed values
         Email email = new Email();
         email.addAllRecipients(recipients.get());
         email.setSubject(subject.get());
         email.setBody(body.get());
+
+        // Request the model to send the e-mail and to perform
+        // callback action when send operation completes
         model.send(email, callback);
     }
 
+
+    /**
+     * Informs controllers in the same package about the status
+     * of the e-mails the user is composing.
+     *
+     * @return The bindings that holds such status.
+     */
     BooleanBinding isEmailWellFormed() {
+        // The only check that's needed is that the e-mail has at least one recipient
         return recipients.sizeProperty().greaterThan(0);
     }
 
+
+    /**
+     * Computes the new subject.
+     *
+     * @param prefix The prefix that must be prepended to the previous subject.
+     * @param email The e-mail from which to extract the previous subject from.
+     * @return The computed new subject.
+     */
     private String computeNewSubject(String prefix, Email email) {
         String newSubject = "";
         String prevSubject = email.getSubject();

@@ -41,7 +41,7 @@ public class QueueViewController extends Controller implements EventHandler<Mous
         });
 
         // At startup, show Received queue e-mails in list view
-        listView.setItems(model.receivedQueue().getValue());
+        listView.setItems(model.receivedQueue());
 
         // When the user changes selected e-mail in the list view,
         // update the model to keep track of the currently selected e-mail
@@ -58,8 +58,8 @@ public class QueueViewController extends Controller implements EventHandler<Mous
         //      Sent queue in the second tab
         tabPane.getSelectionModel().selectedIndexProperty().addListener((observable, oldIndex, newIndex) -> {
             switch (newIndex.intValue()) {
-                case 0 -> listView.setItems(model.receivedQueue().getValue());
-                case 1 -> listView.setItems(model.sentQueue().getValue());
+                case 0 -> listView.setItems(model.receivedQueue());
+                case 1 -> listView.setItems(model.sentQueue());
                 default -> throw new IllegalStateException("Unexpected tab selected:" + newIndex.intValue());
             }
 

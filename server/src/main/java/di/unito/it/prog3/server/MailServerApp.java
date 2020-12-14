@@ -8,6 +8,8 @@ import di.unito.it.prog3.server.gui.Model;
 import di.unito.it.prog3.server.server.Server;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
@@ -29,17 +31,16 @@ public class MailServerApp extends Application {
 
         FXWrapper<ConsoleController> gui = new WrappedFXMLLoader("/screens/main/index.fxml").load();
         gui.getController().init(model);
+        gui.getController().bindFocus(stage.focusedProperty());
 
-        stage.setOnCloseRequest(e -> {
-            System.out.println("CIao");
-            DEBUG("Close requested");
+        /*stage.setOnCloseRequest(e -> {
             Platform.exit();
-        });
+        });*/
+
         stage.setOnHidden(e -> {
-            System.out.println("CIao2");
-            DEBUG("Close requested");
             Platform.exit();
         });
+
         stage.setScene(new Scene(gui.getContent()));
         stage.show();
     }

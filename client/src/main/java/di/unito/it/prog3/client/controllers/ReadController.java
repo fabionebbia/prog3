@@ -23,7 +23,7 @@ public class ReadController extends Controller {
     /**
      * Called by controllers in the same package to set displayed e-mail.
      *
-     * @param email
+     * @param email The e-mail that must be displayed.
      */
     void showEmail(Email email) {
         fromLabel.setText(email.getSender());

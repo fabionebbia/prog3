@@ -115,7 +115,7 @@ public class MainController extends Controller {
         setupStatusBar();
 
         // Listen for receivedQueue changes to show an alert to the user when new e-mails are received
-        model.receivedQueue().getValue().addListener((ListChangeListener<Email>) change -> {
+        model.receivedQueue().addListener((ListChangeListener<Email>) change -> {
             // change.next()                              - Trigger change inspection, required by JavaFX
             // change.getAddedSize() > 0                  - If e-mails were added
             // model.getClient().firstRequestSent().get() - If contact with server was already established
@@ -359,15 +359,6 @@ public class MainController extends Controller {
         // If the current view is writing view,
         // simply discard any changes by resetting to queue view
         currentView.set(QUEUES);
-
-        /* switch (currentView.get()) {
-            case QUEUES, READ -> {
-                Email.ID id = model.getCurrentEmail().getId();
-                model.delete(id);
-                currentView.set(QUEUES);
-            }
-            case WRITE -> currentView.set(QUEUES);
-        }*/
     }
 
 
