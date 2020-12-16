@@ -114,7 +114,7 @@ public class Client {
 
 
     /**
-     * Starts the poller, responsible for asking the server for new e-mails.
+     * Starts the poller, responsible for retrieving updates from the server.
      */
     void startPoller() {
         if (!pollerStarted) {
@@ -161,7 +161,7 @@ public class Client {
             request.setPivot(pivot);
 
             // On response success, add any new e-mail the the `all` queue
-            // so that filtered oredered sub-queues are automatically updated
+            // so that filtered ordered sub-queues are automatically updated
             request.setSuccessHandler(response -> {
                 List<Email> newEmails = response.getEmails();
                 model.allQueue().addAll(newEmails);
